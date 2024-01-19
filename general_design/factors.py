@@ -17,6 +17,7 @@ ________________________________________________________________________________
 """
 
 # IMPORTS
+import math
 from dataclasses import dataclass
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -38,23 +39,29 @@ class LiveLoadsTable(declarative_base()):
 
 # CODE
 @dataclass
-class SnowLoads:
-    """4.1.6. Charge due à la neige et à la pluie.
+class Factors:
+    """5.3 Coefficients."""
 
-    Args:
-        arg: desc.
-    """
-
-    arg: str = "default value"
-
-    def func_name(self):
-        """4.1.6.X. desc.
+    def kd(self, load_duration, d=100, l=100, s=10):
+        """5.3.2 Coefficient de durée d'application de la charge, Kd.
 
         Args:
-            arg: desc.
+            load_duration: Durée d'application de la charge.
         """
 
-        return None
+        kd = 1
+        if load_duration == "Courte":
+            kd = 1.15
+        elif load_duration == "Continue":
+            pl = d
+            ps = max(s, l, s + 0.5 * l, 0.5 * s + l)
+            if ps == 0:
+                kd = 0.65
+            else:
+                kd = max(1 - 0.5 * math.log(pl / ps), 0.65)
+        kd = min(kd, 1.15)
+
+        return kd
 
 
 # TESTS
@@ -63,8 +70,8 @@ def tests():
 
     print("------START_TESTS------")
 
-    test1 = SnowLoads().func_name()
-    expected_result = None
+    test1 = Factors().kd("Continue")
+    expected_result = 1
     if test1 != expected_result:
         print("test1 -> FAILED")
         print("result = ", test1)
