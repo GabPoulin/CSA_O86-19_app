@@ -4,9 +4,9 @@ CSA O86:19: Règles de calcul des charpentes en bois.
 Section 5. Conception générale.
 -----------------------------------------------
 
-5.3.2 Coefficient de durée d'application de la charge, KD.
+5.3 Conditions et coefficients influant sur la résistance.
 
-    desc.
+    Détermine les différents coefficients relatif aux calculs.
 ____________________________________________________________________________________________________
     
 
