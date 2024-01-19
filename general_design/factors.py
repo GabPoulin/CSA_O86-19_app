@@ -42,7 +42,7 @@ class LiveLoadsTable(declarative_base()):
 class Factors:
     """5.3 Coefficients."""
 
-    def kd(self, load_duration, d=100, l=100, s=10):
+    def kd(self, load_duration, d=0, l=0, s=0):
         """5.3.2 Coefficient de durée d'application de la charge, Kd.
 
         Args:
@@ -70,7 +70,7 @@ def tests():
 
     print("------START_TESTS------")
 
-    test1 = Factors().kd("Continue")
+    test1 = Factors().kd(load_duration="Normal", d=1, l=0, s=0)
     expected_result = 1
     if test1 != expected_result:
         print("test1 -> FAILED")
