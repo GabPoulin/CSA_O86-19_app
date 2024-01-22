@@ -1,12 +1,15 @@
 """
-
 CSA O86:19: Règles de calcul des charpentes en bois.
 Section 5. Conception générale.
 -----------------------------------------------
 
 5.3 Conditions et coefficients influant sur la résistance.
-
     Détermine les différents coefficients relatif aux calculs.
+    Le calcul pour Kd est présent ici, les autes coefficients dépendent des autres sections de la
+    norme.
+    
+5.4 Exigences relatives à la tenue en service
+    Calculs pour module d'élasticité, flèche, et vibration.
 ____________________________________________________________________________________________________
     
 
@@ -47,9 +50,9 @@ class Factors:
 
         Args:
             load_duration: Durée d'application de la charge.
-            d: charge de durée d'application continue
-            l: surcharge de durée d'application normale
-            s: charge de neige de durée d'application normale
+            d: charge de durée d'application continue.
+            l: surcharge de durée d'application normale.
+            s: charge de neige de durée d'application normale.
         """
 
         kd = 1
@@ -69,6 +72,24 @@ class Factors:
         return kd
 
 
+@dataclass
+class Service:
+    """5.4 Tenue en service."""
+
+    def es(self, e, kse, kt):
+        """5.4.1 Module d'élasticité.
+
+        Args:
+            e:  module d'élasticité prévu, MPa.
+            kse: coefficient de conditions d'utilisation.
+            Kt: coefficient de traitement.
+        """
+
+        es = e * (kse * kt)
+
+        return es
+
+
 # TESTS
 def tests():
     """tests pour la classe SnowLoads."""
@@ -83,6 +104,15 @@ def tests():
         print("expected = ", expected_result)
     else:
         print("test1 -> PASSED")
+
+    test2 = Service().es(e=70.0, kse=0.5, kt=1)
+    expected_result = 35
+    if test2 != expected_result:
+        print("test2 -> FAILED")
+        print("result = ", test2)
+        print("expected = ", expected_result)
+    else:
+        print("test2 -> PASSED")
 
     print("-------END_TESTS-------")
 
