@@ -25,16 +25,16 @@ from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
 
 
 # DB CONNECTION
-@dataclass
-class LiveLoadsTable(declarative_base()):
-    """Se connecte à la table X de loads.db."""
-
-    __tablename__ = "X"
-    XX: str = Column("XX", TEXT, primary_key=True)
-    XXX: float = Column("XXX", REAL)
-    engine = create_engine("sqlite:///loads.db")
-    Session = sessionmaker(engine)
-    session = Session()
+# @dataclass
+# class LiveLoadsTable(declarative_base()):
+#    """Se connecte à la table X de loads.db."""
+#
+#    __tablename__ = "X"
+#    XX: str = Column("XX", TEXT, primary_key=True)
+#    XXX: float = Column("XXX", REAL)
+#    engine = create_engine("sqlite:///loads.db")
+#    Session = sessionmaker(engine)
+#    session = Session()
 
 
 # CODE
@@ -47,18 +47,23 @@ class Factors:
 
         Args:
             load_duration: Durée d'application de la charge.
+            d: charge de durée d'application continue
+            l: surcharge de durée d'application normale
+            s: charge de neige de durée d'application normale
         """
 
         kd = 1
         if load_duration == "Courte":
             kd = 1.15
         elif load_duration == "Continue":
+            kd = 0.65
             pl = d
             ps = max(s, l, s + 0.5 * l, 0.5 * s + l)
-            if ps == 0:
-                kd = 0.65
-            else:
-                kd = max(1 - 0.5 * math.log(pl / ps), 0.65)
+            if ps > 0:
+                if pl > ps:
+                    kd = max(1 - (0.5 * math.log(pl / ps, 10)), 0.65)
+                else:
+                    kd = 1
         kd = min(kd, 1.15)
 
         return kd
@@ -70,8 +75,8 @@ def tests():
 
     print("------START_TESTS------")
 
-    test1 = Factors().kd(load_duration="Normal", d=1, l=0, s=0)
-    expected_result = 1
+    test1 = Factors().kd(load_duration="Continue", d=1, l=0.5)
+    expected_result = 0.8494850021680094
     if test1 != expected_result:
         print("test1 -> FAILED")
         print("result = ", test1)
