@@ -89,6 +89,20 @@ class Service:
 
         return es
 
+    def deflection(l, delta):
+        """5.4.2/5.4.3 Flèche.
+
+        Args:
+            l:  Portée, mm.
+            delta: flèche, mm.
+        Returns:
+            Critère de flèeche obtenu
+        """
+
+        result = l / delta
+
+        return result
+
 
 # TESTS
 def tests():
