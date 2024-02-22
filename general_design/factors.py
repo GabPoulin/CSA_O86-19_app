@@ -5,14 +5,12 @@ Section 5. Conception générale.
 
 5.3 Conditions et coefficients influant sur la résistance.
     Détermine les différents coefficients relatif aux calculs.
-    Le calcul pour Kd est présent ici, les autes coefficients dépendent des autres sections de la
-    norme.
+    Vérification de la section nette.
     
 5.4 Exigences relatives à la tenue en service
-    Calculs pour module d'élasticité, flèche, et vibration.
+    Calculs pour module d'élasticité, flèche et vibration.
 ____________________________________________________________________________________________________
     
-
     auteur: GabPoulin
     email: poulin33@me.com
 
@@ -43,7 +41,7 @@ from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
 # CODE
 @dataclass
 class Factors:
-    """5.3 Coefficients."""
+    """5.3 Conditions et coefficients influant sur la résistance."""
 
     def kd(self, load_duration, d=0, l=0, s=0):
         """5.3.2 Coefficient de durée d'application de la charge, Kd.
@@ -52,7 +50,10 @@ class Factors:
             load_duration: Durée d'application de la charge.
             d: charge de durée d'application continue.
             l: surcharge de durée d'application normale.
-            s: charge de neige de durée d'application normale.
+            s: surcharge de neige.
+
+        Returns:
+            float|int: Coefficient de durée d’application de la charge, Kd
         """
 
         kd = 1
@@ -64,17 +65,28 @@ class Factors:
             ps = max(s, l, s + 0.5 * l, 0.5 * s + l)
             if ps > 0:
                 if pl > ps:
-                    kd = max(1 - (0.5 * math.log(pl / ps, 10)), 0.65)
+                    kd = max(1 - 0.5 * math.log(pl / ps, 10), 0.65)
                 else:
                     kd = 1
         kd = min(kd, 1.15)
 
         return kd
 
+    def cross_section(self, net, gross):
+        """5.3.8 Réduction de la section transversale.
+
+        Args:
+            net: section nette. 5.3.8.1
+            gross: section brute.
+
+        Returns:
+            str: Satisfait ou non la condition.
+        """
+
 
 @dataclass
-class Service:
-    """5.4 Tenue en service."""
+class Serviceability:
+    """5.4 Exigences relatives à la tenue en service."""
 
     def es(self, e, kse, kt):
         """5.4.1 Module d'élasticité.
@@ -82,26 +94,49 @@ class Service:
         Args:
             e:  module d'élasticité prévu, MPa.
             kse: coefficient de conditions d'utilisation.
-            Kt: coefficient de traitement.
+            kt: coefficient de traitement.
+
+        Returns:
+            float|int: Module d'élasticité, Es.
         """
 
-        es = e * (kse * kt)
+        return e * (kse * kt)
 
-        return es
-
-    def deflection(l, delta):
-        """5.4.2/5.4.3 Flèche.
+    def deflection(self, l, delta):
+        """5.4.2 Flèche élastique. 5.4.3 Déformation permanente.
 
         Args:
             l:  Portée, mm.
-            delta: flèche, mm.
+            delta: Flèche, mm.
+
         Returns:
-            Critère de flèeche obtenu
+            str: Critère de flèche obtenu.
         """
 
-        result = l / delta
+        return f"L/{int(l / delta)}"
 
-        return result
+    def ponding(self, w, *delta):
+        """5.4.4 Accumulation d’eau.
+
+        Args:
+            w: charge totale spécifiée uniformément répartie, kPa.
+            delta: flèche pour chaque élément constitutif du système, mm.
+
+        Returns:
+            str: Satisfait ou non la condition.
+        """
+
+        total = 0
+        for i in delta:
+            total = total + i
+
+        verif = total / w
+        if verif < 65:
+            message = f"Condition satisfaite: {verif} < 65"
+        else:
+            message = f"Condition non satisfaite: {verif} !< 65"
+
+        return message
 
 
 # TESTS
@@ -119,7 +154,7 @@ def tests():
     else:
         print("test1 -> PASSED")
 
-    test2 = Service().es(e=70.0, kse=0.5, kt=1)
+    test2 = Serviceability().es(e=70.0, kse=0.5, kt=1)
     expected_result = 35
     if test2 != expected_result:
         print("test2 -> FAILED")
@@ -127,6 +162,24 @@ def tests():
         print("expected = ", expected_result)
     else:
         print("test2 -> PASSED")
+
+    test3 = Serviceability().deflection(l=1800, delta=10)
+    expected_result = "L/180"
+    if test3 != expected_result:
+        print("test3 -> FAILED")
+        print("result = ", test3)
+        print("expected = ", expected_result)
+    else:
+        print("test3 -> PASSED")
+
+    test4 = Serviceability().ponding(2, 10, 13)
+    expected_result = "Condition satisfaite: 11.5 < 65"
+    if test4 != expected_result:
+        print("test4 -> FAILED")
+        print("result = ", test4)
+        print("expected = ", expected_result)
+    else:
+        print("test4 -> PASSED")
 
     print("-------END_TESTS-------")
 
