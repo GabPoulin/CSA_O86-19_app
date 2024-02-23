@@ -19,10 +19,11 @@ ________________________________________________________________________________
 
 # IMPORTS
 import math
-from dataclasses import dataclass
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
+
+# from dataclasses import dataclass
+# from sqlalchemy.orm import sessionmaker
+# from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
 
 
 # DB CONNECTION
@@ -39,112 +40,123 @@ from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
 
 
 # CODE
-    def kd(self, load_duration, d=0, l=0, s=0):
-        """5.3.2 Coefficient de durée d'application de la charge, Kd.
+def kd(load_duration, d=0, l=0, s=0):
+    """5.3.2 Coefficient de durée d'application de la charge, Kd.
 
-        Args:
-            load_duration: Durée d'application de la charge.
-            d: charge de durée d'application continue.
-            l: surcharge de durée d'application normale.
-            s: surcharge de neige.
+    Args:
+        load_duration: Durée d'application de la charge.
+            ("Courte", "Normale", "Continue")
+        d: charge de durée d'application continue.
+        l: surcharge de durée d'application normale.
+        s: surcharge de neige.
 
-        Returns:
-            float|int: Coefficient de durée d'application de la charge, Kd
-        """
+    Returns:
+        float: Coefficient de durée d'application de la charge, Kd
+    """
 
-        kd = 1
-        if load_duration == "Courte":
-            kd = 1.15
-        elif load_duration == "Continue":
-            kd = 0.65
-            pl = d
-            ps = max(s, l, s + 0.5 * l, 0.5 * s + l)
-            if ps > 0:
-                if pl > ps:
-                    kd = max(1 - 0.5 * math.log(pl / ps, 10), 0.65)
-                else:
-                    kd = 1
-        kd = min(kd, 1.15)
+    kd = 1
+    if load_duration == "Courte":
+        kd = 1.15
+    elif load_duration == "Continue":
+        kd = 0.65
+        pl = d
+        ps = max(s, l, s + 0.5 * l, 0.5 * s + l)
+        if ps > 0:
+            if pl > ps:
+                kd = max(1 - 0.5 * math.log(pl / ps, 10), 0.65)
+            else:
+                kd = 1
+    kd = min(kd, 1.15)
 
-        return kd
-
-
-    def section(self, net, gross):
-        """5.3.8 Réduction de la section transversale.
-
-        Args:
-            net: section nette. (voir 5.3.8.1)
-            gross: section brute.
-
-        Returns:
-            str: Satisfait ou non la condition.
-        """
-
-        if net < 0.75 * gross:
-            message = (
-                f"Condition non satisfaite: {net} < {0.75*gross} (75% de {gross})."
-            )
-        else:
-            message = f"Condition satisfaite: {net} > {0.75*gross} (75% de {gross})."
-
-        return message
+    return kd
 
 
-    def es(self, e, kse, kt):
-        """5.4.1 Module d'élasticité.
+def section(net, gross):
+    """5.3.8 Réduction de la section transversale.
 
-        Args:
-            e:  module d'élasticité prévu, MPa.
-            kse: coefficient de conditions d'utilisation.
-            kt: coefficient de traitement.
+    Args:
+        net: section nette. (voir 5.3.8.1)
+        gross: section brute.
 
-        Returns:
-            float|int: Module d'élasticité, Es.
-        """
+    Returns:
+        str: Validation de la section nette.
+    """
 
-        return e * (kse * kt)
+    if net < 0.75 * gross:
+        message = (
+            f"Section nette non-valide: {net} < {0.75*gross} (75% de la section brute)."
+        )
+    else:
+        message = (
+            f"Section nette valide: {net} > {0.75*gross} (75% de la section brute)."
+        )
 
-
-    def deflection(self, l, delta):
-        """5.4.2 Flèche élastique. 5.4.3 Déformation permanente.
-
-        Args:
-            l:  Portée, mm.
-            delta: Flèche, mm.
-
-        Returns:
-            str: Critère de flèche obtenu.
-        """
-
-        return f"L/{int(l / delta)}"
+    return message
 
 
-    def ponding(self, w, *delta):
-        """5.4.4 Accumulation d'eau.
+def es(e, kse, kt):
+    """5.4.1 Module d'élasticité.
 
-        Args:
-            w: charge totale spécifiée uniformément répartie, kPa.
-            delta: flèche pour chaque élément constitutif du système, mm.
+    Args:
+        e:  module d'élasticité prévu, MPa.
+        kse: coefficient de conditions d'utilisation.
+        kt: coefficient de traitement.
 
-        Returns:
-            str: Satisfait ou non la condition.
-        """
+    Returns:
+        float: Module d'élasticité, Es (MPa).
+    """
 
-        total = 0
-        for i in delta:
-            total = total + i
+    return e * (kse * kt)
 
-        verif = total / w
-        if verif < 65:
-            message = f"Condition satisfaite: {verif} < 65"
-        else:
-            message = f"Condition non satisfaite: {verif} !< 65"
 
-        return message
+def deflection(l, delta):
+    """5.4.2 Flèche élastique. 5.4.3 Déformation permanente.
+
+    Args:
+        l:  Portée, mm.
+        delta: Flèche, mm.
+
+    Returns:
+        str: Critère de flèche obtenu.
+    """
+
+    return f"Critère de flèche: L/{int(l / delta)}"
+
+
+def ponding(w, *delta):
+    """5.4.4 Accumulation d'eau.
+
+    Args:
+        w: charge totale spécifiée uniformément répartie, kPa.
+        delta: flèche pour chaque élément constitutif du système, mm.
+
+    Returns:
+        str: Satisfait ou non la condition pour accumulation d'eau.
+    """
+
+    total = 0
+    for i in delta:
+        total = total + i
+
+    verif = total / w
+    if verif < 65:
+        message = f"Condition pour accumulation d'eau satisfaite: {verif} < 65"
+    else:
+        message = (
+            "Une analyse rationnelle pour assurer la tenue en service en cas d'accumulation "
+            f"d'eau est nécessaire!: {verif} > 65"
+        )
+
+    return message
+
+
+def vibration():
+
+    return 1
 
 
 # TESTS
-def tests():
+def _tests():
     """tests pour la classe SnowLoads."""
 
     print("------START_TESTS------")
@@ -159,7 +171,7 @@ def tests():
         print("test_kd -> PASSED")
 
     test_section = section(net=25, gross=30)
-    expected_result = "Condition satisfaite: 25 > 22.5 (75% de 30)."
+    expected_result = "Section nette valide: 25 > 22.5 (75% de la section brute)."
     if test_section != expected_result:
         print("test_section -> FAILED")
         print("result = ", test_section)
@@ -177,7 +189,7 @@ def tests():
         print("test_es -> PASSED")
 
     test_deflection = deflection(l=1800, delta=10)
-    expected_result = "L/180"
+    expected_result = "Critère de flèche: L/180"
     if test_deflection != expected_result:
         print("test_deflection -> FAILED")
         print("result = ", test_deflection)
@@ -186,7 +198,7 @@ def tests():
         print("test_deflection -> PASSED")
 
     test_ponding = ponding(2, 10, 13)
-    expected_result = "Condition satisfaite: 11.5 < 65"
+    expected_result = "Condition pour accumulation d'eau satisfaite: 11.5 < 65"
     if test_ponding != expected_result:
         print("test_ponding -> FAILED")
         print("result = ", test_ponding)
@@ -199,7 +211,7 @@ def tests():
 
 # RUN FILE
 if __name__ == "__main__":
-    tests()
+    _tests()
 
 
 # END
