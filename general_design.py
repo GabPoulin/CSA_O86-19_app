@@ -157,46 +157,110 @@ def ponding(load, *delta):
 class Vibration:
     """5.4.5 Vibration."""
 
-    thickness: int
+    bracing: bool = False
+    clt_thickness: int = 0
+    concrete_thickness: int = 0
+    gypsum: bool = False
+    joist_mass: float = 0
     multiple_span: bool = False
-    floor_topping: bool = False
+    spacing: float = 16
+    topping_thickness: int = 0
 
-    def floor_vibration(self, clt=False):
+    def floor_vibration(self):
         """5.4.5.2 Vibration des planchers.
-
-        Args:
-            clt: True, pour planchers faits de bois lamellé-croisé.
 
         Returns:
             float: limite de la portée pour le contrôle des vibrations, m.
         """
 
-        if clt:
+        if self.clt_thickness > 0:
             span = self._clt_vibration()
         else:
-            span = self._span_limit()
+            span = self._joist_vibration()
 
         return span
 
-    def _span_limit(self):
+    def _joist_vibration(self):
+        """A.5.4.5 Tenue aux vibrations des planchers en solives en bois.
+            A.5.4.5.1 Portée pour le contrôle des vibrations : méthode générale.
 
-        lv = 1
+        Returns:
+            float: portée pour le contrôle des vibrations, m.
+        """
+
+        ei_eff = self._bending_stiffness()
+        if self.multiple_span and not self.concrete_thickness > 0:
+            ei_eff *= 1.2
+        ktss = self._stiffness_factor()
+        ml = self._linear_mass()
+        lv = (0.122 * ei_eff**0.284) / (ktss**0.14 * ml**0.15)
+        if self.bracing and not self.concrete_thickness > 0:
+            lv *= 1.05
+        if (
+            self.gypsum
+            and not self.concrete_thickness > 0
+            and not self.topping_thickness > 0
+        ):
+            lv *= 1.05
 
         return lv
+
+    def _bending_stiffness(self):
+        """A.5.4.5.1.1 Rigidité composite en flexion du système de plancher dans la direction de
+        la portée des solives.
+
+        Returns:
+            float: rigidité composite en flexion du système de plancher, N*m2.
+        """
+
+        ei_eff = 10e3
+
+        return ei_eff
+
+    def _linear_mass(self):
+        """A.5.4.5.1.2 Masse linéaire du plancher dans la direction de la portée des solives.
+
+        Returns:
+            float: masse linéaire de la section transversale composite du plancher, kg/m.
+        """
+
+        mj = self.joist_mass
+        rho_s = 500  # tableau A.1
+        ts = 15.5 / 1000  # tableau A.1
+        rho_c = 2300
+        tc = self.concrete_thickness
+        rho_w = 600
+        tw = self.topping_thickness
+        b1 = self.spacing * 0.0254
+
+        ml = mj + rho_s * ts * b1 + rho_c * tc * b1 + rho_w * tw * b1
+
+        return ml
+
+    def _stiffness_factor(self):
+        """A.5.4.5.1.3 Coefficient de rigidité transversale du système.
+
+        Returns:
+            float: coefficient de rigidité transversale, Ktss.
+        """
+
+        ktss = 1
+
+        return ktss
 
     def _clt_vibration(self):
         """A.8.5.3 Tenue aux vibrations des planchers faits de bois lamellé-croisé.
 
         Returns:
-            float: limite de la portée pour le contrôle des vibrations, m
+            float: limite de la portée pour le contrôle des vibrations, m.
         """
 
         ei_eff_f = 650e9  # ajuster avec 8.4.3.2
-        poids = 5200  # ajuster avec database
-        m = (poids * (self.thickness / 1000)) / 9.80665
+        poids = 5200 / 9.80665  # ajuster avec database
+        m = poids * self.clt_thickness
         lv = 0.11 * (((ei_eff_f / 10**6) ** 0.29) / (m**0.12))
 
-        if self.multiple_span and self.floor_topping and lv < 8:
+        if self.multiple_span and lv < 8:
             lv = min(1.2 * lv, 8)
 
         return lv
@@ -253,18 +317,35 @@ def _tests():
     else:
         print("test_ponding -> PASSED")
 
-    test_floor_vibration = Vibration(
-        thickness=150,
+    test_floor_vibration_joist = Vibration(
+        bracing=True,
+        clt_thickness=0,
+        concrete_thickness=0,
+        gypsum=True,
+        joist_mass=100,
         multiple_span=True,
-        floor_topping=True,
-    ).floor_vibration(True)
-    expected_result = 3.7866043840767682
-    if test_floor_vibration != expected_result:
-        print("test_floor_vibration -> FAILED")
-        print("result = ", test_floor_vibration)
+        spacing=16,
+        topping_thickness=20,
+    ).floor_vibration()
+    expected_result = 1
+    if test_floor_vibration_joist != expected_result:
+        print("test_floor_vibration_joist -> FAILED")
+        print("result = ", test_floor_vibration_joist)
         print("expected = ", expected_result)
     else:
-        print("test_floor_vibration -> PASSED")
+        print("test_floor_vibration_joist -> PASSED")
+
+    test_floor_vibration_clt = Vibration(
+        clt_thickness=0.150,
+        multiple_span=True,
+    ).floor_vibration()
+    expected_result = 3.7866043840767682
+    if test_floor_vibration_clt != expected_result:
+        print("test_floor_vibration_clt -> FAILED")
+        print("result = ", test_floor_vibration_clt)
+        print("expected = ", expected_result)
+    else:
+        print("test_floor_vibration_clt -> PASSED")
 
     print("-------END_TESTS-------")
 
