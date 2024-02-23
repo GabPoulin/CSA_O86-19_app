@@ -54,7 +54,7 @@ class SnowLoads:
             arg: desc.
         """
 
-        return None
+        return 1
 
 
 # TESTS
@@ -64,7 +64,7 @@ def tests():
     print("------START_TESTS------")
 
     test1 = SnowLoads().func_name()
-    expected_result = None
+    expected_result = 1
     if test1 != expected_result:
         print("test1 -> FAILED")
         print("result = ", test1)
