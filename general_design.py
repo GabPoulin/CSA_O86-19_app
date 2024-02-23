@@ -39,10 +39,6 @@ from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
 
 
 # CODE
-@dataclass
-class Factors:
-    """5.3 Conditions et coefficients influant sur la résistance."""
-
     def kd(self, load_duration, d=0, l=0, s=0):
         """5.3.2 Coefficient de durée d'application de la charge, Kd.
 
@@ -53,7 +49,7 @@ class Factors:
             s: surcharge de neige.
 
         Returns:
-            float|int: Coefficient de durée d’application de la charge, Kd
+            float|int: Coefficient de durée d'application de la charge, Kd
         """
 
         kd = 1
@@ -72,21 +68,27 @@ class Factors:
 
         return kd
 
-    def cross_section(self, net, gross):
+
+    def section(self, net, gross):
         """5.3.8 Réduction de la section transversale.
 
         Args:
-            net: section nette. 5.3.8.1
+            net: section nette. (voir 5.3.8.1)
             gross: section brute.
 
         Returns:
             str: Satisfait ou non la condition.
         """
 
+        if net < 0.75 * gross:
+            message = (
+                f"Condition non satisfaite: {net} < {0.75*gross} (75% de {gross})."
+            )
+        else:
+            message = f"Condition satisfaite: {net} > {0.75*gross} (75% de {gross})."
 
-@dataclass
-class Serviceability:
-    """5.4 Exigences relatives à la tenue en service."""
+        return message
+
 
     def es(self, e, kse, kt):
         """5.4.1 Module d'élasticité.
@@ -102,6 +104,7 @@ class Serviceability:
 
         return e * (kse * kt)
 
+
     def deflection(self, l, delta):
         """5.4.2 Flèche élastique. 5.4.3 Déformation permanente.
 
@@ -115,8 +118,9 @@ class Serviceability:
 
         return f"L/{int(l / delta)}"
 
+
     def ponding(self, w, *delta):
-        """5.4.4 Accumulation d’eau.
+        """5.4.4 Accumulation d'eau.
 
         Args:
             w: charge totale spécifiée uniformément répartie, kPa.
@@ -145,41 +149,50 @@ def tests():
 
     print("------START_TESTS------")
 
-    test1 = Factors().kd(load_duration="Continue", d=1, l=0.5)
+    test_kd = kd(load_duration="Continue", d=1, l=0.5)
     expected_result = 0.8494850021680094
-    if test1 != expected_result:
-        print("test1 -> FAILED")
-        print("result = ", test1)
+    if test_kd != expected_result:
+        print("test_kd -> FAILED")
+        print("result = ", test_kd)
         print("expected = ", expected_result)
     else:
-        print("test1 -> PASSED")
+        print("test_kd -> PASSED")
 
-    test2 = Serviceability().es(e=70.0, kse=0.5, kt=1)
+    test_section = section(net=25, gross=30)
+    expected_result = "Condition satisfaite: 25 > 22.5 (75% de 30)."
+    if test_section != expected_result:
+        print("test_section -> FAILED")
+        print("result = ", test_section)
+        print("expected = ", expected_result)
+    else:
+        print("test_section -> PASSED")
+
+    test_es = es(e=70.0, kse=0.5, kt=1)
     expected_result = 35
-    if test2 != expected_result:
-        print("test2 -> FAILED")
-        print("result = ", test2)
+    if test_es != expected_result:
+        print("test_es -> FAILED")
+        print("result = ", test_es)
         print("expected = ", expected_result)
     else:
-        print("test2 -> PASSED")
+        print("test_es -> PASSED")
 
-    test3 = Serviceability().deflection(l=1800, delta=10)
+    test_deflection = deflection(l=1800, delta=10)
     expected_result = "L/180"
-    if test3 != expected_result:
-        print("test3 -> FAILED")
-        print("result = ", test3)
+    if test_deflection != expected_result:
+        print("test_deflection -> FAILED")
+        print("result = ", test_deflection)
         print("expected = ", expected_result)
     else:
-        print("test3 -> PASSED")
+        print("test_deflection -> PASSED")
 
-    test4 = Serviceability().ponding(2, 10, 13)
+    test_ponding = ponding(2, 10, 13)
     expected_result = "Condition satisfaite: 11.5 < 65"
-    if test4 != expected_result:
-        print("test4 -> FAILED")
-        print("result = ", test4)
+    if test_ponding != expected_result:
+        print("test_ponding -> FAILED")
+        print("result = ", test_ponding)
         print("expected = ", expected_result)
     else:
-        print("test4 -> PASSED")
+        print("test_ponding -> PASSED")
 
     print("-------END_TESTS-------")
 
