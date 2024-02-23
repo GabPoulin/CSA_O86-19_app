@@ -20,7 +20,8 @@ ________________________________________________________________________________
 # IMPORTS
 import math
 
-# from dataclasses import dataclass
+from dataclasses import dataclass
+
 # from sqlalchemy.orm import sessionmaker
 # from sqlalchemy.ext.declarative import declarative_base
 # from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
@@ -40,32 +41,34 @@ import math
 
 
 # CODE
-def kd(load_duration, d=0, l=0, s=0):
+def kd(load_duration, dead=0, live=0, snow=0):
     """5.3.2 Coefficient de durée d'application de la charge, Kd.
 
     Args:
         load_duration: Durée d'application de la charge.
-            ("Courte", "Normale", "Continue")
-        d: charge de durée d'application continue.
-        l: surcharge de durée d'application normale.
-        s: surcharge de neige.
+            ("courte", "normale", "continue")
+        dead: charge de durée d'application continue.
+        live: surcharge de durée d'application normale.
+        snow: surcharge de neige.
 
     Returns:
-        float: Coefficient de durée d'application de la charge, Kd
+        float: coefficient de durée d'application de la charge, Kd
     """
 
-    kd = 1
-    if load_duration == "Courte":
+    if load_duration == "courte":
         kd = 1.15
-    elif load_duration == "Continue":
+    elif load_duration == "continue":
         kd = 0.65
-        pl = d
-        ps = max(s, l, s + 0.5 * l, 0.5 * s + l)
+        ps = max(snow, live, snow + 0.5 * live, 0.5 * snow + live)
         if ps > 0:
+            pl = dead
             if pl > ps:
                 kd = max(1 - 0.5 * math.log(pl / ps, 10), 0.65)
             else:
                 kd = 1
+    else:
+        kd = 1
+
     kd = min(kd, 1.15)
 
     return kd
@@ -79,7 +82,7 @@ def section(net, gross):
         gross: section brute.
 
     Returns:
-        str: Validation de la section nette.
+        str: validation de la section nette.
     """
 
     if net < 0.75 * gross:
@@ -94,51 +97,51 @@ def section(net, gross):
     return message
 
 
-def es(e, kse, kt):
+def elasticity(modulus, service, treatment):
     """5.4.1 Module d'élasticité.
 
     Args:
-        e:  module d'élasticité prévu, MPa.
-        kse: coefficient de conditions d'utilisation.
-        kt: coefficient de traitement.
+        modulus:  module d'élasticité prévu, MPa.
+        service: coefficient de conditions d'utilisation.
+        treatment: coefficient de traitement.
 
     Returns:
-        float: Module d'élasticité, Es (MPa).
+        float: module d'élasticité, Es (MPa).
     """
 
-    return e * (kse * kt)
+    return modulus * (service * treatment)
 
 
-def deflection(l, delta):
+def deflection(span, delta):
     """5.4.2 Flèche élastique. 5.4.3 Déformation permanente.
 
     Args:
-        l:  Portée, mm.
+        span:  Portée, mm.
         delta: Flèche, mm.
 
     Returns:
-        str: Critère de flèche obtenu.
+        str: critère de flèche obtenu.
     """
 
-    return f"Critère de flèche: L/{int(l / delta)}"
+    return f"Critère de flèche: L/{int(span / delta)}"
 
 
-def ponding(w, *delta):
+def ponding(load, *delta):
     """5.4.4 Accumulation d'eau.
 
     Args:
-        w: charge totale spécifiée uniformément répartie, kPa.
+        load: charge totale spécifiée uniformément répartie, kPa.
         delta: flèche pour chaque élément constitutif du système, mm.
 
     Returns:
-        str: Satisfait ou non la condition pour accumulation d'eau.
+        str: satisfait ou non la condition pour accumulation d'eau.
     """
 
     total = 0
     for i in delta:
-        total = total + i
+        total += i
 
-    verif = total / w
+    verif = total / load
     if verif < 65:
         message = f"Condition pour accumulation d'eau satisfaite: {verif} < 65"
     else:
@@ -150,9 +153,53 @@ def ponding(w, *delta):
     return message
 
 
-def vibration():
+@dataclass
+class Vibration:
+    """5.4.5 Vibration."""
 
-    return 1
+    thickness: int
+    multiple_span: bool = False
+    floor_topping: bool = False
+
+    def floor_vibration(self, clt=False):
+        """5.4.5.2 Vibration des planchers.
+
+        Args:
+            clt: True, pour planchers faits de bois lamellé-croisé.
+
+        Returns:
+            float: limite de la portée pour le contrôle des vibrations, m.
+        """
+
+        if clt:
+            span = self._clt_vibration()
+        else:
+            span = self._span_limit()
+
+        return span
+
+    def _span_limit(self):
+
+        lv = 1
+
+        return lv
+
+    def _clt_vibration(self):
+        """A.8.5.3 Tenue aux vibrations des planchers faits de bois lamellé-croisé.
+
+        Returns:
+            float: limite de la portée pour le contrôle des vibrations, m
+        """
+
+        ei_eff_f = 650e9  # ajuster avec 8.4.3.2
+        poids = 5200  # ajuster avec database
+        m = (poids * (self.thickness / 1000)) / 9.80665
+        lv = 0.11 * (((ei_eff_f / 10**6) ** 0.29) / (m**0.12))
+
+        if self.multiple_span and self.floor_topping and lv < 8:
+            lv = min(1.2 * lv, 8)
+
+        return lv
 
 
 # TESTS
@@ -161,8 +208,8 @@ def _tests():
 
     print("------START_TESTS------")
 
-    test_kd = kd(load_duration="Continue", d=1, l=0.5)
-    expected_result = 0.8494850021680094
+    test_kd = kd(load_duration="continue", dead=1, live=0.5, snow=0.1)
+    expected_result = 0.8701813447471219
     if test_kd != expected_result:
         print("test_kd -> FAILED")
         print("result = ", test_kd)
@@ -179,7 +226,7 @@ def _tests():
     else:
         print("test_section -> PASSED")
 
-    test_es = es(e=70.0, kse=0.5, kt=1)
+    test_es = elasticity(modulus=70.0, service=0.5, treatment=1)
     expected_result = 35
     if test_es != expected_result:
         print("test_es -> FAILED")
@@ -188,7 +235,7 @@ def _tests():
     else:
         print("test_es -> PASSED")
 
-    test_deflection = deflection(l=1800, delta=10)
+    test_deflection = deflection(span=1800, delta=10)
     expected_result = "Critère de flèche: L/180"
     if test_deflection != expected_result:
         print("test_deflection -> FAILED")
@@ -205,6 +252,19 @@ def _tests():
         print("expected = ", expected_result)
     else:
         print("test_ponding -> PASSED")
+
+    test_floor_vibration = Vibration(
+        thickness=150,
+        multiple_span=True,
+        floor_topping=True,
+    ).floor_vibration(True)
+    expected_result = 3.7866043840767682
+    if test_floor_vibration != expected_result:
+        print("test_floor_vibration -> FAILED")
+        print("result = ", test_floor_vibration)
+        print("expected = ", expected_result)
+    else:
+        print("test_floor_vibration -> PASSED")
 
     print("-------END_TESTS-------")
 
