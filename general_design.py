@@ -289,11 +289,11 @@ class Vibration:
             float: Ktss, coefficient de rigidité transversale.
         """
 
-        l = self.span
+        span = self.span
         eis_par = 1  # tableau A.1
         b1 = self.joist_spacing
         if self.topping == "aucun/autre":
-            kl = (0.585 * l * eis_par) / b1**3
+            kl = (0.585 * span * eis_par) / b1**3
         else:
             eas_par = 1  # tableau A.1
             ec = self._table_a2()[1]
@@ -305,12 +305,12 @@ class Vibration:
             h3 = (ts + tc) / 2
             kl = (
                 0.585
-                * l
+                * span
                 * (eis_par + eic + ((eac * eas_par) / (eac + eas_par)) * h3**2)
             ) / b1**3
 
         ei_eff = self._bending_stiffness()
-        kj = ei_eff / l**3
+        kj = ei_eff / span**3
         k1 = kj / (kj + kl)
 
         ktss = 0.0294 + (0.536 * k1**0.25) + (0.516 * k1**0.5) + (0.31 * k1**0.75)
