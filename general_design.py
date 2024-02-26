@@ -41,7 +41,7 @@ from dataclasses import dataclass
 
 
 # CODE
-def kd(load_duration, dead=0, live=0, snow=0):
+def load_duration(duration, dead=0, live=0, snow=0):
     """5.3.2 Coefficient de durée d'application de la charge, Kd.
 
     Args:
@@ -55,9 +55,9 @@ def kd(load_duration, dead=0, live=0, snow=0):
         float: coefficient de durée d'application de la charge, Kd
     """
 
-    if load_duration == "courte":
+    if duration == "courte":
         kd = 1.15
-    elif load_duration == "continue":
+    elif duration == "continue":
         kd = 0.65
         ps = max(snow, live, snow + 0.5 * live, 0.5 * snow + live)
         if ps > 0:
@@ -367,14 +367,14 @@ def _tests():
 
     print("------START_TESTS------")
 
-    test_kd = kd(load_duration="continue", dead=1, live=0.5, snow=0.1)
+    test_load_duration = load_duration(duration="continue", dead=1, live=0.5, snow=0.1)
     expected_result = 0.8701813447471219
-    if test_kd != expected_result:
-        print("test_kd -> FAILED")
-        print("result = ", test_kd)
+    if test_load_duration != expected_result:
+        print("test_load_duration -> FAILED")
+        print("result = ", test_load_duration)
         print("expected = ", expected_result)
     else:
-        print("test_kd -> PASSED")
+        print("test_load_duration -> PASSED")
 
     test_section = section(net=25, gross=30)
     expected_result = "Section nette valide: 25 > 22.5 (75% de la section brute)."
@@ -392,7 +392,7 @@ def _tests():
         print("result = ", test_elasticity)
         print("expected = ", expected_result)
     else:
-        print("test_es -> PASSED")
+        print("test_elasticity -> PASSED")
 
     test_deflection = deflection(span=1800, delta=10)
     expected_result = "Critère de flèche: L/180"
