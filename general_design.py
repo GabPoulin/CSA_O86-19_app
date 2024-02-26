@@ -157,28 +157,47 @@ def ponding(load, *delta):
 class Vibration:
     """5.4.5 Vibration."""
 
+    span: float
+
     bracing: bool = False
     clt_thickness: int = 0
-    concrete_thickness: int = 0
+    glued: bool = False
     gypsum: bool = False
+    joist_bending_stiffness: float = 0
     joist_mass: float = 0
+    joist_spacing: float = 0.4064
     multiple_span: bool = False
-    spacing: float = 16
+    topping: str = "aucun/autre"
     topping_thickness: int = 0
 
     def floor_vibration(self):
         """5.4.5.2 Vibration des planchers.
 
         Returns:
-            float: limite de la portée pour le contrôle des vibrations, m.
+            str: validation du critère de vibration.
         """
 
+        span = self.span
+        
         if self.clt_thickness > 0:
-            span = self._clt_vibration()
+            max_span = self._clt_vibration()
         else:
-            span = self._joist_vibration()
+            max_span = self._joist_vibration()
+            
+        if span <= max_span:
+            message = (
+                "Critère de vibration satisfait:\n"
+                f"\tPortée maximale\t->\t{max_span} m.\n"
+                f"\tPortée actuelle\t->\t{span} m."
+            )
+        else:
+            message = (
+                "Critère de vibration non-satisfait:\n"
+                f"\tPortée maximale\t->\t{max_span} m.\n"
+                f"\tPortée actuelle\t->\t{span} m."
+            )
 
-        return span
+        return message
 
     def _joist_vibration(self):
         """A.5.4.5 Tenue aux vibrations des planchers en solives en bois.
@@ -189,18 +208,15 @@ class Vibration:
         """
 
         ei_eff = self._bending_stiffness()
-        if self.multiple_span and not self.concrete_thickness > 0:
+        if self.multiple_span and not self.topping == "béton":
             ei_eff *= 1.2
         ktss = self._stiffness_factor()
         ml = self._linear_mass()
+        
         lv = (0.122 * ei_eff**0.284) / (ktss**0.14 * ml**0.15)
-        if self.bracing and not self.concrete_thickness > 0:
+        if self.bracing and not self.topping == "béton":
             lv *= 1.05
-        if (
-            self.gypsum
-            and not self.concrete_thickness > 0
-            and not self.topping_thickness > 0
-        ):
+        if self.gypsum and self.topping == "aucun/autre":
             lv *= 1.05
 
         return lv
@@ -213,7 +229,39 @@ class Vibration:
             float: rigidité composite en flexion du système de plancher, N*m2.
         """
 
-        ei_eff = 10e3
+
+        ei_joist = self.joist_bending_stiffness
+        b1 = self.joist_spacing
+        eis_perp = 1  # tableau A.1
+        if self.topping == "aucun/autre":
+            ec = 0
+            tc = 0
+        elif self.topping == "béton":
+            ec = 22e9  # tableau A.2
+            tc = self.topping_thickness
+        else:
+            eis_perp = 1  # tableau A.1
+            tc = 1  # tableau A.1 / 1000
+            ec = (12 * eis_perp) / tc**3
+        eic = (ec * tc**3) / 12
+        eiu = ei_joist + b1 * (eis_perp + eic)
+        
+        eas_perp = 1  # tableau A.1
+        eac = 1  # tableau A.2
+        ea1 = eas_perp + eac
+        s1 = 5e6
+        if self.glued and self.topping == "aucun/autre":
+            s1 = 1e8
+        l1 = self.span
+        if self.topping == "aucun/autre":
+            l1 = 1.2192
+        ea1_barre = (b1 * ea1) / (1 + 10 * ((b1 * ea1) / (s1 * l1**2)))
+        
+        a_barre = 
+        h1 = 
+        y_barre = 
+        
+        ei_eff = eiu + ea1_barre * h1**2 - a_barre * y_barre**2
 
         return ei_eff
 
@@ -225,15 +273,13 @@ class Vibration:
         """
 
         mj = self.joist_mass
-        rho_s = 500  # tableau A.1
-        ts = 15.5 / 1000  # tableau A.1
-        rho_c = 2300
-        tc = self.concrete_thickness
-        rho_w = 600
-        tw = self.topping_thickness
-        b1 = self.spacing * 0.0254
+        rho_s = 1  # tableau A.1
+        rho_c = 1  # tableau A.2
+        ts = 1  # tableau A.1
+        tc = self.topping_thickness
+        b1 = self.joist_spacing
 
-        ml = mj + rho_s * ts * b1 + rho_c * tc * b1 + rho_w * tw * b1
+        ml = mj + rho_s * ts * b1 + rho_c * tc * b1
 
         return ml
 
@@ -248,7 +294,7 @@ class Vibration:
 
         return ktss
 
-    def _clt_vibration(self):
+    def _clt_vibration(self): # ajuster
         """A.8.5.3 Tenue aux vibrations des planchers faits de bois lamellé-croisé.
 
         Returns:
@@ -320,11 +366,10 @@ def _tests():
     test_floor_vibration_joist = Vibration(
         bracing=True,
         clt_thickness=0,
-        concrete_thickness=0,
         gypsum=True,
         joist_mass=100,
+        joist_spacing=0.4,
         multiple_span=True,
-        spacing=16,
         topping_thickness=20,
     ).floor_vibration()
     expected_result = 1
