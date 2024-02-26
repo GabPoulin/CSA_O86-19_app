@@ -34,7 +34,7 @@ from dataclasses import dataclass
 #
 #    __tablename__ = "X"
 #    XX: str = Column("XX", TEXT, primary_key=True)
-#    XXX: float = Column("XXX", REAL)
+#    XX: float = Column("XX", REAL)
 #    engine = create_engine("sqlite:///loads.db")
 #    Session = sessionmaker(engine)
 #    session = Session()
