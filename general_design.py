@@ -332,11 +332,10 @@ class Vibration:
         else:
             eas_par = self._table_a1().eas_par
             ec = self._table_a2()[1]
-            tc = self.topping_thickness
+            tc = self._table_a2()[0]
             eic = (ec * tc**3) / 12
             eac = ec * tc
             ts = self._table_a1().ts / 1000
-            tc = self.topping_thickness
             h3 = (ts + tc) / 2
             kl = (
                 0.585
@@ -349,6 +348,12 @@ class Vibration:
         k1 = kj / (kj + kl)
 
         ktss = 0.0294 + (0.536 * k1**0.25) + (0.516 * k1**0.5) + (0.31 * k1**0.75)
+
+        print(" ")
+        print(f"Ktss = {ktss}\n" f"K1 = {k1}\n" f"Kj = {kj}")
+        print(f"KL = {kl}\n" f"l = {span}\n" f"EIs_para = {eis_par}")
+        print(f"EAs_para = {eas_par}\n" f"EAc = {eac}\n" f"EIc = {eic}")
+        print(" ")
 
         return ktss
 
@@ -498,8 +503,8 @@ def _tests():
         joist_spacing=0.4,
         multiple_span=True,
         subfloor="CSP 5/8",
-        topping="béton",
-        topping_thickness=20,
+        topping="CSP 1/2",
+        topping_thickness=0.03,
     ).floor_vibration()
     expected_result = (
         "Critère de vibration satisfait:\n"
