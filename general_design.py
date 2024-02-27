@@ -21,23 +21,27 @@ ________________________________________________________________________________
 import math
 
 from dataclasses import dataclass
-
-# from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
 
 
 # DB CONNECTION
-# @dataclass
-# class LiveLoadsTable(declarative_base()):
-#    """Se connecte à la table X de loads.db."""
-#
-#    __tablename__ = "X"
-#    XX: str = Column("XX", TEXT, primary_key=True)
-#    XX: float = Column("XX", REAL)
-#    engine = create_engine("sqlite:///loads.db")
-#    Session = sessionmaker(engine)
-#    session = Session()
+@dataclass
+class SubfloorProperties(declarative_base()):
+    """Se connecte à la table subfloor_properties de csa_o86_19.db."""
+
+    __tablename__ = "subfloor_properties"
+    panel: str = Column("panel", TEXT, primary_key=True)
+    ts: float = Column("ts", REAL)
+    eis_par: int = Column("EIs_par", INTEGER)
+    eis_perp: int = Column("EIs_perp", INTEGER)
+    eas_par: float = Column("EAs_par", REAL)
+    eas_perp: float = Column("Eas_perp", REAL)
+    rho_s: int = Column("rho_s", INTEGER)
+    engine = create_engine("sqlite:///csa_o86_19.db")
+    Session = sessionmaker(engine)
+    session = Session()
 
 
 # CODE
@@ -155,7 +159,11 @@ def ponding(load, *delta):
 
 @dataclass
 class Vibration:
-    """5.4.5 Vibration."""
+    """5.4.5 Vibration.
+
+    Args:
+        sspan: .
+    """
 
     span: float
 
@@ -169,6 +177,7 @@ class Vibration:
     joist_mass: float = 0
     joist_spacing: float = 0
     multiple_span: bool = False
+    subfloor: str = "CSP 5/8"
     topping: str = "aucun/autre"
     topping_thickness: int = 0
 
@@ -232,14 +241,14 @@ class Vibration:
         """
 
         ei_joist = self.joist_bending_stiffness
-        eis_perp = 1  # tableau A.1
+        eis_perp = self._table_a1().eis_perp
         tc = self._table_a2()[0]
         ec = self._table_a2()[1]
         eic = (ec * tc**3) / 12
         b1 = self.joist_spacing
         eiu = ei_joist + b1 * (eis_perp + eic)
 
-        eas_perp = 1  # tableau A.1
+        eas_perp = self._table_a1().eas_perp
         eac = ec * tc
         ea1 = eas_perp + eac
         s1 = 5e6
@@ -254,7 +263,7 @@ class Vibration:
         a_barre = ea_joist + ea1_barre
 
         d = self.joist_depth
-        ts = 1  # tableau A.1
+        ts = self._table_a1().ts
         h1 = (d / 2) + (
             (eas_perp * (ts / 2) + eac * (ts + (tc / 2))) / (eas_perp + eac)
         )
@@ -272,9 +281,9 @@ class Vibration:
         """
 
         mj = self.joist_mass
-        rho_s = 1  # tableau A.1
+        rho_s = self._table_a1().rho_s
         rho_c = self._table_a2()[2]
-        ts = 1  # tableau A.1
+        ts = self._table_a1().ts
         tc = self._table_a2()[0]
         b1 = self.joist_spacing
 
@@ -290,17 +299,17 @@ class Vibration:
         """
 
         span = self.span
-        eis_par = 1  # tableau A.1
+        eis_par = self._table_a1().eis_par
         b1 = self.joist_spacing
         if self.topping == "aucun/autre":
             kl = (0.585 * span * eis_par) / b1**3
         else:
-            eas_par = 1  # tableau A.1
+            eas_par = self._table_a1().eas_par
             ec = self._table_a2()[1]
             tc = self.topping_thickness
             eic = (ec * tc**3) / 12
             eac = ec * tc
-            ts = 1  # tableau A.1
+            ts = self._table_a1().ts
             tc = self.topping_thickness
             h3 = (ts + tc) / 2
             kl = (
@@ -317,9 +326,16 @@ class Vibration:
 
         return ktss
 
+    def _table_a1(self):
+        """Tableau A.1. Propriétés des panneaux de sous-plancher."""
+        return (
+            SubfloorProperties.session.query(SubfloorProperties)
+            .filter(SubfloorProperties.panel == self.subfloor)
+            .first()
+        )
+
     def _table_a2(self):
-        """Tableau A.2.
-            Propriétés des matériaux de revêtement.
+        """Tableau A.2. Propriétés des matériaux de revêtement.
 
         Returns:
             float: tc, épaisseur du revêtement, m.
@@ -336,10 +352,10 @@ class Vibration:
             ec = 22e9
             pc = 2300
         else:
-            eisc_perp = 1  # tableau A.1
-            tc = 1  # tableau A.1 / 1000
+            eisc_perp = self._table_a1().eis_perp
+            tc = self._table_a1().ts / 1000
             ec = (12 * eisc_perp) / tc**3
-            pc = 1  # tableau A.1
+            pc = self._table_a1().rho_s
 
         return tc, ec, pc
 
@@ -424,6 +440,7 @@ def _tests():
         joist_mass=100,
         joist_spacing=0.4,
         multiple_span=True,
+        subfloor="CSP 5/8",
         topping="béton",
         topping_thickness=20,
     ).floor_vibration()
