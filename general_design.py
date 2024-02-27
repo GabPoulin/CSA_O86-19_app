@@ -4,11 +4,23 @@ Section 5. Conception générale.
 -----------------------------------------------
 
 5.3 Conditions et coefficients influant sur la résistance.
-    Détermine les différents coefficients relatif aux calculs.
-    Vérification de la section nette.
+        Détermine les différents coefficients relatif aux calculs.
+        Vérification de la section nette.
     
-5.4 Exigences relatives à la tenue en service
-    Calculs pour module d'élasticité, flèche et vibration.
+5.4 Exigences relatives à la tenue en service.
+        Calculs pour module d'élasticité.
+        Critères de flèche.
+        Vérification d'accumulation d'eau.
+        Critère de vibration des planchers.
+        Mouvements du bâtiment attribuables aux changements de la teneur en humidité.
+        
+5.5 Effort de contreventement latéral sur les membrures d'âme en compression des
+    fermes de toit en bois.
+        Vérification de l'effort applicable sur les contreventements.
+        
+5.6 Résistance au feu.
+        Méthode de calcul de la résistance au feu.
+    
 ____________________________________________________________________________________________________
     
     auteur: GabPoulin
@@ -78,7 +90,7 @@ def load_duration(duration, dead=0, live=0, snow=0):
     return kd
 
 
-def section(net, gross):
+def cross_section(net, gross):
     """5.3.8 Réduction de la section transversale.
 
     Args:
@@ -162,13 +174,27 @@ class Vibration:
     """5.4.5 Vibration.
 
     Args:
-        sspan: .
+        span: L = portée du plancher, m.
+        bracing: contreventement latéraux = False.
+        clt_bending_stiffness: (EI)eff,f = rigidité effective en flexion à plat d'un panneau de 1 m de largeur, N*mm2.
+        clt_mass: m = masse linéaire du clt pour un panneau de 1 m de largeur, kg/m.
+        glued: sous-plancher collé sur les solives = False.
+        gypsum: panneau de gypse directement sous les solives = False.
+        joist_axial_stiffness: EAjoist = rigidité axiale de la solive, N.
+        joist_bending_stiffness: EIjoist = rigidité apparente en flexion de la solive, N*m2.
+        joist_depth: d = hauteur de solive, m.
+        joist_mass: mJ = masse par unité de longueur de solive, kg/m.
+        joist_spacing: b1 = espacement des solives, m.
+        multiple_span: portée multiple = False.
+        subfloor: type de sous-plancher = "CSP 5/8" ou Tableau A.1.
+        topping: type de revêtement = "aucun/autre", "béton" ou Tableau A.1.
+        topping_thickness: tc = épaisseur du revêtement, m.
     """
 
     span: float
-
     bracing: bool = False
-    clt_thickness: int = 0
+    clt_bending_stiffness: float = 0
+    clt_mass: float = 0
     glued: bool = False
     gypsum: bool = False
     joist_axial_stiffness: float = 0
@@ -190,7 +216,7 @@ class Vibration:
 
         span = self.span
 
-        if self.clt_thickness > 0:
+        if self.clt_mass > 0 or self.clt_bending_stiffness > 0:
             max_span = self._clt_vibration()
         else:
             max_span = self._joist_vibration()
@@ -256,14 +282,14 @@ class Vibration:
             s1 = 1e8
         l1 = self.span
         if self.topping == "aucun/autre":
-            l1 = 1.2192  # panneaux de sous-plancher ayant une largeur de 4'
+            l1 = 1.2192  # panneaux de sous-plancher sont considérés ayant une largeur de 4'
         ea1_barre = (b1 * ea1) / (1 + 10 * ((b1 * ea1) / (s1 * l1**2)))
 
         ea_joist = self.joist_axial_stiffness
         a_barre = ea_joist + ea1_barre
 
         d = self.joist_depth
-        ts = self._table_a1().ts
+        ts = self._table_a1().ts / 1000
         h1 = (d / 2) + (
             (eas_perp * (ts / 2) + eac * (ts + (tc / 2))) / (eas_perp + eac)
         )
@@ -283,7 +309,7 @@ class Vibration:
         mj = self.joist_mass
         rho_s = self._table_a1().rho_s
         rho_c = self._table_a2()[2]
-        ts = self._table_a1().ts
+        ts = self._table_a1().ts / 1000
         tc = self._table_a2()[0]
         b1 = self.joist_spacing
 
@@ -309,7 +335,7 @@ class Vibration:
             tc = self.topping_thickness
             eic = (ec * tc**3) / 12
             eac = ec * tc
-            ts = self._table_a1().ts
+            ts = self._table_a1().ts / 1000
             tc = self.topping_thickness
             h3 = (ts + tc) / 2
             kl = (
@@ -352,29 +378,61 @@ class Vibration:
             ec = 22e9
             pc = 2300
         else:
-            eisc_perp = self._table_a1().eis_perp
-            tc = self._table_a1().ts / 1000
+            table_a1 = (
+                SubfloorProperties.session.query(SubfloorProperties)
+                .filter(SubfloorProperties.panel == self.topping)
+                .first()
+            )
+            eisc_perp = table_a1.eis_perp
+            tc = table_a1.ts / 1000
             ec = (12 * eisc_perp) / tc**3
-            pc = self._table_a1().rho_s
+            pc = table_a1.rho_s
 
         return tc, ec, pc
 
-    def _clt_vibration(self):  # ajuster
+    def _clt_vibration(self):
         """A.8.5.3 Tenue aux vibrations des planchers faits de bois lamellé-croisé.
 
         Returns:
             float: lv, limite de la portée pour le contrôle des vibrations, m.
         """
 
-        ei_eff_f = 650e9  # ajuster avec 8.4.3.2
-        poids = 5200 / 9.80665  # ajuster avec database
-        m = poids * self.clt_thickness
+        ei_eff_f = self.clt_bending_stiffness
+        m = self.clt_mass
         lv = 0.11 * (((ei_eff_f / 10**6) ** 0.29) / (m**0.12))
 
         if self.multiple_span and lv < 8:
             lv = min(1.2 * lv, 8)
 
         return lv
+
+
+def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
+    """A.5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
+
+    Args:
+        dimension: D = dimension réelle (épaisseur, largeur ou longueur), mm.
+        init_mc: Mi = teneur en humidité initiale, %.
+        final_mc: Mf = teneur en humidité finale, %.
+        direction: direction du fil pour le bois d'oeuvre = "perp", "para" ou "autre".
+        coefficient: c = coefficient de retrait.
+
+    Returns:
+        _type_: _description_
+    """
+
+    d = dimension
+    mi = min(init_mc, 28)
+    mf = final_mc
+    if direction == "perp":
+        c = 0.002
+    elif direction == "para":
+        c = 0.00005
+    else:
+        c = coefficient
+    s = d * (mi - mf) * c
+
+    return s
 
 
 # TESTS
@@ -392,7 +450,7 @@ def _tests():
     else:
         print("test_load_duration -> PASSED")
 
-    test_section = section(net=25, gross=30)
+    test_section = cross_section(net=25, gross=30)
     expected_result = "Section nette valide: 25 > 22.5 (75% de la section brute)."
     if test_section != expected_result:
         print("test_section -> FAILED")
@@ -431,7 +489,6 @@ def _tests():
     test_floor_vibration_joist = Vibration(
         span=2,
         bracing=True,
-        clt_thickness=0,
         glued=True,
         gypsum=True,
         joist_axial_stiffness=100,
@@ -458,7 +515,8 @@ def _tests():
 
     test_floor_vibration_clt = Vibration(
         span=2,
-        clt_thickness=0.150,
+        clt_bending_stiffness=650e9,
+        clt_mass=100,
         multiple_span=True,
     ).floor_vibration()
     expected_result = (
@@ -472,6 +530,21 @@ def _tests():
         print("expected = ", expected_result)
     else:
         print("test_floor_vibration_clt -> PASSED")
+
+    test_moisture = moisture(
+        dimension=150,
+        init_mc=50,
+        final_mc=12,
+        direction="autre",
+        coefficient=0.002,
+    )
+    expected_result = 4.8
+    if test_moisture != expected_result:
+        print("test_moisture -> FAILED")
+        print("result = ", test_moisture)
+        print("expected = ", expected_result)
+    else:
+        print("test_moisture -> PASSED")
 
     print("-------END_TESTS-------")
 
