@@ -408,7 +408,7 @@ class Vibration:
 
 
 def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
-    """A.5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
+    """5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
 
     Args:
         dimension: D = dimension réelle (épaisseur, largeur ou longueur), mm.
@@ -418,7 +418,7 @@ def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
         coefficient: c = coefficient de retrait.
 
     Returns:
-        _type_: _description_
+        float: S = retrait ou gonflement de la dimension considérée, mm.
     """
 
     d = dimension
@@ -533,7 +533,7 @@ def _tests():
 
     test_moisture = moisture(
         dimension=150,
-        init_mc=50,
+        init_mc=35,
         final_mc=12,
         direction="autre",
         coefficient=0.002,
