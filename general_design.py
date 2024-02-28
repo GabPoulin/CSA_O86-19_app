@@ -129,7 +129,7 @@ def elasticity(modulus, service, treatment):
 
 
 def deflection(span, delta):
-    """5.4.2 Flèche élastique. 5.4.3 Déformation permanente.
+    """5.4.2 Flèche élastique. / 5.4.3 Déformation permanente.
 
     Args:
         span:  Portée, mm.
@@ -352,7 +352,7 @@ class Vibration:
         return ktss
 
     def _table_a1(self):
-        """Tableau A.1. Propriétés des panneaux de sous-plancher."""
+        """Tableau A.1 Propriétés des panneaux de sous-plancher."""
         return (
             SubfloorProperties.session.query(SubfloorProperties)
             .filter(SubfloorProperties.panel == self.subfloor)
@@ -360,7 +360,7 @@ class Vibration:
         )
 
     def _table_a2(self):
-        """Tableau A.2. Propriétés des matériaux de revêtement.
+        """Tableau A.2 Propriétés des matériaux de revêtement.
 
         Returns:
             float: tc, épaisseur du revêtement, m.
@@ -443,8 +443,8 @@ def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
 
 
 def lateral_brace(force):
-    """5.5 Effort de contreventement latéral sur les membrures d'âme en compression des fermes
-    de toit en bois.
+    """5.5 Effort de contreventement latéral sur les membrures d'âme en
+        compression des fermes de toit en bois.
 
     Args:
         force: force de compression axiale qui s'exerce sur la membrure d'âme, kN.
