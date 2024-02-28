@@ -442,6 +442,28 @@ def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
     return s
 
 
+def lateral_brace(force):
+    """5.5 Effort de contreventement latéral sur les membrures d'âme en compression des fermes
+    de toit en bois.
+
+    Args:
+        force: force de compression axiale qui s'exerce sur la membrure d'âme, kN.
+
+    Returns:
+        float: effort applicable au contreventement latéral, kN.
+    """
+
+    return 0.0125 * force
+
+
+@dataclass
+class FireResistance:
+    """5.6 Résistance au feu."""
+
+    def function1(self):
+        pass
+
+
 # TESTS
 def _tests():
     """tests pour les calculs de conception générale."""
@@ -552,6 +574,15 @@ def _tests():
         print("expected = ", expected_result)
     else:
         print("test_moisture -> PASSED")
+
+    test_lateral_brace = lateral_brace(force=100)
+    expected_result = 1.25
+    if test_lateral_brace != expected_result:
+        print("test_lateral_brace -> FAILED")
+        print("result = ", test_lateral_brace)
+        print("expected = ", expected_result)
+    else:
+        print("test_lateral_brace -> PASSED")
 
     print("-------END_TESTS-------")
 
