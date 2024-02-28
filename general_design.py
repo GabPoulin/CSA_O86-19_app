@@ -16,7 +16,7 @@ Section 5. Conception générale.
         
 5.5 Effort de contreventement latéral sur les membrures d'âme en compression des
     fermes de toit en bois.
-        Vérification de l'effort applicable sur les contreventements.
+        Calcul de l'effort applicable sur les contreventements.
         
 5.6 Résistance au feu.
         Méthode de calcul de la résistance au feu.
