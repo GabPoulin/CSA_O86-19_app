@@ -275,7 +275,7 @@ class Vibration:
         eiu = ei_joist + b1 * (eis_perp + eic)
 
         eas_perp = self._table_a1().eas_perp
-        eac = ec * tc
+        eac = self._table_a2()[3]
         ea1 = eas_perp + eac
         s1 = 5e6
         if self.glued and self.topping == "aucun/autre":
@@ -334,9 +334,9 @@ class Vibration:
             ec = self._table_a2()[1]
             tc = self._table_a2()[0]
             eic = (ec * tc**3) / 12
-            eac = ec * tc
             ts = self._table_a1().ts / 1000
             h3 = (ts + tc) / 2
+            eac = self._table_a2()[3]
             kl = (
                 0.585
                 * span
@@ -348,12 +348,6 @@ class Vibration:
         k1 = kj / (kj + kl)
 
         ktss = 0.0294 + (0.536 * k1**0.25) + (0.516 * k1**0.5) + (0.31 * k1**0.75)
-
-        print(" ")
-        print(f"Ktss = {ktss}\n" f"K1 = {k1}\n" f"Kj = {kj}")
-        print(f"KL = {kl}\n" f"l = {span}\n" f"EIs_para = {eis_par}")
-        print(f"EAs_para = {eas_par}\n" f"EAc = {eac}\n" f"EIc = {eic}")
-        print(" ")
 
         return ktss
 
@@ -372,16 +366,19 @@ class Vibration:
             float: tc, épaisseur du revêtement, m.
             float: Ec, module d'élasticité du revêtement, N/m2.
             float: Pc, densité du revêtement, kg/m3.
+            float: EAc, rigidité axiale d'un panneau de revêtement de 1 m de largeur, N/m.
         """
 
         if self.topping == "aucun/autre":
             tc = 0
             ec = 0
             pc = 0
+            eac = 0
         elif self.topping == "béton":
             tc = self.topping_thickness
             ec = 22e9
             pc = 2300
+            eac = ec * self.topping_thickness
         else:
             table_a1 = (
                 SubfloorProperties.session.query(SubfloorProperties)
@@ -392,8 +389,9 @@ class Vibration:
             tc = table_a1.ts / 1000
             ec = (12 * eisc_perp) / tc**3
             pc = table_a1.rho_s
+            eac = table_a1.eas_perp
 
-        return tc, ec, pc
+        return tc, ec, pc, eac
 
     def _clt_vibration(self):
         """A.8.5.3 Tenue aux vibrations des planchers faits de bois lamellé-croisé.
@@ -404,6 +402,10 @@ class Vibration:
 
         ei_eff_f = self.clt_bending_stiffness
         m = self.clt_mass
+        if self.topping == "béton":
+            concrete = self._table_a2()[2] * self.topping_thickness
+            if not concrete > 2 * m:
+                m += concrete
         lv = 0.11 * (((ei_eff_f / 10**6) ** 0.29) / (m**0.12))
 
         if self.multiple_span and lv < 8:
@@ -442,7 +444,7 @@ def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
 
 # TESTS
 def _tests():
-    """tests pour la classe SnowLoads."""
+    """tests pour les calculs de conception générale."""
 
     print("------START_TESTS------")
 
@@ -498,17 +500,17 @@ def _tests():
         gypsum=True,
         joist_axial_stiffness=100,
         joist_bending_stiffness=100,
-        joist_depth=0.25,
+        joist_depth=0.3,
         joist_mass=100,
         joist_spacing=0.4,
         multiple_span=True,
-        subfloor="CSP 5/8",
-        topping="CSP 1/2",
+        subfloor="OSB 5/8",
+        topping="béton",
         topping_thickness=0.03,
     ).floor_vibration()
     expected_result = (
-        "Critère de vibration satisfait:\n"
-        "\tPortée maximale\t->\tX m.\n"
+        "Critère de vibration non-satisfait:\n"
+        "\tPortée maximale\t->\t1.2597785160882118 m.\n"
         "\tPortée actuelle\t->\t2 m."
     )
     if test_floor_vibration_joist != expected_result:
@@ -520,13 +522,13 @@ def _tests():
 
     test_floor_vibration_clt = Vibration(
         span=2,
-        clt_bending_stiffness=650e9,
-        clt_mass=100,
+        clt_bending_stiffness=6.5e12,
+        clt_mass=1000,
         multiple_span=True,
     ).floor_vibration()
     expected_result = (
         "Critère de vibration satisfait:\n"
-        "\tPortée maximale\t->\tX m.\n"
+        "\tPortée maximale\t->\t5.44902505257897 m.\n"
         "\tPortée actuelle\t->\t2 m."
     )
     if test_floor_vibration_clt != expected_result:
