@@ -458,10 +458,85 @@ def lateral_brace(force):
 
 @dataclass
 class FireResistance:
-    """5.6 Résistance au feu."""
+    """5.6 Résistance au feu.
 
-    def function1(self):
-        pass
+    Args:
+        duration: t = durée d’exposition au feu, min.
+        product: type de produit = "autre", "sciage", "glt", "clt_v1_v2" ou "clt_e1_e2_e3".
+    """
+
+    duration: float
+    product: str = "autre"
+
+    def _factors(self):
+        """B.3 Coefficients influant sur la résistance.
+
+        Returns:
+            int: phi = coefficient de résistance.
+            int: Kh = coefficient de système.
+            float: Kfi = coefficient de correction pour le calcul de la résistance au feu.
+        """
+
+        phi = 1
+        kh = 1
+
+        if self.product == "sciage":
+            kfi = 1.5
+        elif self.product == "glt":
+            kfi = 1.35
+        elif self.product == "clt_v1_v2":
+            kfi = 1.5
+        elif self.product == "clt_e1_e2_e3":
+            kfi = 1.25
+        else:
+            kfi = 1.25
+
+        return phi, kh, kfi
+
+    def _char_layer(self):
+        """B.4 Profondeur de la couche carbonisée.
+
+        Returns:
+            float: xc,o = profondeur de la couche carbonisée unidimensionnelle, mm.
+            float: xc,n = profondeur de la couche carbonisée fictive, mm.
+        """
+
+        if self.product == "sciage":
+            bo = 0.65
+            bn = 0.8
+        elif self.product == "glt":
+            bo = 0.65
+            bn = 0.7
+        elif self.product in ("clt_v1_v2", "clt_e1_e2_e3"):
+            bo = 0.65
+            bn = 0.8
+        else:
+            bo = 0.65
+            bn = 0.7
+
+        t = self.duration
+        xco = bo * t
+        xcn = bn * t
+        if self.product in ("clt_v1_v2", "clt_e1_e2_e3"):
+            if xco > 38:
+                xco = xcn
+
+        return xco, xcn
+
+    def _zero_layer(self):
+        """B.5 Épaisseur de la couche de résistance nulle.
+
+        Returns:
+            float: xt = profondeur de la couche de résistance nulle, mm.
+        """
+
+        xt = 7
+
+        t = self.duration
+        if t < 20:
+            xt = (t / 20) * 7
+
+        return xt
 
 
 # TESTS
