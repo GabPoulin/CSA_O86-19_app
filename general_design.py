@@ -251,10 +251,11 @@ class Vibration:
         ml = self._linear_mass()
 
         lv = (0.122 * ei_eff**0.284) / (ktss**0.14 * ml**0.15)
+        lv_increase = 1.05 * lv
         if self.bracing and not self.topping == "béton":
-            lv *= 1.05
+            lv = lv_increase
         if self.gypsum and self.topping == "aucun/autre":
-            lv *= 1.05
+            lv = lv_increase
 
         return lv
 
