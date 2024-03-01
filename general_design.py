@@ -589,6 +589,19 @@ class FireResistance:
                 b -= 2 * xt + 2 * xcn
                 d -= 2 * xt + 2 * xcn
 
+        if min(b, d) < 70:
+            raise ValueError(
+                f"\nb = {b} mm."
+                f"\nd = {d} mm.\n"
+                "Voir note tableau B.2. CSA O86:19:\n "
+                "Lorsque la plus petite dimension de la section effective d’un élément soumis\n "
+                "à de la chaleur sur ses faces parallèles est inférieure à 70 mm, la vitesse de\n "
+                "combustion augmentera à mesure que l'augmentation de température au-delà de la\n "
+                "couche carbonisée atteint le milieu de la section. Dans ce cas, une analyse de\n "
+                "transfert de chaleur peut être nécessaire pour déterminer la section\n "
+                "transversale effective à utiliser."
+            )
+
         phi, kh, kfi = self._factors()
 
         return b, d, phi, kh, kfi
