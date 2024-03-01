@@ -269,8 +269,7 @@ class Vibration:
 
         ei_joist = self.joist_bending_stiffness
         eis_perp = self._table_a1().eis_perp
-        tc = self._table_a2()[0]
-        ec = self._table_a2()[1]
+        tc, ec = self._table_a2()[0:2]
         eic = (ec * tc**3) / 12
         b1 = self.joist_spacing
         eiu = ei_joist + b1 * (eis_perp + eic)
@@ -332,8 +331,7 @@ class Vibration:
             kl = (0.585 * span * eis_par) / b1**3
         else:
             eas_par = self._table_a1().eas_par
-            ec = self._table_a2()[1]
-            tc = self._table_a2()[0]
+            tc, ec = self._table_a2()[0:2]
             eic = (ec * tc**3) / 12
             ts = self._table_a1().ts / 1000
             h3 = (ts + tc) / 2
@@ -463,10 +461,18 @@ class FireResistance:
 
     Args:
         duration: t = durée d’exposition au feu, min.
+        width: b = largeur de l’élément, mm.
+        depth: d = hauteur de l’élément, mm.
+        sides_protection: protection des faces larges = "aucune", "1_face" ou "2_faces".
+        top_bottom_protection: protection des faces étroites = "aucune", "1_face" ou "2_faces".
         product: type de produit = "autre", "sciage", "glt", "clt_v1_v2" ou "clt_e1_e2_e3".
     """
 
     duration: float
+    width: float
+    depth: float
+    sides_protection: str = "aucune"
+    top_bottom_protection: str = "aucune"
     product: str = "autre"
 
     def _factors(self):
@@ -538,6 +544,54 @@ class FireResistance:
             xt = (t / 20) * 7
 
         return xt
+
+    def effective_section(self):
+        """B.6 Résistance de la section effective.
+            B.6.2 Section transversale effective.
+            B.6.3 Résistance de la section transversale effective.
+
+        Returns:
+            float: b = largeur effective de l’élément, mm.
+            float: d = hauteur effective de l’élément, mm.
+            int: phi = coefficient de résistance.
+            int: Kh = coefficient de système.
+            float: Kfi = coefficient de correction pour le calcul de la résistance au feu.
+        """
+
+        xco, xcn = self._char_layer()
+        xt = self._zero_layer()
+
+        b = self.width
+        d = self.depth
+        if self.sides_protection == "2_faces":
+            if self.top_bottom_protection == "2_faces":
+                pass
+            elif self.top_bottom_protection == "1_face":
+                d -= xt + xco
+            else:
+                d -= 2 * xt + 2 * xco
+        elif self.sides_protection == "1_face":
+            if self.top_bottom_protection == "2_faces":
+                b -= xt + xco
+            elif self.top_bottom_protection == "1_face":
+                b -= xt + xcn
+                d -= xt + xcn
+            else:
+                b -= xt + xcn
+                d -= 2 * xt + 2 * xcn
+        else:
+            if self.top_bottom_protection == "2_faces":
+                b -= 2 * xt + 2 * xco
+            elif self.top_bottom_protection == "1_face":
+                b -= 2 * xt + 2 * xcn
+                d -= xt + xcn
+            else:
+                b -= 2 * xt + 2 * xcn
+                d -= 2 * xt + 2 * xcn
+
+        phi, kh, kfi = self._factors()
+
+        return b, d, phi, kh, kfi
 
 
 # TESTS
@@ -659,6 +713,22 @@ def _tests():
         print("expected = ", expected_result)
     else:
         print("test_lateral_brace -> PASSED")
+
+    test_fire_resistance = FireResistance(
+        duration=30,
+        width=140,
+        depth=350,
+        sides_protection="2_faces",
+        top_bottom_protection="2_faces",
+        product="sciage",
+    ).effective_section()
+    expected_result = (140, 350, 1, 1, 1.5)
+    if test_fire_resistance != expected_result:
+        print("test_fire_resistance -> FAILED")
+        print("result = ", test_fire_resistance)
+        print("expected = ", expected_result)
+    else:
+        print("test_fire_resistance -> PASSED")
 
     print("-------END_TESTS-------")
 
