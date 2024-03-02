@@ -1,47 +1,45 @@
 """
 CSA O86:19: Règles de calcul des charpentes en bois.
-Section 5. Conception générale.
+ Section 5. Conception générale.
 ----------------------------------------------------
 
 5.3 Conditions et coefficients influant sur la résistance.
-        Détermine les différents coefficients relatif aux calculs.
-        Vérification de la section nette.
+    5.3.2 Coefficient de durée d'application de la charge, Kd.
+     5.3.8 Réduction de la section transversale.
     
 5.4 Exigences relatives à la tenue en service.
-        Calculs pour module d'élasticité.
-        Critères de flèche.
-        Vérification d'accumulation d'eau.
-        Critère de vibration des planchers.
-        Mouvements du bâtiment attribuables aux changements de la teneur en humidité.
+    5.4.1 Module d'élasticité.
+     5.4.2 Flèche élastique.
+    5.4.3 Déformation permanente.
+     5.4.4 Accumulation d'eau.
+    5.4.5 Vibration.
+     5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
         
-5.5 Effort de contreventement latéral sur les membrures d'âme en compression des
-    fermes de toit en bois.
-        Calcul de l'effort applicable sur les contreventements.
+5.5 Effort de contreventement latéral sur les membrures d'âme en compression 
+    des fermes de toit en bois.
         
 5.6 Résistance au feu.
-        Méthode de calcul de la résistance au feu.
-    
+
 ____________________________________________________________________________________________________
     
     auteur: GabPoulin
     email: poulin33@me.com
 
-====================================================================================================
 """
 
 # IMPORTS
 import math
-
 from dataclasses import dataclass
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, TEXT, REAL, INTEGER
+from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 
 
 # DB CONNECTION
 @dataclass
-class SubfloorProperties(declarative_base()):
-    """Se connecte à la table subfloor_properties de csa_o86_19.db."""
+class SubfloorProperties(orm.declarative_base()):
+    """
+    Se connecte à la table subfloor_properties de csa_o86_19.db.
+
+    """
 
     __tablename__ = "subfloor_properties"
     panel: str = Column("panel", TEXT, primary_key=True)
@@ -52,7 +50,7 @@ class SubfloorProperties(declarative_base()):
     eas_perp: float = Column("Eas_perp", REAL)
     rho_s: int = Column("rho_s", INTEGER)
     engine = create_engine("sqlite:///csa_o86_19.db")
-    Session = sessionmaker(engine)
+    Session = orm.sessionmaker(engine)
     session = Session()
 
 
@@ -139,7 +137,8 @@ def elasticity(modulus: float, service: float, treatment: float) -> float:
 
 def deflection(span: float, delta: float) -> str:
     """
-    5.4.2 Flèche élastique. / 5.4.3 Déformation permanente.
+    5.4.2 Flèche élastique.
+     5.4.3 Déformation permanente.
 
     Args:
         span (float):  Portée, mm.
@@ -165,8 +164,8 @@ def ponding(load: float, *delta: float) -> str:
 
     """
     total = 0
-    for i in delta:
-        total += i
+    for deflection in delta:
+        total += deflection
 
     verif = total / load
     if verif < 65:
@@ -187,20 +186,20 @@ class Vibration:
 
     Args:
         span (float): Portée du plancher, m.
-        bracing (bool): Contreventement latéraux. Defaults to False.
-        clt_bending_stiffness (float): (EI)eff,f, N*mm2 (voir 8.4.3.2). Defaults to 0.
-        clt_mass (float): Masse linéaire du clt, kg/m. Defaults to 0.
-        glued (bool): Sous-plancher collé. Defaults to False.
-        gypsum (bool): Panneau de gypse directement sous les solives. Defaults to False.
-        joist_axial_stiffness (float): EAjoist, N. Defaults to 0.
-        joist_bending_stiffness (float): EIjoist, N*m2. Defaults to 0.
-        joist_depth (float): Hauteur de solive, m. Defaults to 0.
-        joist_mass (float): Masse par unité de longueur de solive, kg/m. Defaults to 0.
-        joist_spacing (float): Espacement des solives, m. Defaults to 0.
-        multiple_span (bool): Portée multiple. Defaults to False.
-        subfloor (str): Type de sous-plancher. Tableau A.1. Defaults to "CSP 5/8".
-        topping (str): Type de revêtement. "béton" ou Tableau A.1. Defaults to "aucun/autre".
-        topping_thickness (float): Épaisseur du revêtement, m. Defaults to 0.
+        bracing (bool, optional): Contreventement latéraux. Defaults to False.
+        clt_bending_stiffness (float, optional): (EI)eff,f, N*mm2 (voir 8.4.3.2). Defaults to 0.
+        clt_mass (float, optional): Masse linéaire du clt, kg/m. Defaults to 0.
+        glued (bool, optional): Sous-plancher collé. Defaults to False.
+        gypsum (bool, optional): Panneau de gypse directement sous les solives. Defaults to False.
+        joist_axial_stiffness (float, optional): EAjoist, N. Defaults to 0.
+        joist_bending_stiffness (float, optional): EIjoist, N*m2. Defaults to 0.
+        joist_depth (float, optional): Hauteur de solive, m. Defaults to 0.
+        joist_mass (float, optional): Masse par unité de longueur de solive, kg/m. Defaults to 0.
+        joist_spacing (float, optional): Espacement des solives, m. Defaults to 0.4064.
+        multiple_span (bool, optional): Portée multiple. Defaults to False.
+        subfloor (str, optional): Sous-plancher. Tableau A.1. Defaults to "CSP 5/8".
+        topping (str, optional): Revêtement. "béton" ou Tableau A.1. Defaults to "aucun/autre".
+        topping_thickness (float, optional): Épaisseur du revêtement, m. Defaults to 0.
 
     """
 
@@ -214,7 +213,7 @@ class Vibration:
     joist_bending_stiffness: float = 0
     joist_depth: float = 0
     joist_mass: float = 0
-    joist_spacing: float = 0
+    joist_spacing: float = 0.4064
     multiple_span: bool = False
     subfloor: str = "CSP 5/8"
     topping: str = "aucun/autre"
@@ -294,13 +293,12 @@ class Vibration:
         """
         ei_joist = self.joist_bending_stiffness
         eis_perp = self._table_a1().eis_perp
-        tc, ec = self._table_a2()[0:2]
+        tc, ec, _, eac = self._table_a2()
         eic = (ec * tc**3) / 12
         b1 = self.joist_spacing
         eiu = ei_joist + b1 * (eis_perp + eic)
 
         eas_perp = self._table_a1().eas_perp
-        eac = self._table_a2()[3]
         ea1 = eas_perp + eac
         s1 = 5e6
         if self.glued and self.topping == "aucun/autre":
@@ -337,9 +335,8 @@ class Vibration:
         """
         mj = self.joist_mass
         rho_s = self._table_a1().rho_s
-        rho_c = self._table_a2()[2]
+        tc, _, rho_c, _ = self._table_a2()
         ts = self._table_a1().ts / 1000
-        tc = self._table_a2()[0]
         b1 = self.joist_spacing
 
         ml = mj + (rho_s * ts * b1) + (rho_c * tc * b1)
@@ -364,11 +361,10 @@ class Vibration:
             kl = (0.585 * span * eis_par) / b1**3
         else:
             eas_par = self._table_a1().eas_par
-            tc, ec = self._table_a2()[0:2]
+            tc, ec, _, eac = self._table_a2()
             eic = (ec * tc**3) / 12
             ts = self._table_a1().ts / 1000
             h3 = (ts + tc) / 2
-            eac = self._table_a2()[3]
             kl = (
                 0.585
                 * span
@@ -383,15 +379,9 @@ class Vibration:
 
         return ktss
 
-    def _table_a1(self) -> SubfloorProperties:
+    def _table_a1(self):
         """
         Tableau A.1 Propriétés des panneaux de sous-plancher.
-
-        Args:
-            self (Vibration): Attributs de la classe Vibration.
-
-        Returns:
-            SubfloorProperties: Attributs de la classe SubfloorProperties.
 
         """
         return (
@@ -463,20 +453,27 @@ class Vibration:
         return lv
 
 
-def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
-    """5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
+def moisture(
+    dimension: float,
+    init_mc: float,
+    final_mc: float,
+    direction: str = "perp",
+    coefficient: float = 0.002,
+) -> float:
+    """
+    5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
 
     Args:
-        dimension: D = dimension réelle (épaisseur, largeur ou longueur), mm.
-        init_mc: Mi = teneur en humidité initiale, %.
-        final_mc: Mf = teneur en humidité finale, %.
-        direction: direction du fil pour le bois d'oeuvre. "perp", "para" ou "autre".
-        coefficient (float, optional): Coefficient de retrait. Default to 0.
+        dimension (float): Dimension réelle (épaisseur, largeur ou longueur), mm.
+        init_mc (float): Teneur en humidité initiale, %.
+        final_mc (float): Teneur en humidité finale, %.
+        direction (str, optional): Direction du fil du bois. "perp", "para" ou "autre".
+        coefficient (float, optional): Coefficient de retrait. Default to 0.002.
 
     Returns:
         float: S = Retrait ou gonflement de la dimension considérée, mm.
-    """
 
+    """
     d = dimension
     mi = min(init_mc, 28)
     mf = final_mc
@@ -491,49 +488,56 @@ def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
     return s
 
 
-def lateral_brace(force):
-    """5.5 Effort de contreventement latéral sur les membrures d'âme en
-        compression des fermes de toit en bois.
+def lateral_brace(force: float) -> float:
+    """
+    5.5 Effort de contreventement latéral sur les membrures d'âme en
+    compression des fermes de toit en bois.
 
     Args:
-        force: force de compression axiale qui s'exerce sur la membrure d'âme, kN.
+        force (float): Force de compression axiale qui s'exerce sur la membrure d'âme, kN.
 
     Returns:
-        float: effort applicable au contreventement latéral, kN.
-    """
+        float: Effort applicable au contreventement latéral, kN.
 
+    """
     return 0.0125 * force
 
 
 @dataclass
 class FireResistance:
-    """5.6 Résistance au feu.
+    """
+    5.6 Résistance au feu.
 
     Args:
-        duration: t = durée d’exposition au feu, min.
-        width: b = largeur de l’élément, mm.
-        depth: d = hauteur de l’élément, mm.
-        sides_protection: protection des faces larges = "aucune", "1_face" ou "2_faces".
-        top_bottom_protection: protection des faces étroites = "aucune", "1_face" ou "2_faces".
-        product: type de produit = "autre", "sciage", "glt", "clt_v1_v2" ou "clt_e1_e2_e3".
+        duration (float): Durée d'exposition au feu, min.
+        width (float): Largeur de l'élément, mm.
+        depth (float): Hauteur de l'élément, mm.
+        sides (str, optional): Protection des faces larges. "aucune", "1_face" ou "2_faces".
+        top_bottom (str, optional): Protection des faces étroites. "aucune", "1_face" ou "2_faces".
+        product (str, optional): Produit. "autre", "sciage", "glt", "clt_v1_v2" ou "clt_e1_e2_e3".
+
     """
 
     duration: float
     width: float
     depth: float
-    sides_protection: str = "aucune"
-    top_bottom_protection: str = "aucune"
+    sides: str = "aucune"
+    top_bottom: str = "aucune"
     product: str = "autre"
 
-    def _factors(self):
-        """B.3 Coefficients influant sur la résistance.
+    def _factors(self) -> tuple[float, float, float]:
+        """
+        B.3 Coefficients influant sur la résistance.
+
+        Args:
+            self (FireResistance): Attributs de la classe FireResistance.
 
         Returns:
-            int: phi = coefficient de résistance.
-            int: Kh = coefficient de système.
-            float: Kfi = coefficient de correction pour le calcul de la résistance au feu.
-        """
+            int: phi = Coefficient de résistance.
+            int: Kh = Coefficient de système.
+            float: Kfi = Coefficient de correction pour le calcul de la résistance au feu.
 
+        """
         phi = 1
         kh = 1
 
@@ -550,26 +554,22 @@ class FireResistance:
 
         return phi, kh, kfi
 
-    def _char_layer(self):
-        """B.4 Profondeur de la couche carbonisée.
+    def _char_layer(self) -> tuple[float, float]:
+        """
+        B.4 Profondeur de la couche carbonisée.
+
+        Args:
+            self (FireResistance): Attributs de la classe FireResistance.
 
         Returns:
-            float: xc,o = profondeur de la couche carbonisée unidimensionnelle, mm.
-            float: xc,n = profondeur de la couche carbonisée fictive, mm.
-        """
+            float: xc,o = Profondeur de la couche carbonisée unidimensionnelle, mm.
+            float: xc,n = Profondeur de la couche carbonisée fictive, mm.
 
-        if self.product == "sciage":
-            bo = 0.65
+        """
+        bo = 0.65
+        bn = 0.7
+        if self.product in ("sciage", "clt_v1_v2", "clt_e1_e2_e3"):
             bn = 0.8
-        elif self.product == "glt":
-            bo = 0.65
-            bn = 0.7
-        elif self.product in ("clt_v1_v2", "clt_e1_e2_e3"):
-            bo = 0.65
-            bn = 0.8
-        else:
-            bo = 0.65
-            bn = 0.7
 
         t = self.duration
         xco = bo * t
@@ -580,13 +580,17 @@ class FireResistance:
 
         return xco, xcn
 
-    def _zero_layer(self):
-        """B.5 Épaisseur de la couche de résistance nulle.
+    def _zero_layer(self) -> float:
+        """
+        B.5 Épaisseur de la couche de résistance nulle.
+
+        Args:
+            self (FireResistance): Attributs de la classe FireResistance.
 
         Returns:
-            float: xt = profondeur de la couche de résistance nulle, mm.
-        """
+            float: xt = Profondeur de la couche de résistance nulle, mm.
 
+        """
         xt = 7
 
         t = self.duration
@@ -595,44 +599,48 @@ class FireResistance:
 
         return xt
 
-    def effective_section(self):
-        """B.6 Résistance de la section effective.
+    def effective_section(self) -> tuple[float, float, float, float, float]:
+        """
+        B.6 Résistance de la section effective.
             B.6.2 Section transversale effective.
-            B.6.3 Résistance de la section transversale effective.
+             B.6.3 Résistance de la section transversale effective.
+
+        Args:
+            self (FireResistance): Attributs de la classe FireResistance.
 
         Returns:
-            float: b = largeur effective de l’élément, mm.
-            float: d = hauteur effective de l’élément, mm.
-            int: phi = coefficient de résistance.
-            int: Kh = coefficient de système.
-            float: Kfi = coefficient de correction pour le calcul de la résistance au feu.
-        """
+            float: b = Largeur effective de l'élément, mm.
+            float: d = Hauteur effective de l'élément, mm.
+            int: phi = Coefficient de résistance.
+            int: Kh = Coefficient de système.
+            float: Kfi = Coefficient de correction pour le calcul de la résistance au feu.
 
+        """
         xco, xcn = self._char_layer()
         xt = self._zero_layer()
 
         b = self.width
         d = self.depth
-        if self.sides_protection == "2_faces":
-            if self.top_bottom_protection == "2_faces":
+        if self.sides == "2_faces":
+            if self.top_bottom == "2_faces":
                 pass
-            elif self.top_bottom_protection == "1_face":
+            elif self.top_bottom == "1_face":
                 d -= xt + xco
             else:
                 d -= 2 * xt + 2 * xco
-        elif self.sides_protection == "1_face":
-            if self.top_bottom_protection == "2_faces":
+        elif self.sides == "1_face":
+            if self.top_bottom == "2_faces":
                 b -= xt + xco
-            elif self.top_bottom_protection == "1_face":
+            elif self.top_bottom == "1_face":
                 b -= xt + xcn
                 d -= xt + xcn
             else:
                 b -= xt + xcn
                 d -= 2 * xt + 2 * xcn
         else:
-            if self.top_bottom_protection == "2_faces":
+            if self.top_bottom == "2_faces":
                 b -= 2 * xt + 2 * xco
-            elif self.top_bottom_protection == "1_face":
+            elif self.top_bottom == "1_face":
                 b -= 2 * xt + 2 * xcn
                 d -= xt + xcn
             else:
@@ -644,7 +652,7 @@ class FireResistance:
                 f"\nb = {b} mm."
                 f"\nd = {d} mm.\n"
                 "Voir note tableau B.2. CSA O86:19:\n "
-                "Lorsque la plus petite dimension de la section effective d’un élément soumis\n "
+                "Lorsque la plus petite dimension de la section effective d'un élément soumis\n "
                 "à de la chaleur sur ses faces parallèles est inférieure à 70 mm, la vitesse de\n "
                 "combustion augmentera à mesure que l'augmentation de température au-delà de la\n "
                 "couche carbonisée atteint le milieu de la section. Dans ce cas, une analyse de\n "
@@ -659,34 +667,46 @@ class FireResistance:
 
 # TESTS
 def _tests():
-    """tests pour les calculs de conception générale."""
+    """
+    Tests pour les calculs de conception générale.
 
-    # Test load_duration function
+    """
+    # Test load_duration
     test_load_duration = load_duration(duration="continue", dead=1, live=0.5, snow=0.1)
     expected_result = 0.8701813447471219
-    assert test_load_duration == expected_result, "load_duration function is incorrect"
+    assert (
+        test_load_duration == expected_result
+    ), f"load_duration -> FAILED\n {expected_result = }\n {test_load_duration = }"
 
-    # Test cross_section function
+    # Test cross_section
     test_section = cross_section(net=25, gross=30)
     expected_result = "Section nette valide: 25 > 22.5 (75% de la section brute)."
-    assert test_section == expected_result, "cross_section function is incorrect"
+    assert (
+        test_section == expected_result
+    ), f"cross_section -> FAILED\n {expected_result = }\n {test_section = }"
 
-    # Test elasticity function
+    # Test elasticity
     test_elasticity = elasticity(modulus=70.0, service=0.5, treatment=1)
     expected_result = 35
-    assert test_elasticity == expected_result, "elasticity function is incorrect"
+    assert (
+        test_elasticity == expected_result
+    ), f"elasticity -> FAILED\n {expected_result = }\n {test_elasticity = }"
 
-    # Test deflection function
+    # Test deflection
     test_deflection = deflection(span=1800, delta=10)
     expected_result = "Critère de flèche: L/180"
-    assert test_deflection == expected_result, "deflection function is incorrect"
+    assert (
+        test_deflection == expected_result
+    ), f"deflection -> FAILED\n {expected_result = }\n {test_deflection = }"
 
-    # Test ponding function
+    # Test ponding
     test_ponding = ponding(2, 10, 13)
     expected_result = "Condition pour accumulation d'eau satisfaite: 11.5 < 65"
-    assert test_ponding == expected_result, "ponding function is incorrect"
+    assert (
+        test_ponding == expected_result
+    ), f"ponding -> FAILED\n {expected_result = }\n {test_ponding = }"
 
-    # Test floor_vibration function for joist
+    # Test floor_vibration for joist
     test_floor_vibration_joist = Vibration(
         span=2,
         bracing=True,
@@ -709,9 +729,9 @@ def _tests():
     )
     assert (
         test_floor_vibration_joist == expected_result
-    ), "floor_vibration function for joist is incorrect"
+    ), f"floor_vibration_joist -> FAILED\n {expected_result = }\n {test_floor_vibration_joist = }"
 
-    # Test floor_vibration function for CLT
+    # Test floor_vibration for CLT
     test_floor_vibration_clt = Vibration(
         span=2,
         clt_bending_stiffness=6.5e12,
@@ -725,9 +745,9 @@ def _tests():
     )
     assert (
         test_floor_vibration_clt == expected_result
-    ), "floor_vibration function for CLT is incorrect"
+    ), f"floor_vibration_clt -> FAILED\n {expected_result = }\n {test_floor_vibration_clt = }"
 
-    # Test moisture function
+    # Test moisture
     test_moisture = moisture(
         dimension=150,
         init_mc=35,
@@ -736,26 +756,30 @@ def _tests():
         coefficient=0.002,
     )
     expected_result = 4.8
-    assert test_moisture == expected_result, "moisture function is incorrect"
+    assert (
+        test_moisture == expected_result
+    ), f"moisture -> FAILED\n {expected_result = }\n {test_moisture = }"
 
-    # Test lateral_brace function
+    # Test lateral_brace
     test_lateral_brace = lateral_brace(force=100)
     expected_result = 1.25
-    assert test_lateral_brace == expected_result, "lateral_brace function is incorrect"
+    assert (
+        test_lateral_brace == expected_result
+    ), f"lateral_brace -> FAILED\n {expected_result = }\n {test_lateral_brace = }"
 
-    # Test fire_resistance function
+    # Test fire_resistance
     test_fire_resistance = FireResistance(
         duration=30,
         width=140,
         depth=350,
-        sides_protection="2_faces",
-        top_bottom_protection="2_faces",
+        sides="2_faces",
+        top_bottom="2_faces",
         product="sciage",
     ).effective_section()
     expected_result = (140, 350, 1, 1, 1.5)
     assert (
         test_fire_resistance == expected_result
-    ), "fire_resistance function is incorrect"
+    ), f"fire_resistance -> FAILED\n {expected_result = }\n {test_fire_resistance = }"
 
 
 # RUN FILE
