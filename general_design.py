@@ -57,20 +57,25 @@ class SubfloorProperties(declarative_base()):
 
 
 # CODE
-def load_duration(duration, dead=0, live=0, snow=0):
-    """5.3.2 Coefficient de durée d'application de la charge, Kd.
+def load_duration(
+    duration: str, dead: float = 0, live: float = 0, snow: float = 0
+) -> float:
+    """
+    5.3.2 Coefficient de durée d'application de la charge, Kd.
 
     Args:
-        load_duration: Durée d'application de la charge.
-            ("courte", "normale", "continue")
-        dead: charge de durée d'application continue.
-        live: surcharge de durée d'application normale.
-        snow: surcharge de neige.
+        duration (str): Durée d'application de la charge. "courte", "normale" ou "continue".
+        dead (float, optional): Charge de durée d'application continue. Defaults to 0.
+        live (float, optional): Surcharge de durée d'application normale. Defaults to 0.
+        snow (float, optional): Surcharge de neige. Defaults to 0.
 
     Returns:
-        float: coefficient de durée d'application de la charge, Kd
-    """
+        float: Kd = Coefficient de durée d'application de la charge.
 
+    Raises:
+        ValueError: Si la durée d'application de la charge n'est pas reconnue.
+
+    """
     if duration == "courte":
         kd = 1.15
     elif duration == "continue":
@@ -82,25 +87,28 @@ def load_duration(duration, dead=0, live=0, snow=0):
                 kd = max(1 - 0.5 * math.log(pl / ps, 10), 0.65)
             else:
                 kd = 1
-    else:
+    elif duration == "normale":
         kd = 1
+    else:
+        raise ValueError(f"Durée d'application de la charge invalide: {duration}")
 
     kd = min(kd, 1.15)
 
     return kd
 
 
-def cross_section(net, gross):
-    """5.3.8 Réduction de la section transversale.
+def cross_section(net: float, gross: float) -> str:
+    """
+    5.3.8 Réduction de la section transversale.
 
     Args:
-        net: section nette. (voir 5.3.8.1)
-        gross: section brute.
+        net (float): Section nette. (voir 5.3.8.1)
+        gross (float): Section brute.
 
     Returns:
-        str: validation de la section nette.
-    """
+        str: Message de validation de la section nette.
 
+    """
     if net < 0.75 * gross:
         message = (
             f"Section nette non-valide: {net} < {0.75*gross} (75% de la section brute)."
@@ -113,46 +121,49 @@ def cross_section(net, gross):
     return message
 
 
-def elasticity(modulus, service, treatment):
-    """5.4.1 Module d'élasticité.
+def elasticity(modulus: float, service: float, treatment: float) -> float:
+    """
+    5.4.1 Module d'élasticité.
 
     Args:
-        modulus:  module d'élasticité prévu, MPa.
-        service: coefficient de conditions d'utilisation.
-        treatment: coefficient de traitement.
+        modulus (float):  Module d'élasticité prévu, MPa.
+        service (float): Coefficient de conditions d'utilisation.
+        treatment (float): Coefficient de traitement.
 
     Returns:
-        float: module d'élasticité, Es (MPa).
-    """
+        float: Es = module d'élasticité, MPa.
 
+    """
     return modulus * (service * treatment)
 
 
-def deflection(span, delta):
-    """5.4.2 Flèche élastique. / 5.4.3 Déformation permanente.
+def deflection(span: float, delta: float) -> str:
+    """
+    5.4.2 Flèche élastique. / 5.4.3 Déformation permanente.
 
     Args:
-        span:  Portée, mm.
-        delta: Flèche, mm.
+        span (float):  Portée, mm.
+        delta (float): Flèche, mm.
 
     Returns:
-        str: critère de flèche obtenu.
-    """
+        str: Critère de flèche obtenu.
 
+    """
     return f"Critère de flèche: L/{int(span / delta)}"
 
 
-def ponding(load, *delta):
-    """5.4.4 Accumulation d'eau.
+def ponding(load: float, *delta: float) -> str:
+    """
+    5.4.4 Accumulation d'eau.
 
     Args:
-        load: charge totale spécifiée uniformément répartie, kPa.
-        delta: flèche pour chaque élément constitutif du système, mm.
+        load (float): Charge totale spécifiée uniformément répartie, kPa.
+        *delta (float): Flèche pour chaque élément constitutif du système, mm.
 
     Returns:
-        str: satisfait ou non la condition pour accumulation d'eau.
-    """
+        str: Satisfait ou non la condition pour accumulation d'eau.
 
+    """
     total = 0
     for i in delta:
         total += i
@@ -171,24 +182,26 @@ def ponding(load, *delta):
 
 @dataclass
 class Vibration:
-    """5.4.5 Vibration.
+    """
+    5.4.5 Vibration.
 
     Args:
-        span: L = portée du plancher, m.
-        bracing: contreventement latéraux = False.
-        clt_bending_stiffness: (EI)eff,f = rigidité effective en flexion à plat d'un panneau de 1 m de largeur, N*mm2.
-        clt_mass: m = masse linéaire du clt pour un panneau de 1 m de largeur, kg/m.
-        glued: sous-plancher collé sur les solives = False.
-        gypsum: panneau de gypse directement sous les solives = False.
-        joist_axial_stiffness: EAjoist = rigidité axiale de la solive, N.
-        joist_bending_stiffness: EIjoist = rigidité apparente en flexion de la solive, N*m2.
-        joist_depth: d = hauteur de solive, m.
-        joist_mass: mJ = masse par unité de longueur de solive, kg/m.
-        joist_spacing: b1 = espacement des solives, m.
-        multiple_span: portée multiple = False.
-        subfloor: type de sous-plancher = "CSP 5/8" ou Tableau A.1.
-        topping: type de revêtement = "aucun/autre", "béton" ou Tableau A.1.
-        topping_thickness: tc = épaisseur du revêtement, m.
+        span (float): Portée du plancher, m.
+        bracing (bool): Contreventement latéraux. Defaults to False.
+        clt_bending_stiffness (float): (EI)eff,f, N*mm2 (voir 8.4.3.2). Defaults to 0.
+        clt_mass (float): Masse linéaire du clt, kg/m. Defaults to 0.
+        glued (bool): Sous-plancher collé. Defaults to False.
+        gypsum (bool): Panneau de gypse directement sous les solives. Defaults to False.
+        joist_axial_stiffness (float): EAjoist, N. Defaults to 0.
+        joist_bending_stiffness (float): EIjoist, N*m2. Defaults to 0.
+        joist_depth (float): Hauteur de solive, m. Defaults to 0.
+        joist_mass (float): Masse par unité de longueur de solive, kg/m. Defaults to 0.
+        joist_spacing (float): Espacement des solives, m. Defaults to 0.
+        multiple_span (bool): Portée multiple. Defaults to False.
+        subfloor (str): Type de sous-plancher. Tableau A.1. Defaults to "CSP 5/8".
+        topping (str): Type de revêtement. "béton" ou Tableau A.1. Defaults to "aucun/autre".
+        topping_thickness (float): Épaisseur du revêtement, m. Defaults to 0.
+
     """
 
     span: float
@@ -205,15 +218,19 @@ class Vibration:
     multiple_span: bool = False
     subfloor: str = "CSP 5/8"
     topping: str = "aucun/autre"
-    topping_thickness: int = 0
+    topping_thickness: float = 0
 
-    def floor_vibration(self):
-        """5.4.5.2 Vibration des planchers.
+    def floor_vibration(self) -> str:
+        """
+        5.4.5.2 Vibration des planchers.
+
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
 
         Returns:
-            str: validation du critère de vibration.
-        """
+            str: Validation du critère de vibration.
 
+        """
         span = self.span
 
         if self.clt_mass > 0 or self.clt_bending_stiffness > 0:
@@ -236,14 +253,18 @@ class Vibration:
 
         return message
 
-    def _joist_vibration(self):
-        """A.5.4.5 Tenue aux vibrations des planchers en solives en bois.
+    def _joist_vibration(self) -> float:
+        """
+        A.5.4.5 Tenue aux vibrations des planchers en solives en bois.
             A.5.4.5.1 Portée pour le contrôle des vibrations : méthode générale.
 
-        Returns:
-            float: lv, portée pour le contrôle des vibrations, m.
-        """
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
 
+        Returns:
+            float: lv = portée pour le contrôle des vibrations, m.
+
+        """
         ei_eff = self._bending_stiffness()
         if self.multiple_span and not self.topping == "béton":
             ei_eff *= 1.2
@@ -260,13 +281,17 @@ class Vibration:
         return lv
 
     def _bending_stiffness(self):
-        """A.5.4.5.1.1 Rigidité composite en flexion du système de plancher dans la direction de
+        """
+        A.5.4.5.1.1 Rigidité composite en flexion du système de plancher dans la direction de
         la portée des solives.
+
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
 
         Returns:
             float: EIeff, rigidité composite en flexion du système de plancher, N*m2.
-        """
 
+        """
         ei_joist = self.joist_bending_stiffness
         eis_perp = self._table_a1().eis_perp
         tc, ec = self._table_a2()[0:2]
