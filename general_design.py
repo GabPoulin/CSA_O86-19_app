@@ -1,7 +1,7 @@
 """
 CSA O86:19: Règles de calcul des charpentes en bois.
 Section 5. Conception générale.
------------------------------------------------
+----------------------------------------------------
 
 5.3 Conditions et coefficients influant sur la résistance.
         Détermine les différents coefficients relatif aux calculs.
