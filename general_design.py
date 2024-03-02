@@ -280,7 +280,7 @@ class Vibration:
 
         return lv
 
-    def _bending_stiffness(self):
+    def _bending_stiffness(self) -> float:
         """
         A.5.4.5.1.1 Rigidité composite en flexion du système de plancher dans la direction de
         la portée des solives.
@@ -289,7 +289,7 @@ class Vibration:
             self (Vibration): Attributs de la classe Vibration.
 
         Returns:
-            float: EIeff, rigidité composite en flexion du système de plancher, N*m2.
+            float: EIeff = Rigidité composite en flexion du système de plancher, N*m2.
 
         """
         ei_joist = self.joist_bending_stiffness
@@ -324,13 +324,17 @@ class Vibration:
 
         return ei_eff
 
-    def _linear_mass(self):
-        """A.5.4.5.1.2 Masse linéaire du plancher dans la direction de la portée des solives.
+    def _linear_mass(self) -> float:
+        """
+        A.5.4.5.1.2 Masse linéaire du plancher dans la direction de la portée des solives.
+
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
 
         Returns:
-            float: ml, masse linéaire de la section transversale composite du plancher, kg/m.
-        """
+            float: ml = Masse linéaire de la section transversale composite du plancher, kg/m.
 
+        """
         mj = self.joist_mass
         rho_s = self._table_a1().rho_s
         rho_c = self._table_a2()[2]
@@ -342,13 +346,17 @@ class Vibration:
 
         return ml
 
-    def _stiffness_factor(self):
-        """A.5.4.5.1.3 Coefficient de rigidité transversale du système.
+    def _stiffness_factor(self) -> float:
+        """
+        A.5.4.5.1.3 Coefficient de rigidité transversale du système.
+
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
 
         Returns:
-            float: Ktss, coefficient de rigidité transversale.
-        """
+            float: Ktss = Coefficient de rigidité transversale.
 
+        """
         span = self.span
         eis_par = self._table_a1().eis_par
         b1 = self.joist_spacing
@@ -375,24 +383,37 @@ class Vibration:
 
         return ktss
 
-    def _table_a1(self):
-        """Tableau A.1 Propriétés des panneaux de sous-plancher."""
+    def _table_a1(self) -> SubfloorProperties:
+        """
+        Tableau A.1 Propriétés des panneaux de sous-plancher.
+
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
+
+        Returns:
+            SubfloorProperties: Attributs de la classe SubfloorProperties.
+
+        """
         return (
             SubfloorProperties.session.query(SubfloorProperties)
             .filter(SubfloorProperties.panel == self.subfloor)
             .first()
         )
 
-    def _table_a2(self):
-        """Tableau A.2 Propriétés des matériaux de revêtement.
+    def _table_a2(self) -> tuple[float, float, float, float]:
+        """
+        Tableau A.2 Propriétés des matériaux de revêtement.
+
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
 
         Returns:
-            float: tc, épaisseur du revêtement, m.
-            float: Ec, module d'élasticité du revêtement, N/m2.
-            float: Pc, densité du revêtement, kg/m3.
-            float: EAc, rigidité axiale d'un panneau de revêtement de 1 m de largeur, N/m.
-        """
+            float: tc = Épaisseur du revêtement, m.
+            float: Ec = Module d'élasticité du revêtement, N/m2.
+            float: Pc = Densité du revêtement, kg/m3.
+            float: EAc = Rigidité axiale d'un panneau de revêtement de 1 m de largeur, N/m.
 
+        """
         if self.topping == "aucun/autre":
             tc = 0
             ec = 0
@@ -417,13 +438,17 @@ class Vibration:
 
         return tc, ec, pc, eac
 
-    def _clt_vibration(self):
-        """A.8.5.3 Tenue aux vibrations des planchers faits de bois lamellé-croisé.
+    def _clt_vibration(self) -> float:
+        """
+        A.8.5.3 Tenue aux vibrations des planchers faits de bois lamellé-croisé.
+
+        Args:
+            self (Vibration): Attributs de la classe Vibration.
 
         Returns:
-            float: lv, limite de la portée pour le contrôle des vibrations, m.
-        """
+            float: lv = Limite de la portée pour le contrôle des vibrations, m.
 
+        """
         ei_eff_f = self.clt_bending_stiffness
         m = self.clt_mass
         if self.topping == "béton":
@@ -445,11 +470,11 @@ def moisture(dimension, init_mc, final_mc, direction="perp", coefficient=0):
         dimension: D = dimension réelle (épaisseur, largeur ou longueur), mm.
         init_mc: Mi = teneur en humidité initiale, %.
         final_mc: Mf = teneur en humidité finale, %.
-        direction: direction du fil pour le bois d'oeuvre = "perp", "para" ou "autre".
-        coefficient: c = coefficient de retrait.
+        direction: direction du fil pour le bois d'oeuvre. "perp", "para" ou "autre".
+        coefficient (float, optional): Coefficient de retrait. Default to 0.
 
     Returns:
-        float: S = retrait ou gonflement de la dimension considérée, mm.
+        float: S = Retrait ou gonflement de la dimension considérée, mm.
     """
 
     d = dimension
