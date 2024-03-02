@@ -611,53 +611,32 @@ class FireResistance:
 def _tests():
     """tests pour les calculs de conception générale."""
 
-    print("------START_TESTS------")
-
+    # Test load_duration function
     test_load_duration = load_duration(duration="continue", dead=1, live=0.5, snow=0.1)
     expected_result = 0.8701813447471219
-    if test_load_duration != expected_result:
-        print("test_load_duration -> FAILED")
-        print("result = ", test_load_duration)
-        print("expected = ", expected_result)
-    else:
-        print("test_load_duration -> PASSED")
+    assert test_load_duration == expected_result, "load_duration function is incorrect"
 
+    # Test cross_section function
     test_section = cross_section(net=25, gross=30)
     expected_result = "Section nette valide: 25 > 22.5 (75% de la section brute)."
-    if test_section != expected_result:
-        print("test_section -> FAILED")
-        print("result = ", test_section)
-        print("expected = ", expected_result)
-    else:
-        print("test_section -> PASSED")
+    assert test_section == expected_result, "cross_section function is incorrect"
 
+    # Test elasticity function
     test_elasticity = elasticity(modulus=70.0, service=0.5, treatment=1)
     expected_result = 35
-    if test_elasticity != expected_result:
-        print("test_elasticity -> FAILED")
-        print("result = ", test_elasticity)
-        print("expected = ", expected_result)
-    else:
-        print("test_elasticity -> PASSED")
+    assert test_elasticity == expected_result, "elasticity function is incorrect"
 
+    # Test deflection function
     test_deflection = deflection(span=1800, delta=10)
     expected_result = "Critère de flèche: L/180"
-    if test_deflection != expected_result:
-        print("test_deflection -> FAILED")
-        print("result = ", test_deflection)
-        print("expected = ", expected_result)
-    else:
-        print("test_deflection -> PASSED")
+    assert test_deflection == expected_result, "deflection function is incorrect"
 
+    # Test ponding function
     test_ponding = ponding(2, 10, 13)
     expected_result = "Condition pour accumulation d'eau satisfaite: 11.5 < 65"
-    if test_ponding != expected_result:
-        print("test_ponding -> FAILED")
-        print("result = ", test_ponding)
-        print("expected = ", expected_result)
-    else:
-        print("test_ponding -> PASSED")
+    assert test_ponding == expected_result, "ponding function is incorrect"
 
+    # Test floor_vibration function for joist
     test_floor_vibration_joist = Vibration(
         span=2,
         bracing=True,
@@ -678,13 +657,11 @@ def _tests():
         "\tPortée maximale\t->\t1.2597785160882118 m.\n"
         "\tPortée actuelle\t->\t2 m."
     )
-    if test_floor_vibration_joist != expected_result:
-        print("test_floor_vibration_joist -> FAILED")
-        print("result = ", test_floor_vibration_joist)
-        print("expected = ", expected_result)
-    else:
-        print("test_floor_vibration_joist -> PASSED")
+    assert (
+        test_floor_vibration_joist == expected_result
+    ), "floor_vibration function for joist is incorrect"
 
+    # Test floor_vibration function for CLT
     test_floor_vibration_clt = Vibration(
         span=2,
         clt_bending_stiffness=6.5e12,
@@ -696,13 +673,11 @@ def _tests():
         "\tPortée maximale\t->\t5.44902505257897 m.\n"
         "\tPortée actuelle\t->\t2 m."
     )
-    if test_floor_vibration_clt != expected_result:
-        print("test_floor_vibration_clt -> FAILED")
-        print("result = ", test_floor_vibration_clt)
-        print("expected = ", expected_result)
-    else:
-        print("test_floor_vibration_clt -> PASSED")
+    assert (
+        test_floor_vibration_clt == expected_result
+    ), "floor_vibration function for CLT is incorrect"
 
+    # Test moisture function
     test_moisture = moisture(
         dimension=150,
         init_mc=35,
@@ -711,22 +686,14 @@ def _tests():
         coefficient=0.002,
     )
     expected_result = 4.8
-    if test_moisture != expected_result:
-        print("test_moisture -> FAILED")
-        print("result = ", test_moisture)
-        print("expected = ", expected_result)
-    else:
-        print("test_moisture -> PASSED")
+    assert test_moisture == expected_result, "moisture function is incorrect"
 
+    # Test lateral_brace function
     test_lateral_brace = lateral_brace(force=100)
     expected_result = 1.25
-    if test_lateral_brace != expected_result:
-        print("test_lateral_brace -> FAILED")
-        print("result = ", test_lateral_brace)
-        print("expected = ", expected_result)
-    else:
-        print("test_lateral_brace -> PASSED")
+    assert test_lateral_brace == expected_result, "lateral_brace function is incorrect"
 
+    # Test fire_resistance function
     test_fire_resistance = FireResistance(
         duration=30,
         width=140,
@@ -736,14 +703,9 @@ def _tests():
         product="sciage",
     ).effective_section()
     expected_result = (140, 350, 1, 1, 1.5)
-    if test_fire_resistance != expected_result:
-        print("test_fire_resistance -> FAILED")
-        print("result = ", test_fire_resistance)
-        print("expected = ", expected_result)
-    else:
-        print("test_fire_resistance -> PASSED")
-
-    print("-------END_TESTS-------")
+    assert (
+        test_fire_resistance == expected_result
+    ), "fire_resistance function is incorrect"
 
 
 # RUN FILE
