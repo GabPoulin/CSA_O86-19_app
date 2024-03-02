@@ -164,8 +164,8 @@ def ponding(load: float, *delta: float) -> str:
 
     """
     total = 0
-    for deflection in delta:
-        total += deflection
+    for item in delta:
+        total += item
 
     verif = total / load
     if verif < 65:
