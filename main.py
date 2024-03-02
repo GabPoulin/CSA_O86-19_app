@@ -1,4 +1,5 @@
-# test
+""" tests"""
+
 import general_design
 
 kd = general_design.load_duration("continue", 1.5, 0.5)
