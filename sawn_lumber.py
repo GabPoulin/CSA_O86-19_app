@@ -40,7 +40,7 @@ def _tests():
     Tests pour les calculs de bois de sciage.
 
     """
-    pass
+    print("Tests pour les calculs de bois de sciage.")
 
 
 # RUN FILE
