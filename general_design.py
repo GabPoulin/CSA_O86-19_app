@@ -55,6 +55,27 @@ class SubfloorProperties(orm.declarative_base()):
 
 
 # CODE
+def limit_states_design(load: float, resistance: float) -> str:
+    """
+    5.1 Calculs aux états limites.
+
+    Args:
+        load (float): Charge pondérée ou charge spécifiée.
+        resistance (float): Résistance correspondante.
+
+    Returns:
+        str: Message de validation de la résistance.
+
+    """
+    verif = round((load / resistance) * 100)
+    if verif < 100:
+        message = f"État limite respecté: sollicitation atteinte à {verif}%"
+    else:
+        message = f"État limite non-respecté: sollicitation atteinte à {verif}%"
+
+    return message
+
+
 def load_duration(
     duration: str, dead: float = 0, live: float = 0, snow: float = 0
 ) -> float:
@@ -697,6 +718,13 @@ def _tests():
     Tests pour les calculs de conception générale.
 
     """
+    # Test limit_states_design
+    test_limit_states_design = limit_states_design(load=12.3, resistance=27)
+    expected_result = "État limite respecté: sollicitation atteinte à 46%"
+    assert (
+        test_limit_states_design == expected_result
+    ), f"limit_states_design -> FAILED\n {expected_result = }\n {test_limit_states_design = }"
+
     # Test load_duration
     test_load_duration = load_duration(duration="continue", dead=1, live=0.5, snow=0.1)
     expected_result = 0.8701813447471219
