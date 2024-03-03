@@ -36,7 +36,11 @@ if SECTION == "5":
 
     # Sous-section 5.1
     if SOUS_SECTION == "1":
-        print("    À venir")
+        LOAD = input("\tCharge pondérée ou charge spécifiée = ")
+        RESISTANCE = input("\tRésistance correspondante = ")
+        message = general_design.limit_states_design(float(LOAD), float(RESISTANCE))
+
+        print(f"\t{message}")
         print("")
         ANSWERED = True
 
