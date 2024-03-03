@@ -43,7 +43,7 @@ ________________________________________________________________________________
 
 
 # CODE
-def categories(width: int, depth: int) -> str:
+def lumber_category(width: int, depth: int) -> str:
     """
     6.2 Matériaux.
 
@@ -68,16 +68,46 @@ def categories(width: int, depth: int) -> str:
         print("Valider la disponibilité du bois chez les fournisseurs.")
 
     if small < 89 and large < 89:
-        category = "light"
+        category = "Light"
     elif small >= 114:
         if large - small >= 51:
-            category = "beam"
+            category = "Beam"
         else:
-            category = "post"
+            category = "Post"
     else:
-        category = "lumber"
+        category = "Lumber"
 
     return category
+
+
+def specified_strength(
+    category: str, specie: str, grade: str
+) -> tuple[float, float, float, float, float, float, float]:
+    """
+    6.3 Résistances prévues et modules d'élasticité.
+
+    Args:
+        category (str): Catégorie. "Lumber", "Light", "Beam", "Post", "MSR" ou "MEL".
+        specie (str): Groupe d'essence. "df", "hf", "spf" ou "ns".
+            Pour catégorie MSR et MEL. "normal", "courant" ou "rare".
+        grade (str): Classe. "ss", "n1", "n1_n2", "n2", "n3_stud", "cst" ou "std"
+            Pour catégorie MSR, voir tableau 6.8. (ex: 1200Fb-1.2E = "1200-1.2")
+            Pour catégorie MEL, voir tableau 6.9. (ex: M-10 = "m-10")
+
+    Returns:
+        float: fb = Résistance prévue en flexion, MPa.
+        float: fv = Résistance prévue en cisaillement longitudinal, MPa.
+        float: fc = Résistance prévue en compression parallèle au fil, MPa.
+        float: fcp = Résistance prévue en compression perpendiculaire au fil, MPa.
+        float: ft = Résistance prévue en traction parallèle au fil, MPa.
+        float: E = Module d'élasticité prévu, MPa.
+        float: E05 = Module d'élasticité pour les calculs des éléments en compression, MPa.
+
+    Raises:
+        ValueError: x.
+
+    """
+    pass
 
 
 # TESTS
@@ -86,12 +116,12 @@ def _tests():
     Tests pour les calculs de bois de sciage.
 
     """
-    # Test categories
-    test_categories = categories(width=38, depth=140)
-    expected_result = "lumber"
+    # Test lumber_category
+    test_lumber_category = lumber_category(width=38, depth=140)
+    expected_result = "Lumber"
     assert (
-        test_categories == expected_result
-    ), f"categories -> FAILED\n {expected_result = }\n {test_categories = }"
+        test_lumber_category == expected_result
+    ), f"lumber_category -> FAILED\n {expected_result = }\n {test_lumber_category = }"
 
 
 # RUN FILE
