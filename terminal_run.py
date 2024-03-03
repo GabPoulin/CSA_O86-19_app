@@ -25,6 +25,7 @@ SECTION = input("Section: ")
 
 # Section 5
 if SECTION == "5":
+    print("    5.1 - Calculs aux états limites")
     print("    5.3 - Conditions et coefficients influant sur la résistance")
     print("    5.4 - Exigences relatives à la tenue en service")
     print("    5.5 - Effort de contreventement latéral sur les membrures")
@@ -32,6 +33,12 @@ if SECTION == "5":
     print("    5.6 - Résistance au feu")
     print("")
     SOUS_SECTION = input("Sous-section: 5.")
+
+    # Sous-section 5.1
+    if SOUS_SECTION == "1":
+        print("    À venir")
+        print("")
+        ANSWERED = True
 
     # Sous-section 5.3
     if SOUS_SECTION == "3":
@@ -43,8 +50,14 @@ if SECTION == "5":
         # Clause 5.3.2
         if CLAUSE == "2":
             DURATION = input(
-                "\tDurée d'application de la charge ('courte', 'normale' ou 'continue') = "
+                "\tDurée d'application de la charge (courte:'s', normale:'n' ou continue:'c') = "
             )
+            if DURATION == "s":
+                DURATION = "courte"
+            elif DURATION == "n":
+                DURATION = "normale"
+            elif DURATION == "c":
+                DURATION = "continue"
             kd = general_design.load_duration(DURATION)
 
             if DURATION == "continue":
@@ -136,13 +149,13 @@ if SECTION == "5":
 
     # Branch to 5.5
     elif SOUS_SECTION == "5":
-        h = general_design.lateral_brace
+        load = general_design.lateral_brace
         print("")
         ANSWERED = True
 
     # Branch to 5.6
     elif SOUS_SECTION == "6":
-        i = general_design.FireResistance.effective_section
+        # b, d, phi, kh, kfi = general_design.FireResistance.effective_section
         print("")
         ANSWERED = True
 
