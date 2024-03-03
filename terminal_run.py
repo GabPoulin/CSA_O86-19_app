@@ -2,65 +2,178 @@
 
 import general_design
 
+# Validation for correct inputs
+ANSWERED = False
+
 # Initial prompts
-print("\t5.3.2 Kd.")
-print("\t5.3.8 Validation de la section transversale.")
-print("\t5.4.1 Es.")
-print("\t5.4.2 Flèche.")
-print("\t5.4.4 Accumulation d'eau.")
-print("\t5.4.5 Vibration.")
-print("\t5.4.6 Changement d'humidité.")
-print("\t5.5 Effort latéral sur membrures d'âme des fermes de toit en bois.")
-print("\t5.6 Résistance au feu.")
+print("")
+print("CSA O86:19: Règles de calcul des charpentes en bois")
+print("    5 - Conception générale")
+print("    6 - Bois de sciage")
+print("")
+section = input("Section: ")
 
-choice = input("\n: ")
+# Section 5
+if section == "5":
+    print("    5.3 - Conditions et coefficients influant sur la résistance")
+    print("    5.4 - Exigences relatives à la tenue en service")
+    print("    5.5 - Effort de contreventement latéral sur les membrures")
+    print("          d’âme en compression des fermes de toit en bois")
+    print("    5.6 - Résistance au feu")
+    print("")
+    sous_section = input("Sous-section: 5.")
 
-# Branch to 5.3.2
-if choice == "5.3.2":
-    duration = input("Durée. 'courte', 'normale' ou 'continue'.: ")
-    kd = general_design.load_duration(duration)
+    # Sous-section 5.3
+    if sous_section == "3":
+        print("    5.3.2 - Coefficient de durée d’application de la charge, Kd")
+        print("    5.3.8 - Validation de la section transversale")
+        print("")
+        clause = input("Clause: 5.3.")
 
-    if duration == "continue":
-        dead = input("Charge de durée d'application continue. Defaults to 0.: ")
-        live = input("Surcharge de durée d'application normale. Defaults to 0.: ")
-        snow = input("Surcharge de neige. Defaults to 0.: ")
-        kd = general_design.load_duration(
-            duration, float(dead), float(live), float(snow)
-        )
+        # Clause 5.3.2
+        if clause == "2":
+            duration = input(
+                "\tDurée d'application de la charge ('courte', 'normale' ou 'continue') = "
+            )
+            kd = general_design.load_duration(duration)
 
-    print(f"\tKd = {kd}")
+            if duration == "continue":
+                dead = input(
+                    "\tCharge de durée d'application continue (Defaults to 0) = "
+                )
+                if dead == "":
+                    dead = 0
+                live = input(
+                    "\tSurcharge de durée d'application normale (Defaults to 0) = "
+                )
+                if live == "":
+                    live = 0
+                snow = input("\tSurcharge de neige (Defaults to 0) = ")
+                if snow == "":
+                    snow = 0
+                kd = general_design.load_duration(
+                    duration, float(dead), float(live), float(snow)
+                )
 
-# Branch to 5.3.8
-elif choice == "5.3.8":
-    message = general_design.cross_section
+            print(f"\tKd = {kd}")
+            print("")
+            ANSWERED = True
 
-# Branch to 5.4.1
-elif choice == "5.3.8":
-    es = general_design.elasticity
+        # Clause 5.3.8
+        elif clause == "8":
+            gross = input("\tSection brute = ")
+            net = input("\tSection nette = ")
+            message = general_design.cross_section(float(net), float(gross))
 
-# Branch to 5.4.2
-elif choice == "5.3.8":
-    message = general_design.deflection
+            print(f"\t{message}")
+            print("")
+            ANSWERED = True
 
-# Branch to 5.4.4
-elif choice == "5.3.8":
-    message = general_design.ponding
+    # Sous-section 5.4
+    elif sous_section == "4":
+        print("    5.4.1 - Module d'élasticité")
+        print("    5.4.2 - Flèche")
+        print("    5.4.4 - Accumulation d'eau")
+        print("    5.4.5 - Vibration")
+        print("    5.4.6 - Mouvements du bâtiment attribuables au")
+        print("            changement de la teneur en humidité")
+        print("")
+        clause = input("Clause: 5.4.")
 
-# Branch to 5.4.5
-elif choice == "5.3.8":
-    message = general_design.Vibration.floor_vibration
+        # Clause 5.4.1
+        if clause == "1":
+            modulus = input("\tModule d'élasticité prévu, MPa = ")
+            service = input("\tCoefficient de conditions d'utilisation = ")
+            treatment = input("\tCoefficient de traitement = ")
+            es = general_design.elasticity(
+                float(modulus), float(service), float(treatment)
+            )
 
-# Branch to 5.4.6
-elif choice == "5.3.8":
-    s = general_design.moisture
+            print(f"\tEs = {es} MPa")
+            print("")
+            ANSWERED = True
 
-# Branch to 5.5
-elif choice == "5.3.8":
-    h = general_design.lateral_brace
+        # Clause 5.4.2
+        elif clause == "2":
+            message = general_design.deflection
+            print("")
+            ANSWERED = True
 
-# Branch to 5.6
-elif choice == "5.3.8":
-    i = general_design.FireResistance.effective_section
+        # Clause 5.4.4
+        elif clause == "4":
+            message = general_design.ponding
+            print("")
+            ANSWERED = True
 
-else:
-    print("Entrez le numéro de l'article parmi les choix plus haut")
+        # Clause 5.4.5
+        elif clause == "5":
+            message = general_design.Vibration.floor_vibration
+            print("")
+            ANSWERED = True
+
+        # Clause 5.4.6
+        elif clause == "6":
+            s = general_design.moisture
+            print("")
+            ANSWERED = True
+
+    # Branch to 5.5
+    elif sous_section == "5":
+        h = general_design.lateral_brace
+        print("")
+        ANSWERED = True
+
+    # Branch to 5.6
+    elif sous_section == "6":
+        i = general_design.FireResistance.effective_section
+        print("")
+        ANSWERED = True
+
+# Section 6
+elif section == "6":
+    print("    À venir")
+    print("")
+    ANSWERED = True
+
+# Section 7
+elif section == "7":
+    print("    À venir")
+    print("")
+    ANSWERED = True
+
+# Section 8
+elif section == "8":
+    print("    À venir")
+    print("")
+    ANSWERED = True
+
+# Section 9
+elif section == "9":
+    print("    À venir")
+    print("")
+    ANSWERED = True
+
+# Section 10
+elif section == "10":
+    print("    À venir")
+    print("")
+    ANSWERED = True
+
+# Section 11
+elif section == "11":
+    print("    À venir")
+    print("")
+    ANSWERED = True
+
+# Section 12
+elif section == "12":
+    print("    À venir")
+    print("")
+    ANSWERED = True
+
+if not ANSWERED:
+    print("")
+    print("!!Entrée non reconnue!!")
+    print("    Entrez un chiffre correspondant à l'un des éléments")
+    print("    de la liste ci-haut pour effectuer la sélection.")
+    print("")
