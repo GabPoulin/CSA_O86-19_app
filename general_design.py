@@ -662,6 +662,9 @@ class FireResistance:
             int: Kh = Coefficient de système.
             float: Kfi = Coefficient de correction pour le calcul de la résistance au feu.
 
+        Raises:
+            ValueError: Si b ou d est plus petit que 70 mm.
+
         """
         xco, xcn = self._char_layer()
         xt = self._zero_layer()
