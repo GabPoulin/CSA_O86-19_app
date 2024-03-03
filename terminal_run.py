@@ -82,7 +82,8 @@ if SECTION == "5":
     # Sous-section 5.4
     elif SOUS_SECTION == "4":
         print("    5.4.1 - Module d'élasticité")
-        print("    5.4.2 - Flèche")
+        print("    5.4.2 - Flèche élastique")
+        print("    5.4.3 - Déformation permanente")
         print("    5.4.4 - Accumulation d'eau")
         print("    5.4.5 - Vibration")
         print("    5.4.6 - Mouvements du bâtiment attribuables au")
@@ -105,7 +106,13 @@ if SECTION == "5":
 
         # Clause 5.4.2
         elif CLAUSE == "2":
-            message = general_design.deflection
+            message = general_design.elastic_deflection
+            print("")
+            ANSWERED = True
+
+        # Clause 5.4.3
+        elif CLAUSE == "3":
+            message = general_design.permanent_deformation
             print("")
             ANSWERED = True
 
@@ -206,8 +213,4 @@ elif SECTION == "16":
     ANSWERED = True
 
 if not ANSWERED:
-    print("")
-    print("!!Entrée non reconnue!!")
-    print("    Entrez un chiffre correspondant à l'un des éléments")
-    print("    de la liste ci-haut pour effectuer la sélection.")
-    print("")
+    raise ValueError("Entrez un chiffre correspondant à l'un des éléments de la liste")

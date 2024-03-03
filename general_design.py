@@ -1,6 +1,6 @@
 """
 CSA O86:19: Règles de calcul des charpentes en bois.
- Section 5. Conception générale.
+ 5 Conception générale.
 ----------------------------------------------------
 
 5.3 Conditions et coefficients influant sur la résistance.
@@ -10,10 +10,10 @@ CSA O86:19: Règles de calcul des charpentes en bois.
 5.4 Exigences relatives à la tenue en service.
     5.4.1 Module d'élasticité.
      5.4.2 Flèche élastique.
-    5.4.3 Déformation permanente.
-     5.4.4 Accumulation d'eau.
-    5.4.5 Vibration.
-     5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
+      5.4.3 Déformation permanente.
+       5.4.4 Accumulation d'eau.
+        5.4.5 Vibration.
+         5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
         
 5.5 Effort de contreventement latéral sur les membrures d'âme en compression 
     des fermes de toit en bois.
@@ -135,20 +135,46 @@ def elasticity(modulus: float, service: float, treatment: float) -> float:
     return modulus * (service * treatment)
 
 
-def deflection(span: float, delta: float) -> str:
+def elastic_deflection(span: float, delta: float) -> str:
     """
     5.4.2 Flèche élastique.
-     5.4.3 Déformation permanente.
 
     Args:
         span (float):  Portée, mm.
         delta (float): Flèche, mm.
 
     Returns:
-        str: Critère de flèche obtenu.
+        str: Message de validation du critère de flèche élastique.
 
     """
-    return f"Critère de flèche: L/{int(span / delta)}"
+    criteria = span / delta
+    if criteria < 180:
+        message = f"Critère de flèche non-valide: L/{int(criteria)} > L/180"
+    else:
+        message = f"Critère de flèche valide: L/{int(criteria)} < L/180"
+
+    return message
+
+
+def permanent_deformation(span: float, delta: float) -> str:
+    """
+    5.4.3 Déformation permanente.
+
+    Args:
+        span (float):  Portée, mm.
+        delta (float): Flèche, mm.
+
+    Returns:
+        str: Message de validation du critère de déformation permanente.
+
+    """
+    criteria = span / delta
+    if criteria < 360:
+        message = f"Critère de déformation non-valide: L/{int(criteria)} > L/360"
+    else:
+        message = f"Critère de déformation valide: L/{int(criteria)} < L/360"
+
+    return message
 
 
 def ponding(load: float, *delta: float) -> str:
@@ -692,12 +718,19 @@ def _tests():
         test_elasticity == expected_result
     ), f"elasticity -> FAILED\n {expected_result = }\n {test_elasticity = }"
 
-    # Test deflection
-    test_deflection = deflection(span=1800, delta=10)
-    expected_result = "Critère de flèche: L/180"
+    # Test elastic_deflection
+    test_elastic_deflection = elastic_deflection(span=1800, delta=10)
+    expected_result = "Critère de flèche valide: L/180 < L/180"
     assert (
-        test_deflection == expected_result
-    ), f"deflection -> FAILED\n {expected_result = }\n {test_deflection = }"
+        test_elastic_deflection == expected_result
+    ), f"elastic_deflection -> FAILED\n {expected_result = }\n {test_elastic_deflection = }"
+
+    # Test permanent_deformation
+    test_permanent_deformation = permanent_deformation(span=1800, delta=10)
+    expected_result = "Critère de déformation non-valide: L/180 > L/360"
+    assert (
+        test_permanent_deformation == expected_result
+    ), f"permanent_deformation -> FAILED\n {expected_result = }\n {test_permanent_deformation = }"
 
     # Test ponding
     test_ponding = ponding(2, 10, 13)
