@@ -1,6 +1,7 @@
 """Permet d'utiliser la CSA O86:19 dans le terminal."""
 
 import general_design
+import sawn_lumber
 
 # Validation for correct inputs
 ANSWERED = False
@@ -29,7 +30,7 @@ if SECTION == "5":
     print("    5.3 - Conditions et coefficients influant sur la résistance")
     print("    5.4 - Exigences relatives à la tenue en service")
     print("    5.5 - Effort de contreventement latéral sur les membrures")
-    print("          d’âme en compression des fermes de toit en bois")
+    print("          d'âme en compression des fermes de toit en bois")
     print("    5.6 - Résistance au feu")
     print("")
     SOUS_SECTION = input("Sous-section: 5.")
@@ -165,6 +166,13 @@ if SECTION == "5":
 
 # Section 6
 elif SECTION == "6":
+    print("    6.2 - Matériaux")
+    print("    6.3 - Résistances prévues et modules d'élasticité")
+    print("    6.4 - Coefficients de correction")
+    print("    6.5 - Calcul des résistances")
+    print("    6.6 - États limites de tenue en service")
+    print("")
+    SOUS_SECTION = input("Sous-section: 6.")
     print("    À venir")
     print("")
     ANSWERED = True
