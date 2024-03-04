@@ -352,7 +352,7 @@ class Vibration:
             s1 = 1e8
         l1 = self.span
         if self.topping == "aucun/autre":
-            l1 = 1.2192  # panneaux de sous-plancher sont considérés ayant une largeur de 4'
+            l1 = 1.2192  # Les panneaux de sous-plancher sont considérés ayant une largeur de 4'
         ea1_barre = (b1 * ea1) / (1 + 10 * ((b1 * ea1) / (s1 * l1**2)))
 
         ea_joist = self.joist_axial_stiffness
