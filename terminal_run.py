@@ -47,7 +47,7 @@ if SECTION == "5":
 
     # Sous-section 5.3
     if SOUS_SECTION == "3":
-        print("    5.3.2 - Coefficient de durée d’application de la charge, Kd")
+        print("    5.3.2 - Coefficient de durée d'application de la charge, Kd")
         print("    5.3.8 - Validation de la section transversale")
         print("")
         CLAUSE = input("Clause: 5.3.")
@@ -144,7 +144,7 @@ if SECTION == "5":
 
         # Clause 5.4.4
         elif CLAUSE == "4":
-            SPAN = input("\Charge totale spécifiée uniformément répartie, kPa = ")
+            LOAD = input("\tCharge totale spécifiée uniformément répartie, kPa = ")
             DELTA = input("\tFlèche totale du système, mm = ")
             message = general_design.ponding(float(LOAD), float(DELTA))
 
@@ -154,16 +154,76 @@ if SECTION == "5":
 
         # Clause 5.4.5
         elif CLAUSE == "5":
+            SPAN = input("\tPortée du plancher, m = ")
+            MULTI_SPAN = input("\tPortée multiple? (y/n) = ") == "y"
+            CLT_FLOOR = input("\tPlancher en CLT? (y/n) = ") == "y"
+
+            CLT_MASS = 0
+            EI_EFF = 0
+            TOP_THICK = 0
+            J_DEPTH = 0
+            J_MASS = 0
+            J_SPACING = 0.4064
+            EA_J = 0
+            EI_J = 0
+            BRACE = False
+            GYPSE = False
+            SUBFLOOR = "CSP 5/8"
+            GLUE = False
+
+            if CLT_FLOOR:
+                CLT_MASS = input("\tMasse linéaire du clt, kg/m = ")
+                EI_EFF = input("\t(EI)eff,f, N*mm2 (voir 8.4.3.2) = ")
+                TOPPING = input("\tRevêtement. 'béton' ou 'aucun/autre' = ")
+                if TOPPING == "béton":
+                    TOP_THICK = input("\tÉpaisseur du revêtement, m = ")
+            else:
+                J_SPACING = input("\tEspacement des solives, m = ")
+                J_DEPTH = input("\tHauteur de solive, m = ")
+                J_MASS = input("\tMasse par unité de longueur de solive, kg/m = ")
+                EI_J = input("\tEIjoist, N*m2 = ")
+                EA_J = input("\tEAjoist, N = ")
+                BRACE = input("\tContreventement latéraux? (y/n) = ") == "y"
+                GYPSE = input("\tPanneau de gypse sous les solives? (y/n) = ") == "y"
+                print("\tSous-plancher. Choisir parmi la liste:")
+                print(
+                    """
+       'OSB 1/2'       'DFP 1/2'        'CSP 1/2'
+       'OSB 5/8'       'DFP 5/8'        'CSP 5/8'
+       'OSB 3/4'       'DFP 3/4'        'CSP 3/4'
+                       'DFP 13/16'      'CSP 13/16'
+       'OSB 7/8'       'DFP 7/8'        'CSP 7/8'
+                       'DFP 1'          'CSP 1'
+       'OSB 1-1/8'     'DFP 1-1/8'      'CSP 1-1/8'
+                       'DFP 1-1/4'      'CSP 1-1/4'
+                    """
+                )
+                SUBFLOOR = input("\tSous-plancher = ")
+                GLUE = input("\tSous-plancher collé? (y/n) = ") == "y"
+                TOPPING = input(
+                    "\tRevêtement. 'béton', 'aucun/autre' ou selon la liste des sous-planchers = "
+                )
+                if TOPPING == "béton":
+                    TOP_THICK = input("\tÉpaisseur du revêtement, m = ")
             message = general_design.Vibration(
-                SPAN,
-                BRACE,
-                CLT_BEND,
-                CLT_MASS,
-                GLUE,
-                GYPSE,
-                EAJ,
-                EIJ,
-            ).floor_vibration
+                float(SPAN),
+                bool(BRACE),
+                float(EI_EFF),
+                float(CLT_MASS),
+                bool(GLUE),
+                bool(GYPSE),
+                float(EA_J),
+                float(EI_J),
+                float(J_DEPTH),
+                float(J_MASS),
+                float(J_SPACING),
+                bool(MULTI_SPAN),
+                str(SUBFLOOR),
+                str(TOPPING),
+                float(TOP_THICK),
+            ).floor_vibration()
+
+            print(f"\t{message}")
             print("")
             ANSWERED = True
 
@@ -199,16 +259,8 @@ elif SECTION == "6":
     if SOUS_SECTION == "2":
         WIDTH = input("\tLargeur de l'élément, mm = ")
         DEPTH = input("\tHauteur de l'élément, mm = ")
-        MSR = input("\tBois MSR? (y/n) = ")
-        MEL = input("\tBois MEL? (y/n) = ")
-        if MSR == "y":
-            MSR = True
-        else:
-            MSR = False
-        if MEL == "y":
-            MEL = True
-        else:
-            MEL = False
+        MSR = input("\tBois MSR? (y/n) = ") == "y"
+        MEL = input("\tBois MEL? (y/n) = ") == "y"
         message = sawn_lumber.lumber_category(
             int(WIDTH), int(DEPTH), bool(MSR), bool(MEL)
         )
