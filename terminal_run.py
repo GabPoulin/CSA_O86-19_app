@@ -124,25 +124,46 @@ if SECTION == "5":
 
         # Clause 5.4.2
         elif CLAUSE == "2":
-            message = general_design.elastic_deflection
+            SPAN = input("\tPortée, mm = ")
+            DELTA = input("\tFlèche, mm = ")
+            message = general_design.elastic_deflection(float(SPAN), float(DELTA))
+
+            print(f"\t{message}")
             print("")
             ANSWERED = True
 
         # Clause 5.4.3
         elif CLAUSE == "3":
-            message = general_design.permanent_deformation
+            SPAN = input("\tPortée, mm = ")
+            DELTA = input("\tFlèche, mm = ")
+            message = general_design.permanent_deformation(float(SPAN), float(DELTA))
+
+            print(f"\t{message}")
             print("")
             ANSWERED = True
 
         # Clause 5.4.4
         elif CLAUSE == "4":
-            message = general_design.ponding
+            SPAN = input("\Charge totale spécifiée uniformément répartie, kPa = ")
+            DELTA = input("\tFlèche totale du système, mm = ")
+            message = general_design.ponding(float(LOAD), float(DELTA))
+
+            print(f"\t{message}")
             print("")
             ANSWERED = True
 
         # Clause 5.4.5
         elif CLAUSE == "5":
-            message = general_design.Vibration.floor_vibration
+            message = general_design.Vibration(
+                SPAN,
+                BRACE,
+                CLT_BEND,
+                CLT_MASS,
+                GLUE,
+                GYPSE,
+                EAJ,
+                EIJ,
+            ).floor_vibration
             print("")
             ANSWERED = True
 
@@ -173,9 +194,52 @@ elif SECTION == "6":
     print("    6.6 - États limites de tenue en service")
     print("")
     SOUS_SECTION = input("Sous-section: 6.")
-    print("    À venir")
-    print("")
-    ANSWERED = True
+
+    # Sous-section 6.2
+    if SOUS_SECTION == "2":
+        WIDTH = input("\tLargeur de l'élément, mm = ")
+        DEPTH = input("\tHauteur de l'élément, mm = ")
+        MSR = input("\tBois MSR? (y/n) = ")
+        MEL = input("\tBois MEL? (y/n) = ")
+        if MSR == "y":
+            MSR = True
+        else:
+            MSR = False
+        if MEL == "y":
+            MEL = True
+        else:
+            MEL = False
+        message = sawn_lumber.lumber_category(
+            int(WIDTH), int(DEPTH), bool(MSR), bool(MEL)
+        )
+
+        print(f"\tCatégorie de bois d'oeuvre = {message}")
+        print("")
+        ANSWERED = True
+
+    # Sous-section 6.3
+    if SOUS_SECTION == "3":
+        print("    À venir")
+        print("")
+        ANSWERED = True
+
+    # Sous-section 6.4
+    if SOUS_SECTION == "4":
+        print("    À venir")
+        print("")
+        ANSWERED = True
+
+    # Sous-section 6.5
+    if SOUS_SECTION == "5":
+        print("    À venir")
+        print("")
+        ANSWERED = True
+
+    # Sous-section 6.6
+    if SOUS_SECTION == "6":
+        print("    À venir")
+        print("")
+        ANSWERED = True
 
 # Section 7
 elif SECTION == "7":
