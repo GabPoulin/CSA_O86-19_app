@@ -207,19 +207,19 @@ if SECTION == "5":
                     TOP_THICK = input("\tÉpaisseur du revêtement, m = ")
             message = general_design.Vibration(
                 float(SPAN),
-                bool(BRACE),
+                BRACE,
                 float(EI_EFF),
                 float(CLT_MASS),
-                bool(GLUE),
-                bool(GYPSE),
+                GLUE,
+                GYPSE,
                 float(EA_J),
                 float(EI_J),
                 float(J_DEPTH),
                 float(J_MASS),
                 float(J_SPACING),
-                bool(MULTI_SPAN),
-                str(SUBFLOOR),
-                str(TOPPING),
+                MULTI_SPAN,
+                SUBFLOOR,
+                TOPPING,
                 float(TOP_THICK),
             ).floor_vibration()
 
@@ -238,7 +238,7 @@ if SECTION == "5":
             else:
                 COEFF = 0
             s = general_design.moisture(
-                float(DIM), float(MI), float(MF), str(DIR), float(COEFF)
+                float(DIM), float(MI), float(MF), DIR, float(COEFF)
             )
 
             if s >= 0:
@@ -294,7 +294,7 @@ if SECTION == "5":
         else:
             PROD = "autre"
         b, d, phi, kh, kfi = general_design.FireResistance(
-            float(DUR), float(WIDTH), float(DEPTH), str(SIDES), str(TOP), str(PROD)
+            float(DUR), float(WIDTH), float(DEPTH), SIDES, TOP, PROD
         ).effective_section()
 
         print(f"{b = } mm")
@@ -321,9 +321,7 @@ elif SECTION == "6":
         DEPTH = input("\tHauteur de l'élément, mm = ")
         MSR = input("\tBois MSR? (y/n) = ") == "y"
         MEL = input("\tBois MEL? (y/n) = ") == "y"
-        message = sawn_lumber.lumber_category(
-            int(WIDTH), int(DEPTH), bool(MSR), bool(MEL)
-        )
+        message = sawn_lumber.lumber_category(int(WIDTH), int(DEPTH), MSR, MEL)
 
         print(f"\tCatégorie de bois d'oeuvre = {message}")
         print("")
@@ -331,12 +329,47 @@ elif SECTION == "6":
 
     # Sous-section 6.3
     if SOUS_SECTION == "3":
-        print("    À venir")
+        SIDE = False
+        CATEGORY = input(
+            "\tCatégorie. ('Lumber', 'Light', 'Beam', 'Post', 'MSR' ou 'MEL') = "
+        )
+        if CATEGORY in ("MSR", "MEL"):
+            SPECIE = input("\tGroupe. ('normal', 'courant' ou 'rare') = ")
+            if CATEGORY == "MSR":
+                GRADE = input(
+                    "\tClasse. voir tableau 6.8. (ex: 1200Fb-1.2E = '1200-1.2') = "
+                )
+            else:
+                GRADE = input("\tClasse. voir tableau 6.9. (ex: M-10 = 'm-10') = ")
+        else:
+            SPECIE = input("\tGroupe d'essence. ('df', 'hf', 'spf' ou 'ns') = ")
+            if CATEGORY == "Lumber":
+                GRADE = input("\tClasse. ('ss', 'n1-n2' ou 'n3-stud') = ")
+            elif CATEGORY == "Light":
+                GRADE = input("\tClasse. ('cst' ou 'std') = ")
+            else:
+                GRADE = input("\tClasse. ('ss', 'n1' ou 'n2') = ")
+            if CATEGORY == "Beam":
+                SIDE = input("\tCharges appliquées sur la grande face? (y/n) = ") == "y"
+        fb, fv, fc, fcp, ft, e, e05 = sawn_lumber.specified_strengths(
+            CATEGORY, SPECIE, GRADE, SIDE
+        )
+
+        print(f"\tfb  = {fb} MPa")
+        print(f"\tfv  = {fv} MPa")
+        print(f"\tfc  = {fc} MPa")
+        print(f"\tfcp = {fcp} MPa")
+        print(f"\tft  = {ft} MPa")
+        print(f"\tE   = {e} MPa")
+        print(f"\tE05 = {e05} MPa")
         print("")
         ANSWERED = True
 
     # Sous-section 6.4
     if SOUS_SECTION == "4":
+        kd, ks, kt, kh, kz = sawn_lumber.modification_factors(
+            int(WID), int(DEP), PRO, DUR, CAT, WET, TRE, INC, SPA, CON, BUI
+        )
         print("    À venir")
         print("")
         ANSWERED = True

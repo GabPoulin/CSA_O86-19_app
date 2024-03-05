@@ -116,7 +116,7 @@ def lumber_category(
 
 
 def specified_strengths(
-    category: str, specie: str, grade: str
+    category: str, specie: str, grade: str, side: bool = False
 ) -> tuple[float, float, float, float, float, float, float]:
     """
     6.3 Résistances prévues et modules d'élasticité.
@@ -125,9 +125,12 @@ def specified_strengths(
         category (str): Catégorie. "Lumber", "Light", "Beam", "Post", "MSR" ou "MEL".
         specie (str): Groupe d'essence. "df", "hf", "spf" ou "ns".
             Pour catégorie MSR et MEL. "normal", "courant" ou "rare".
-        grade (str): Classe. "ss", "n1", "n1-n2", "n2", "n3-stud", "cst" ou "std"
-            Pour catégorie MSR, voir tableau 6.8. (ex: 1200Fb-1.2E = "1200-1.2")
-            Pour catégorie MEL, voir tableau 6.9. (ex: M-10 = "m-10")
+        grade (str): Classe. "ss", "n1" ou "n2".
+            Pour catégorie Lumber, "ss", "n1-n2" ou "n3-stud".
+             Pour catégorie Light, "cst" ou "std".
+              Pour catégorie MSR, voir tableau 6.8. (ex: 1200Fb-1.2E = "1200-1.2").
+               Pour catégorie MEL, voir tableau 6.9. (ex: M-10 = "m-10").
+        side (bool, optional): Charges appliquées sur la grande face. (Default to False).
 
     Returns:
         float: fb = Résistance prévue en flexion, MPa.
@@ -153,6 +156,13 @@ def specified_strengths(
     ft = strengths.ft
     e = strengths.e
     e05 = strengths.e05
+    if side and category == "Beam":
+        if grade == "ss":
+            fb *= 0.88
+        else:
+            fb *= 0.77
+            e *= 0.9
+            e05 *= 0.9
 
     return fb, fv, fc, fcp, ft, e, e05
 
@@ -568,11 +578,12 @@ def _tests():
 
     # Test specified_strengths
     test_specified_strengths = specified_strengths(
-        category="MSR",
-        specie="courant",
-        grade="1650-1.5",
+        category="Beam",
+        specie="spf",
+        grade="ss",
+        side=True,
     )
-    expected_result = (23.9, 1.5, 18.1, 5.3, 11.4, 10300, 0)
+    expected_result = (11.968, 1.2, 9.5, 5.3, 7, 8500, 6000)
     assert (
         test_specified_strengths == expected_result
     ), f"specified_strengths -> FAILED\n {expected_result = }\n {test_specified_strengths = }"
