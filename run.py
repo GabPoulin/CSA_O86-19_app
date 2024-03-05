@@ -201,7 +201,7 @@ if SECTION == "5":
                 SUBFLOOR = input("\tSous-plancher = ")
                 GLUE = input("\tSous-plancher collé? (y/n) = ") == "y"
                 TOPPING = input(
-                    "\tRevêtement. 'béton', 'aucun/autre' ou selon la liste des sous-planchers = "
+                    "\tRevêtement. 'béton', 'aucun/autre' ou selon la liste de sous-planchers = "
                 )
                 if TOPPING == "béton":
                     TOP_THICK = input("\tÉpaisseur du revêtement, m = ")
@@ -232,7 +232,7 @@ if SECTION == "5":
             DIM = input("\tDimension réelle, mm = ")
             MI = input("\tTeneur en humidité initiale, % = ")
             MF = input("\tTeneur en humidité finale, % = ")
-            DIR = input("\tDirection du fil du bois. 'perp', 'para' ou 'autre' = ")
+            DIR = input("\tDirection du fil du bois ('perp', 'para' ou 'autre') = ")
             if DIR not in ("perp", "para"):
                 COEFF = input("\tCoefficient de retrait = ")
             else:
@@ -250,9 +250,7 @@ if SECTION == "5":
 
     # Branch to 5.5
     elif SOUS_SECTION == "5":
-        FORCE = input(
-            "\tForce de compression axiale qui s'exerce sur la membrure d'âme, kN = "
-        )
+        FORCE = input("\tForce, kN = ")
         load = general_design.lateral_brace(float(FORCE))
 
         print(f"\tEffort applicable au contreventement latéral = {load} kN")
@@ -261,7 +259,49 @@ if SECTION == "5":
 
     # Branch to 5.6
     elif SOUS_SECTION == "6":
-        # b, d, phi, kh, kfi = general_design.FireResistance.effective_section
+        DUR = input("\tDurée d'exposition au feu, min = ")
+        WIDTH = input("\tLargeur de l'élément, mm = ")
+        DEPTH = input("\tHauteur de l'élément, mm = ")
+        SIDES = input(
+            "\tProtection des faces larges (aucune:'0', 1_face:'1' ou 2_faces:'2') = "
+        )
+        if SIDES == "1":
+            SIDES = "1_face"
+        elif SIDES == "2":
+            SIDES = "2_faces"
+        else:
+            SIDES = "aucune"
+        TOP = input(
+            "\tProtection des faces étroites (aucune:'0', 1_face:'1' ou 2_faces:'2') = "
+        )
+        if TOP == "1":
+            TOP = "1_face"
+        elif TOP == "2":
+            TOP = "2_faces"
+        else:
+            TOP = "aucune"
+        PROD = input(
+            "\tProduit (autre:'0', sciage:'1', glt:'2', clt_v1_v2:'3' ou clt_e1_e2_e3:'4') = "
+        )
+        if PROD == "1":
+            PROD = "sciage"
+        elif PROD == "2":
+            PROD = "glt"
+        elif PROD == "3":
+            PROD = "clt_v1_v2"
+        elif PROD == "4":
+            PROD = "clt_e1_e2_e3"
+        else:
+            PROD = "autre"
+        b, d, phi, kh, kfi = general_design.FireResistance(
+            float(DUR), float(WIDTH), float(DEPTH), str(SIDES), str(TOP), str(PROD)
+        ).effective_section()
+
+        print(f"{b = } mm")
+        print(f"{d = } mm")
+        print(f"φ = {phi}")
+        print(f"Kh = {kh}")
+        print(f"Kfi = {kfi}")
         print("")
         ANSWERED = True
 
