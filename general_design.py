@@ -523,7 +523,7 @@ def moisture(
     """
     d = dimension
     mi = min(init_mc, 28)
-    mf = final_mc
+    mf = min(final_mc, 28)
     if direction == "perp":
         c = 0.002
     elif direction == "para":

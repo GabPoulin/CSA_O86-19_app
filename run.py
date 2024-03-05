@@ -188,15 +188,15 @@ if SECTION == "5":
                 print("\tSous-plancher. Choisir parmi la liste:")
                 print(
                     """
-       'OSB 1/2'       'DFP 1/2'        'CSP 1/2'
-       'OSB 5/8'       'DFP 5/8'        'CSP 5/8'
-       'OSB 3/4'       'DFP 3/4'        'CSP 3/4'
-                       'DFP 13/16'      'CSP 13/16'
-       'OSB 7/8'       'DFP 7/8'        'CSP 7/8'
-                       'DFP 1'          'CSP 1'
-       'OSB 1-1/8'     'DFP 1-1/8'      'CSP 1-1/8'
-                       'DFP 1-1/4'      'CSP 1-1/4'
-                    """
+        'OSB 1/2'       'DFP 1/2'        'CSP 1/2'
+        'OSB 5/8'       'DFP 5/8'        'CSP 5/8'
+        'OSB 3/4'       'DFP 3/4'        'CSP 3/4'
+                        'DFP 13/16'      'CSP 13/16'
+        'OSB 7/8'       'DFP 7/8'        'CSP 7/8'
+                        'DFP 1'          'CSP 1'
+        'OSB 1-1/8'     'DFP 1-1/8'      'CSP 1-1/8'
+                        'DFP 1-1/4'      'CSP 1-1/4'
+                        """
                 )
                 SUBFLOOR = input("\tSous-plancher = ")
                 GLUE = input("\tSous-plancher collé? (y/n) = ") == "y"
@@ -229,13 +229,33 @@ if SECTION == "5":
 
         # Clause 5.4.6
         elif CLAUSE == "6":
-            s = general_design.moisture
+            DIM = input("\tDimension réelle, mm = ")
+            MI = input("\tTeneur en humidité initiale, % = ")
+            MF = input("\tTeneur en humidité finale, % = ")
+            DIR = input("\tDirection du fil du bois. 'perp', 'para' ou 'autre' = ")
+            if DIR not in ("perp", "para"):
+                COEFF = input("\tCoefficient de retrait = ")
+            else:
+                COEFF = 0
+            s = general_design.moisture(
+                float(DIM), float(MI), float(MF), str(DIR), float(COEFF)
+            )
+
+            if s >= 0:
+                print(f"\tRetrait de la dimension considérée = {s} mm")
+            else:
+                print(f"\tGonflement de la dimension considérée = {-s} mm")
             print("")
             ANSWERED = True
 
     # Branch to 5.5
     elif SOUS_SECTION == "5":
-        load = general_design.lateral_brace
+        FORCE = input(
+            "\tForce de compression axiale qui s'exerce sur la membrure d'âme, kN = "
+        )
+        load = general_design.lateral_brace(float(FORCE))
+
+        print(f"\tEffort applicable au contreventement latéral = {load} kN")
         print("")
         ANSWERED = True
 
