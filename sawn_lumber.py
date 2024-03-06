@@ -558,6 +558,17 @@ def modification_factors(
     return kd, ks, kt, kh, kz
 
 
+@dataclass
+class Resistances:
+    """
+    Classe pour les resistances.
+
+    """
+
+    def sizes(self):
+        pass
+
+
 # TESTS
 def _tests():
     """
