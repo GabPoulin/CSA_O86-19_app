@@ -367,10 +367,39 @@ elif SECTION == "6":
 
     # Sous-section 6.4
     if SOUS_SECTION == "4":
+        WID = input("\tLargeur de l'élément, mm = ")
+        DEP = input("\tHauteur de l'élément, mm = ")
+        print("\tPropriété évaluée.")
+        PRO = input(
+            "\t('flex', 'cis_f', 'cis_l', 'comp_para', 'comp_perp', 'trac' ou 'moe') = "
+        )
+        DUR = input(
+            "\tDurée d'application de la charge. ('courte', 'normale' ou 'continue') = "
+        )
+        CAT = input(
+            "\tCatégorie. ('Lumber', 'Light', 'Beam', 'Post', 'MSR' ou 'MEL') = "
+        )
+        WET = input("\tUtilisation en milieu humide. (y/n) = ") == "y"
+        TRE = input("\tBois traité. (y/n) = ") == "y"
+        if TRE:
+            INC = input("\tBois incisé. (y/n) = ") == "y"
+        else:
+            INC = False
+        SPA = input("\tL'espacement ne dépasse pas 610 mm. (y/n) = ") == "y"
+        if SPA:
+            CON = input("\tSous-plancher fixé. (y/n) = ") == "y"
+        else:
+            CON = False
+        BUI = input("\tPoutres composées. (y/n) = ") == "y"
         kd, ks, kt, kh, kz = sawn_lumber.modification_factors(
             int(WID), int(DEP), PRO, DUR, CAT, WET, TRE, INC, SPA, CON, BUI
         )
-        print("    À venir")
+
+        print(f"\tKd = {kd}")
+        print(f"\tKs = {ks}")
+        print(f"\tKt = {kt}")
+        print(f"\tKh = {kh}")
+        print(f"\tKz = {kz}")
         print("")
         ANSWERED = True
 
