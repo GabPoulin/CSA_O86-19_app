@@ -376,9 +376,9 @@ elif SECTION == "6":
         DUR = input(
             "\tDurée d'application de la charge. ('courte', 'normale' ou 'continue') = "
         )
-        CAT = input(
-            "\tCatégorie. ('Lumber', 'Light', 'Beam', 'Post', 'MSR' ou 'MEL') = "
-        )
+        MSR = input("\tBois MSR? (y/n) = ") == "y"
+        MEL = input("\tBois MEL? (y/n) = ") == "y"
+        CAT = sawn_lumber.lumber_category(float(WID), float(DEP), MSR, MEL)
         WET = input("\tUtilisation en milieu humide. (y/n) = ") == "y"
         TRE = input("\tBois traité. (y/n) = ") == "y"
         if TRE:
@@ -392,7 +392,7 @@ elif SECTION == "6":
             CON = False
         BUI = input("\tPoutres composées. (y/n) = ") == "y"
         kd, ks, kt, kh, kz = sawn_lumber.modification_factors(
-            int(WID), int(DEP), PRO, DUR, CAT, WET, TRE, INC, SPA, CON, BUI
+            float(WID), float(DEP), PRO, DUR, CAT, WET, TRE, INC, SPA, CON, BUI
         )
 
         print(f"\tKd = {kd}")
