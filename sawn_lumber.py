@@ -1,6 +1,6 @@
 """
 CSA O86:19: Règles de calcul des charpentes en bois.
- 6 Bois de sciage.
+ 6 Bois de sciage. test1
 ----------------------------------------------------
 
 6.2 Matériaux.
