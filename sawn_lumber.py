@@ -561,11 +561,85 @@ def modification_factors(
 @dataclass
 class Resistances:
     """
-    Classe pour les resistances.
+    6.5 Calcul des résistances.
 
     """
 
     def sizes(self):
+        """
+        6.5.2 Dimensions.
+
+        """
+        pass
+
+    def bending_moment(self):
+        """
+        6.5.3 Résistance au moment de flexion.
+
+        """
+        pass
+
+    def shear(self):
+        """
+        6.5.4 Résistance au cisaillement.
+
+        """
+        pass
+
+    def comp_parallel(self):
+        """
+        6.5.5 Résistance à la compression parallèle au fil.
+
+        """
+        pass
+
+    def comp_perpendicular(self):
+        """
+        6.5.6 Résistance à la compression perpendiculaire au fil.
+
+        """
+        pass
+
+    def comp_angle(self):
+        """
+        6.5.7 Résistance à la compression oblique par rapport au fil.
+
+        """
+        pass
+
+    def tensile_parallel(self):
+        """
+        6.5.8 Résistance à la traction parallèle au fil.
+
+        """
+        pass
+
+    def combined_bending_axial(self):
+        """
+        6.5.9 Résistance à la flexion et à la charge axiale combinées.
+
+        """
+        pass
+
+    def decking(self):
+        """
+        6.5.10 Platelage.
+
+        """
+        pass
+
+    def foundations(self):
+        """
+        6.5.11 Fondations permanentes en bois.
+
+        """
+        pass
+
+    def truss(self):
+        """
+        6.5.12 Applications propres aux fermes.
+
+        """
         pass
 
 
