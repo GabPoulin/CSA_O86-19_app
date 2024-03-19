@@ -37,9 +37,9 @@ ________________________________________________________________________________
 """
 
 # IMPORTS
-import general_design
 from dataclasses import dataclass
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
+import general_design
 
 
 # DB CONNECTION
@@ -62,6 +62,24 @@ class SawnLumberStrengths(orm.declarative_base()):
     ft: float = Column("ft", REAL)
     e: int = Column("e", INTEGER)
     e05: int = Column("e05", INTEGER)
+    engine = create_engine("sqlite:///csa_o86_19.db")
+    Session = orm.sessionmaker(engine)
+    session = Session()
+
+
+@dataclass
+class LumberSizes(orm.declarative_base()):
+    """
+    Se connecte à la table lumber_sizes de csa_o86_19.db.
+
+    """
+
+    __tablename__ = "lumber_sizes"
+    nominal: int = Column("nominal", INTEGER, primary_key=True)
+    dry: int = Column("dry", INTEGER)
+    green: int = Column("green", INTEGER)
+    dry_brut: int = Column("dry_brut", INTEGER)
+    green_brut: int = Column("green_brut", INTEGER)
     engine = create_engine("sqlite:///csa_o86_19.db")
     Session = orm.sessionmaker(engine)
     session = Session()
@@ -93,7 +111,7 @@ def lumber_category(
     if small < 38:
         raise ValueError("Les dimensions ne peuvent pas être plus petites que 38 mm.")
 
-    if large > 394:
+    if large > 412:
         print("Valider la disponibilité du bois chez les fournisseurs.")
 
     if small < 89 and large < 89:
@@ -307,7 +325,7 @@ def modification_factors(
         kz = 1
     else:
         # Grande face 38, 64, 89
-        if large <= 89:
+        if large < 114:
             kz = {
                 "flex": 1.7,
                 "cis_f": 1.7,
@@ -318,7 +336,7 @@ def modification_factors(
                 "moe": 1,
             }[prop]
         # Grande face 114
-        elif large <= 114:
+        elif large < 140:
             # Face étroite 114 et +
             if small >= 114:
                 kz = {
@@ -353,7 +371,7 @@ def modification_factors(
                     "moe": 1,
                 }[prop]
         # Grande face 140
-        elif large <= 140:
+        elif large < 159:
             # Face étroite 114 et +
             if small >= 114:
                 kz = {
@@ -388,7 +406,7 @@ def modification_factors(
                     "moe": 1,
                 }[prop]
         # Grande face 184 @ 191
-        elif large <= 191:
+        elif large < 210:
             # Face étroite 114 et +
             if small >= 114:
                 kz = {
@@ -423,7 +441,7 @@ def modification_factors(
                     "moe": 1,
                 }[prop]
         # Grande face 235 @ 241
-        elif large <= 241:
+        elif large < 286:
             # Face étroite 114 et +
             if small >= 114:
                 kz = {
@@ -458,7 +476,7 @@ def modification_factors(
                     "moe": 1,
                 }[prop]
         # Grande face 286 @ 292
-        elif large <= 292:
+        elif large < 337:
             # Face étroite 114 et +
             if small >= 114:
                 kz = {
@@ -485,7 +503,7 @@ def modification_factors(
             else:
                 kz = 1
         # Grande face 337 @ 343
-        elif large <= 343:
+        elif large < 362:
             # Face étroite 114 et +
             if small >= 114:
                 kz = {
@@ -563,84 +581,108 @@ class Resistances:
     """
     6.5 Calcul des résistances.
 
+    Args:
+        width (int): Largeur nominale, po.
+        depth (int): Hauteur nominale, po.
+        green (bool): Bois vert (teneur en humidité > 19%). Default to False.
+        brut (bool): Dimensions brutes. Default to False.
+
     """
 
-    def sizes(self):
+    width: int
+    depth: int
+    green: bool = False
+    brut: bool = False
+
+    def _sizes(self, dimension: int):
         """
         6.5.2 Dimensions.
 
+        Args:
+            dimension (int): Dimension nominale, po.
+
+        returns:
+            int: Dimension nette, mm.
+
         """
-        pass
+        table = (
+            LumberSizes.session.query(LumberSizes)
+            .filter(LumberSizes.nominal == dimension)
+            .first()
+        )
+
+        if not table:
+            dim = int(round(dimension * 25.4))
+        elif self.green and self.brut:
+            dim = table.green_brut
+        elif self.brut:
+            dim = table.dry_brut
+        elif self.green:
+            dim = table.green
+        else:
+            dim = table.dry
+
+        return dim
 
     def bending_moment(self):
         """
         6.5.3 Résistance au moment de flexion.
 
         """
-        pass
 
     def shear(self):
         """
         6.5.4 Résistance au cisaillement.
 
         """
-        pass
 
     def comp_parallel(self):
         """
         6.5.5 Résistance à la compression parallèle au fil.
 
         """
-        pass
 
     def comp_perpendicular(self):
         """
         6.5.6 Résistance à la compression perpendiculaire au fil.
 
         """
-        pass
 
     def comp_angle(self):
         """
         6.5.7 Résistance à la compression oblique par rapport au fil.
 
         """
-        pass
 
     def tensile_parallel(self):
         """
         6.5.8 Résistance à la traction parallèle au fil.
 
         """
-        pass
 
     def combined_bending_axial(self):
         """
         6.5.9 Résistance à la flexion et à la charge axiale combinées.
 
         """
-        pass
 
     def decking(self):
         """
         6.5.10 Platelage.
 
         """
-        pass
 
     def foundations(self):
         """
         6.5.11 Fondations permanentes en bois.
 
         """
-        pass
 
     def truss(self):
         """
         6.5.12 Applications propres aux fermes.
 
         """
-        pass
 
 
 # TESTS
@@ -691,6 +733,13 @@ def _tests():
     assert (
         test_modification_factors == expected_result
     ), f"modification_factors -> FAILED\n {expected_result = }\n {test_modification_factors = }"
+
+    # Test _sizes
+    test_sizes = Resistances(2, 4, green=True, brut=False)._sizes(5)
+    expected_result = 117
+    assert (
+        test_sizes == expected_result
+    ), f"_sizes -> FAILED\n {expected_result = }\n {test_sizes = }"
 
 
 # RUN FILE
