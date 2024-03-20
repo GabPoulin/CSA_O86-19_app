@@ -629,6 +629,45 @@ class Resistances:
         6.5.3 Résistance au moment de flexion.
 
         """
+        b = self._sizes(self.width)
+        d = self._sizes(self.depth)
+
+        _fb = specified_strengths(
+            category=category,
+            specie=specie,
+            grade=grade,
+            side=side,
+        )
+
+        factors = modification_factors(
+            width=b,
+            depth=d,
+            prop="flex",
+            duration=duration,
+            category=category,
+            wet_service=wet_service,
+            treated=treated,
+            incised=incised,
+            _2ft_spacing=_2ft_spacing,
+            connected_subfloor=connected_subfloor,
+            built_up_beam=built_up_beam,
+        )
+
+        s = (b * d**2) / 6
+
+        kl = 1
+
+        phi = 0.9
+        kd = factors[0]
+        kh = factors[3]
+        ksb = factors[1]
+        kt = factors[2]
+        fb = _fb[0] * (kd * kh * ksb * kt)
+        kzb = factors[4]
+
+        mr = phi * fb * s * kzb * kl
+
+        return mr
 
     def shear(self):
         """
