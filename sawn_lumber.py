@@ -140,14 +140,20 @@ def specified_strengths(
     6.3 Résistances prévues et modules d'élasticité.
 
     Args:
-        category (str): Catégorie. "Lumber", "Light", "Beam", "Post", "MSR" ou "MEL".
-        specie (str): Groupe d'essence. "df", "hf", "spf" ou "ns".
-            Pour catégorie MSR et MEL. "normal", "courant" ou "rare".
-        grade (str): Classe. "ss", "n1" ou "n2".
-            Pour catégorie Lumber, "ss", "n1-n2" ou "n3-stud".
-             Pour catégorie Light, "cst" ou "std".
-              Pour catégorie MSR, voir tableau 6.8. (ex: 1200Fb-1.2E = "1200-1.2").
-               Pour catégorie MEL, voir tableau 6.9. (ex: M-10 = "m-10").
+        category (str): Catégorie.
+            Choices: "Lumber", "Light", "Beam", "Post", "MSR", "MEL".
+
+        specie (str): Groupe d'essence.
+            Choices: "df", "hf", "spf", "ns".
+            Pour catégorie MSR et MEL: "normal", "courant", "rare".
+
+        grade (str): Classe.
+            Choices: "ss", "n1", "n2".
+            Pour catégorie Lumber: "ss", "n1-n2", "n3-stud".
+            Pour catégorie Light: "cst", "std".
+            Pour catégorie MSR: voir tableau 6.8. (ex: 1200Fb-1.2E = "1200-1.2").
+            Pour catégorie MEL: voir tableau 6.9. (ex: M-10 = "m-10").
+
         side (bool, optional): Charges appliquées sur la grande face. (Default to False).
 
     Returns:
@@ -204,10 +210,16 @@ def modification_factors(
     Args:
         width (int): Largeur de l'élément, mm.
         depth (int): Hauteur de l'élément, mm.
+
         prop (str): Propriété évaluée.
-            "flex", "cis_f", "cis_l", "comp_para", "comp_perp", "trac" ou "moe".
-        duration (str): Durée d'application de la charge. "courte", "normale" ou "continue".
-        category (str): Catégorie. "Lumber", "Light", "Beam", "Post", "MSR" ou "MEL".
+            Choices: "flex", "cis_f", "cis_l", "comp_para", "comp_perp", "trac", "moe".
+
+        duration (str): Durée d'application de la charge.
+            Choices: "courte", "normale", "continue".
+
+        category (str): Catégorie.
+            Choices: "Lumber", "Light", "Beam", "Post", "MSR", "MEL".
+
         wet_service (bool, optional): Utilisation en milieu humide, Default to False.
         treated (bool, optional): Bois traité, Default to False.
         incised (bool, optional): Bois incisé, Default to False.
@@ -581,25 +593,16 @@ class Resistances:
     """
     6.5 Calcul des résistances.
 
-    Args:
-        width (int): Largeur nominale, po.
-        depth (int): Hauteur nominale, po.
-        green (bool): Bois vert (teneur en humidité > 19%). Default to False.
-        brut (bool): Dimensions brutes. Default to False.
-
     """
 
-    width: int
-    depth: int
-    green: bool = False
-    brut: bool = False
-
-    def _sizes(self, dimension: int):
+    def sizes(self, dimension: int, green: bool = False, brut: bool = False):
         """
         6.5.2 Dimensions.
 
         Args:
             dimension (int): Dimension nominale, po.
+            green (bool, optional): Bois vert (teneur en humidité > 19%). Default to False.
+            brut (bool, optional): Dimensions brutes. Default to False.
 
         returns:
             int: Dimension nette, mm.
@@ -613,59 +616,87 @@ class Resistances:
 
         if not table:
             dim = int(round(dimension * 25.4))
-        elif self.green and self.brut:
+        elif green and brut:
             dim = table.green_brut
-        elif self.brut:
+        elif brut:
             dim = table.dry_brut
-        elif self.green:
+        elif green:
             dim = table.green
         else:
             dim = table.dry
 
         return dim
 
-    def bending_moment(self):
+    def bending_moment(
+        self,
+        b: int,
+        d: int,
+        fb: float,
+        kd: float = 1,
+        kh: float = 1,
+        ksb: float = 1,
+        kt: float = 1,
+        kzb: float = 1,
+        ply: int = 1,
+        lateral_support: bool = False,
+        compressive_edge_support: bool = False,
+        tensile_edge_support: bool = False,
+        blocking_support: bool = False,
+        tie_rods_support: bool = False,
+    ):
         """
         6.5.3 Résistance au moment de flexion.
 
+        Args:
+            b (int): Largeur de l'élément, mm.
+            d (int): Hauteur de l'élément, mm.
+            fb (float): Résistance prévue en flexion, MPa (voir les tableaux 6.4 à 6.9).
+
+            kd (float, optional): Coefficient de durée d'application de la charge.
+            kh (float, optional): Coefficient de système.
+            ksb (float, optional): Coefficient de conditions d'utilisation.
+            kt (float, optional): Coefficient de traitement.
+            kzb (float, optional): Coefficient de dimensions en flexion (voir l'article 6.4.5).
+
+            ply (int, optional): Nombre de plis pour une poutre composée. Default to 1 ply.
+            lateral_support (bool, optional): Support latéral aux appuis. Default to False.
+            compressive_edge_support (bool, optional): Rive comprimée maintenu. Default to False.
+            tensile_edge_support (bool, optional): Rive en tension maintenu. Default to False.
+            blocking_support (bool, optional): Entretoises ou entremises. Default to False.
+            tie_rods_support (bool, optional): Pannes ou tirants. Default to False.
+
+        Returns:
+            float: Mr = Résistance pondérée au moment de flexion, N*mm.
+
         """
-        b = self._sizes(self.width)
-        d = self._sizes(self.depth)
-
-        _fb = specified_strengths(
-            category=category,
-            specie=specie,
-            grade=grade,
-            side=side,
-        )
-
-        factors = modification_factors(
-            width=b,
-            depth=d,
-            prop="flex",
-            duration=duration,
-            category=category,
-            wet_service=wet_service,
-            treated=treated,
-            incised=incised,
-            _2ft_spacing=_2ft_spacing,
-            connected_subfloor=connected_subfloor,
-            built_up_beam=built_up_beam,
-        )
-
-        s = (b * d**2) / 6
-
-        kl = 1
 
         phi = 0.9
-        kd = factors[0]
-        kh = factors[3]
-        ksb = factors[1]
-        kt = factors[2]
-        fb = _fb[0] * (kd * kh * ksb * kt)
-        kzb = factors[4]
+        f_b = fb * (kd * kh * ksb * kt)
+        s = (b * d**2) / 6
 
-        mr = phi * fb * s * kzb * kl
+        rapport_h_l = d / (b * ply)
+        if lateral_support:
+            if compressive_edge_support:
+                if tensile_edge_support:
+                    criteria = 9
+                elif blocking_support:
+                    criteria = 7.5
+                else:
+                    criteria = 6.5
+            elif tie_rods_support:
+                criteria = 5
+            else:
+                criteria = 4
+        else:
+            criteria = 2.5
+
+        if rapport_h_l > criteria:
+            kl = 0
+            print("\nATTENTION!!!\tValider Kl selon 7.5.6.4\n")
+        else:
+            kl = 1
+
+        mr = phi * f_b * s * kzb * kl
 
         return mr
 
@@ -773,12 +804,34 @@ def _tests():
         test_modification_factors == expected_result
     ), f"modification_factors -> FAILED\n {expected_result = }\n {test_modification_factors = }"
 
-    # Test _sizes
-    test_sizes = Resistances(2, 4, green=True, brut=False)._sizes(5)
+    # Test sizes
+    test_sizes = Resistances().sizes(dimension=5, green=True, brut=False)
     expected_result = 117
     assert (
         test_sizes == expected_result
-    ), f"_sizes -> FAILED\n {expected_result = }\n {test_sizes = }"
+    ), f"sizes -> FAILED\n {expected_result = }\n {test_sizes = }"
+
+    # Test bending_moment
+    test_bending_moment = Resistances().bending_moment(
+        b=38,
+        d=140,
+        fb=6,
+        kd=1,
+        kh=1,
+        ksb=1,
+        kt=1,
+        kzb=1,
+        ply=1,
+        lateral_support=True,
+        compressive_edge_support=True,
+        tensile_edge_support=True,
+        blocking_support=False,
+        tie_rods_support=False,
+    )
+    expected_result = 670320
+    assert (
+        test_bending_moment == expected_result
+    ), f"bending_moment -> FAILED\n {expected_result = }\n {test_bending_moment = }"
 
 
 # RUN FILE
