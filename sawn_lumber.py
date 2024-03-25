@@ -212,7 +212,7 @@ def modification_factors(
         depth (int): Hauteur de l'élément, mm.
 
         prop (str): Propriété évaluée.
-            Choices: "flex", "cis_f", "cis_l", "comp_para", "comp_perp", "trac", "moe".
+            Choices: "flex", "cis_f", "cis_v", "comp_para", "comp_perp", "trac", "moe".
 
         duration (str): Durée d'application de la charge.
             Choices: "courte", "normale", "continue".
@@ -247,7 +247,7 @@ def modification_factors(
             ks = {
                 "flex": 1,
                 "cis_f": 0.7,
-                "cis_l": 1,
+                "cis_v": 1,
                 "comp_para": 0.91,
                 "comp_perp": 0.67,
                 "trac": 1,
@@ -257,7 +257,7 @@ def modification_factors(
             ks = {
                 "flex": 0.84,
                 "cis_f": 0.7,
-                "cis_l": 0.96,
+                "cis_v": 0.96,
                 "comp_para": 0.69,
                 "comp_perp": 0.67,
                 "trac": 0.84,
@@ -289,7 +289,7 @@ def modification_factors(
                 kh = {
                     "flex": 1.2,
                     "cis_f": 1,
-                    "cis_l": 1.2,
+                    "cis_v": 1.2,
                     "comp_para": 1.1,
                     "comp_perp": 1,
                     "trac": 1,
@@ -300,7 +300,7 @@ def modification_factors(
                 kh = {
                     "flex": 1.4,
                     "cis_f": 1,
-                    "cis_l": 1.4,
+                    "cis_v": 1.4,
                     "comp_para": 1.1,
                     "comp_perp": 1,
                     "trac": 1,
@@ -311,7 +311,7 @@ def modification_factors(
             kh = {
                 "flex": 1.1,
                 "cis_f": 1,
-                "cis_l": 1.1,
+                "cis_v": 1.1,
                 "comp_para": 1.1,
                 "comp_perp": 1,
                 "trac": 1.1,
@@ -323,7 +323,7 @@ def modification_factors(
             kh = {
                 "flex": 1.1,
                 "cis_f": 1,
-                "cis_l": 1.1,
+                "cis_v": 1.1,
                 "comp_para": 1,
                 "comp_perp": 1,
                 "trac": 1,
@@ -341,7 +341,7 @@ def modification_factors(
             kz = {
                 "flex": 1.7,
                 "cis_f": 1.7,
-                "cis_l": 1.7,
+                "cis_v": 1.7,
                 "comp_para": 1,
                 "comp_perp": 1,
                 "trac": 1.5,
@@ -354,7 +354,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.3,
                     "cis_f": 1.3,
-                    "cis_l": 1.3,
+                    "cis_v": 1.3,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.4,
@@ -365,7 +365,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.6,
                     "cis_f": 1.6,
-                    "cis_l": 1.6,
+                    "cis_v": 1.6,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.4,
@@ -376,7 +376,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.5,
                     "cis_f": 1.5,
-                    "cis_l": 1.5,
+                    "cis_v": 1.5,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.4,
@@ -389,7 +389,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.3,
                     "cis_f": 1.3,
-                    "cis_l": 1.3,
+                    "cis_v": 1.3,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.3,
@@ -400,7 +400,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.5,
                     "cis_f": 1.5,
-                    "cis_l": 1.5,
+                    "cis_v": 1.5,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.3,
@@ -411,7 +411,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.4,
                     "cis_f": 1.4,
-                    "cis_l": 1.4,
+                    "cis_v": 1.4,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.3,
@@ -424,7 +424,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.3,
                     "cis_f": 1.3,
-                    "cis_l": 1.3,
+                    "cis_v": 1.3,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.2,
@@ -435,7 +435,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.3,
                     "cis_f": 1.3,
-                    "cis_l": 1.3,
+                    "cis_v": 1.3,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.2,
@@ -446,7 +446,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.2,
                     "cis_f": 1.2,
-                    "cis_l": 1.2,
+                    "cis_v": 1.2,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.2,
@@ -459,7 +459,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.2,
                     "cis_f": 1.2,
-                    "cis_l": 1.2,
+                    "cis_v": 1.2,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.1,
@@ -470,7 +470,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.2,
                     "cis_f": 1.2,
-                    "cis_l": 1.2,
+                    "cis_v": 1.2,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.1,
@@ -481,7 +481,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.1,
                     "cis_f": 1.1,
-                    "cis_l": 1.1,
+                    "cis_v": 1.1,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1.1,
@@ -494,7 +494,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.1,
                     "cis_f": 1.1,
-                    "cis_l": 1.1,
+                    "cis_v": 1.1,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1,
@@ -505,7 +505,7 @@ def modification_factors(
                 kz = {
                     "flex": 1.1,
                     "cis_f": 1.1,
-                    "cis_l": 1.1,
+                    "cis_v": 1.1,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 1,
@@ -521,7 +521,7 @@ def modification_factors(
                 kz = {
                     "flex": 1,
                     "cis_f": 1,
-                    "cis_l": 1,
+                    "cis_v": 1,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 0.9,
@@ -532,7 +532,7 @@ def modification_factors(
                 kz = {
                     "flex": 1,
                     "cis_f": 1,
-                    "cis_l": 1,
+                    "cis_v": 1,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 0.9,
@@ -543,7 +543,7 @@ def modification_factors(
                 kz = {
                     "flex": 0.9,
                     "cis_f": 0.9,
-                    "cis_l": 0.9,
+                    "cis_v": 0.9,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 0.9,
@@ -556,7 +556,7 @@ def modification_factors(
                 kz = {
                     "flex": 0.9,
                     "cis_f": 0.9,
-                    "cis_l": 0.9,
+                    "cis_v": 0.9,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 0.8,
@@ -567,7 +567,7 @@ def modification_factors(
                 kz = {
                     "flex": 0.9,
                     "cis_f": 0.9,
-                    "cis_l": 0.9,
+                    "cis_v": 0.9,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 0.8,
@@ -578,7 +578,7 @@ def modification_factors(
                 kz = {
                     "flex": 0.8,
                     "cis_f": 0.8,
-                    "cis_l": 0.8,
+                    "cis_v": 0.8,
                     "comp_para": 1,
                     "comp_perp": 1,
                     "trac": 0.8,
@@ -593,7 +593,22 @@ class Resistances:
     """
     6.5 Calcul des résistances.
 
+    Args:
+        b (int): Largeur de l'élément, mm.
+        d (int): Hauteur de l'élément, mm.
+        kd (float, optional): Coefficient de durée d'application de la charge.
+        kh (float, optional): Coefficient de système.
+        kt (float, optional): Coefficient de traitement.
+        ply (int, optional): Nombre de plis si élément composée. Default to 1.
+
     """
+
+    b: int
+    d: int
+    kd: float = 1
+    kh: float = 1
+    kt: float = 1
+    ply: int = 1
 
     def sizes(self, dimension: int, green: bool = False, brut: bool = False):
         """
@@ -629,15 +644,9 @@ class Resistances:
 
     def bending_moment(
         self,
-        b: int,
-        d: int,
         fb: float,
-        kd: float = 1,
-        kh: float = 1,
         ksb: float = 1,
-        kt: float = 1,
         kzb: float = 1,
-        ply: int = 1,
         lateral_support: bool = False,
         compressive_edge_support: bool = False,
         tensile_edge_support: bool = False,
@@ -648,17 +657,10 @@ class Resistances:
         6.5.3 Résistance au moment de flexion.
 
         Args:
-            b (int): Largeur de l'élément, mm.
-            d (int): Hauteur de l'élément, mm.
             fb (float): Résistance prévue en flexion, MPa (voir les tableaux 6.4 à 6.9).
-
-            kd (float, optional): Coefficient de durée d'application de la charge.
-            kh (float, optional): Coefficient de système.
-            ksb (float, optional): Coefficient de conditions d'utilisation.
-            kt (float, optional): Coefficient de traitement.
+            ksb (float, optional): Coefficient de conditions d'utilisation en flexion.
             kzb (float, optional): Coefficient de dimensions en flexion (voir l'article 6.4.5).
 
-            ply (int, optional): Nombre de plis pour une poutre composée. Default to 1 ply.
             lateral_support (bool, optional): Support latéral aux appuis. Default to False.
             compressive_edge_support (bool, optional): Rive comprimée maintenu. Default to False.
             tensile_edge_support (bool, optional): Rive en tension maintenu. Default to False.
@@ -669,12 +671,18 @@ class Resistances:
             float: Mr = Résistance pondérée au moment de flexion, N*mm.
 
         """
-
         phi = 0.9
+
+        kd = self.kd
+        kh = self.kh
+        kt = self.kt
         f_b = fb * (kd * kh * ksb * kt)
+
+        b = self.b * self.ply
+        d = self.d
         s = (b * d**2) / 6
 
-        rapport_h_l = d / (b * ply)
+        rapport_h_l = d / b
         if lateral_support:
             if compressive_edge_support:
                 if tensile_edge_support:
@@ -691,7 +699,7 @@ class Resistances:
             criteria = 2.5
 
         if rapport_h_l > criteria:
-            kl = 0
+            kl = 1
             print("\nATTENTION!!!\tValider Kl selon 7.5.6.4\n")
         else:
             kl = 1
@@ -700,11 +708,64 @@ class Resistances:
 
         return mr
 
-    def shear(self):
+    def shear(
+        self,
+        fv: float,
+        ksv: float = 1,
+        ksf: float = 1,
+        kzv: float = 1,
+        dn: int = 0,
+        e: int = 0,
+    ):
         """
         6.5.4 Résistance au cisaillement.
 
+        Args:
+            fv (float): Résistance prévue en cisaillement, MPa (voir l'article 6.3).
+            ksv (float, optional): Coefficient de conditions d'utilisation en cisaillement longitudinal.
+            ksf (float, optional): Coefficient de conditions d'utilisation en cisaillement par fissuration.
+            kzv (float, optional): Coefficient de dimensions en cisaillement (voir l'article 6.4.5).
+            dn (int, optional): Profondeur de l'entaille, mm. Default to 0.
+            e (int, optional): Longueur de l'entaille, mm. Default to 0.
+
+        Returns:
+            float: Vr = Résistance pondérée au cisaillement, N.
+            float: Fr = Résistance pondérée au cisaillement par fissuration, N.
+
         """
+        phi = 0.9
+
+        kd = self.kd
+        kh = self.kh
+        kt = self.kt
+        f_v = fv * (kd * kh * ksv * kt)
+        ff = 0.5
+        f_f = ff * (kd * kh * ksf * kt)
+
+        b = self.b * self.ply
+        d = self.d
+        ag = b * d
+        an = ag
+
+        if dn > 0 and e > 0:
+            if dn > 0.25 * d:
+                raise ValueError(
+                    "La profondeur de l'entaille ne doit pas dépasser 0,25d."
+                )
+            else:
+                an = b * (d - dn)
+            a = 1 - (dn / d)
+            n = e / d
+            kn = (0.006 * d * (1.6 * ((1 / a) - 1) + n**2 * ((1 / a**3) - 1))) ** (
+                -1 / 2
+            )
+        else:
+            kn = 0
+
+        vr = phi * f_v * ((2 * an) / 3) * kzv
+        fr = phi * f_f * ag * kn
+
+        return vr, fr
 
     def comp_parallel(self):
         """
@@ -805,23 +866,24 @@ def _tests():
     ), f"modification_factors -> FAILED\n {expected_result = }\n {test_modification_factors = }"
 
     # Test sizes
-    test_sizes = Resistances().sizes(dimension=5, green=True, brut=False)
+    test_sizes = Resistances(38, 140).sizes(dimension=5, green=True, brut=False)
     expected_result = 117
     assert (
         test_sizes == expected_result
     ), f"sizes -> FAILED\n {expected_result = }\n {test_sizes = }"
 
     # Test bending_moment
-    test_bending_moment = Resistances().bending_moment(
+    test_bending_moment = Resistances(
         b=38,
         d=140,
-        fb=6,
         kd=1,
         kh=1,
-        ksb=1,
         kt=1,
-        kzb=1,
         ply=1,
+    ).bending_moment(
+        fb=6,
+        ksb=1,
+        kzb=1,
         lateral_support=True,
         compressive_edge_support=True,
         tensile_edge_support=True,
@@ -832,6 +894,27 @@ def _tests():
     assert (
         test_bending_moment == expected_result
     ), f"bending_moment -> FAILED\n {expected_result = }\n {test_bending_moment = }"
+
+    # Test shear
+    test_shear = Resistances(
+        b=38,
+        d=140,
+        kd=1,
+        kh=1,
+        kt=1,
+        ply=1,
+    ).shear(
+        fv=1.2,
+        ksv=1,
+        kzv=1,
+        ksf=1,
+        dn=0,
+        e=0,
+    )
+    expected_result = 3830.4, 0
+    assert (
+        test_shear == expected_result
+    ), f"shear -> FAILED\n {expected_result = }\n {test_shear = }"
 
 
 # RUN FILE
