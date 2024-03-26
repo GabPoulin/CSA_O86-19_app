@@ -657,9 +657,9 @@ class Resistances:
         6.5.3 Résistance au moment de flexion.
 
         Args:
-            fb (float): Résistance prévue en flexion, MPa (voir les tableaux 6.4 à 6.9).
-            ksb (float, optional): Coefficient de conditions d'utilisation en flexion.
-            kzb (float, optional): Coefficient de dimensions en flexion (voir l'article 6.4.5).
+            fb (float): Résistance prévue en flexion, MPa.
+            ksb (float, optional): Coefficient de conditions d'utilisation pour la flexion.
+            kzb (float, optional): Coefficient de dimensions pour la flexion.
 
             lateral_support (bool, optional): Support latéral aux appuis. Default to False.
             compressive_edge_support (bool, optional): Rive comprimée maintenu. Default to False.
@@ -721,16 +721,19 @@ class Resistances:
         6.5.4 Résistance au cisaillement.
 
         Args:
-            fv (float): Résistance prévue en cisaillement, MPa (voir l'article 6.3).
-            ksv (float, optional): Coefficient de conditions d'utilisation en cisaillement longitudinal.
-            ksf (float, optional): Coefficient de conditions d'utilisation en cisaillement par fissuration.
-            kzv (float, optional): Coefficient de dimensions en cisaillement (voir l'article 6.4.5).
+            fv (float): Résistance prévue en cisaillement, MPa.
+            ksv (float, optional): Coefficient de conditions d'utilisation pour le cisaillement.
+            ksf (float, optional): Coefficient de conditions d'utilisation pour le cisaillement par fissuration.
+            kzv (float, optional): Coefficient de dimensions en cisaillement.
             dn (int, optional): Profondeur de l'entaille, mm. Default to 0.
             e (int, optional): Longueur de l'entaille, mm. Default to 0.
 
         Returns:
             float: Vr = Résistance pondérée au cisaillement, N.
             float: Fr = Résistance pondérée au cisaillement par fissuration, N.
+
+        Raises:
+            ValueError: Lorsque dn > 0.25d.
 
         """
         phi = 0.9
@@ -750,7 +753,7 @@ class Resistances:
         if dn > 0 and e > 0:
             if dn > 0.25 * d:
                 raise ValueError(
-                    "La profondeur de l'entaille ne doit pas dépasser 0,25d."
+                    f"La profondeur de l'entaille (dn = {dn} mm) ne doit pas dépasser 0,25d = {0.25 * d} mm."
                 )
             else:
                 an = b * (d - dn)
@@ -767,11 +770,91 @@ class Resistances:
 
         return vr, fr
 
-    def comp_parallel(self):
+    def comp_parallel(
+        self,
+        l_b: int,
+        l_d: int,
+        fc: float,
+        e05: int,
+        ksc: float = 1,
+        kse: float = 1,
+        end_in_translation: bool = False,
+        end_in_rotation: int = 2,
+    ):
         """
         6.5.5 Résistance à la compression parallèle au fil.
 
+        Args:
+            l_b (int): Longueur entre les appuis latéraux pour l'axe faible, mm.
+            l_d (int): Longueur entre les appuis latéraux pour l'axe fort, mm.
+
+            fc (float): Résistance prévue en compression parallèle au fil, MPa.
+            e05 (int): Module d’élasticité pour les calculs des éléments en compression, MPa.
+
+            ksc (float, optional): Coefficient de conditions d'utilisation pour la compression parallèle au fil.
+            kse (float, optional): Coefficient de conditions d’utilisation relatif au module d’élasticité.
+
+            end_in_translation (bool, optional): Extrémité libre en translation. Default to False.
+            end_in_rotation (int, optional): Extrémités libre en rotation.
+                Choices: 0, 1, 2. Default to 2.
+
+        Raises:
+            ValueError: Lorsque les conditions d'appuis aux extrémités sont instables.
+            ValueError: Lorsque Cc > 50.
+
         """
+        if not end_in_translation:
+            if end_in_rotation == 0:
+                ke = 0.65
+            elif end_in_rotation == 1:
+                ke = 0.8
+            else:
+                ke = 1
+        else:
+            if end_in_rotation == 0:
+                ke = 1.5
+            elif end_in_rotation == 1:
+                ke = 2
+            else:
+                raise ValueError(
+                    "Les conditions d'appuis aux extrémités sont instables."
+                )
+
+        le_b = ke * l_b
+        le_d = ke * l_d
+        b = self.b * self.ply
+        d = self.d
+        cc_b = le_b / b
+        cc_d = le_d / d
+        if cc_b > 50:
+            raise ValueError(
+                f"L'élancement selon l'axe faible (Cc = {round(cc_b,1)}) ne doit pas dépasser 50."
+            )
+        if cc_d > 50:
+            raise ValueError(
+                f"L'élancement selon l'axe fort (Cc = {round(cc_d,1)}) ne doit pas dépasser 50."
+            )
+
+        phi = 0.8
+
+        kd = self.kd
+        kh = self.kh
+        kt = self.kt
+        f_c = fc * (kd * kh * ksc * kt)
+
+        a = b * d
+
+        kzc_b = min((6.3 * (b * l_b) ** (-0.13)), 1.3)
+        kzc_d = min((6.3 * (d * l_d) ** (-0.13)), 1.3)
+
+        kc_b = (1 + ((f_c * kzc_b * cc_b**3) / (35 * e05 * kse * kt))) ** (-1)
+        kc_d = (1 + ((f_c * kzc_d * cc_d**3) / (35 * e05 * kse * kt))) ** (-1)
+
+        pr_b = phi * f_c * a * kzc_b * kc_b
+        pr_d = phi * f_c * a * kzc_d * kc_d
+        pr = min(pr_b, pr_d)
+
+        return pr
 
     def comp_perpendicular(self):
         """
@@ -915,6 +998,29 @@ def _tests():
     assert (
         test_shear == expected_result
     ), f"shear -> FAILED\n {expected_result = }\n {test_shear = }"
+
+    # Test comp_parallel
+    test_comp_parallel = Resistances(
+        b=38,
+        d=140,
+        kd=1,
+        kh=1,
+        kt=1,
+        ply=1,
+    ).comp_parallel(
+        l_b=10,
+        l_d=7000,
+        fc=10,
+        e05=10000,
+        ksc=1,
+        kse=1,
+        end_in_translation=False,
+        end_in_rotation=2,
+    )
+    expected_result = 9404.76895414987
+    assert (
+        test_comp_parallel == expected_result
+    ), f"comp_parallel -> FAILED\n {expected_result = }\n {test_comp_parallel = }"
 
 
 # RUN FILE
