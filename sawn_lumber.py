@@ -780,6 +780,8 @@ class Resistances:
         kse: float = 1,
         end_in_translation: bool = False,
         end_in_rotation: int = 2,
+        spacers: bool = False,
+        glulam: bool = False,
     ):
         """
         6.5.5 Résistance à la compression parallèle au fil.
@@ -797,6 +799,8 @@ class Resistances:
             end_in_translation (bool, optional): Extrémité libre en translation. Default to False.
             end_in_rotation (int, optional): Extrémités libre en rotation.
                 Choices: 0, 1, 2. Default to 2.
+
+            spacers (bool, optional): Éléments assemblés avec cales d'espacement. Default to False.
 
         Raises:
             ValueError: Lorsque les conditions d'appuis aux extrémités sont instables.
@@ -853,6 +857,17 @@ class Resistances:
         pr_b = phi * f_c * a * kzc_b * kc_b
         pr_d = phi * f_c * a * kzc_d * kc_d
         pr = min(pr_b, pr_d)
+
+        if spacers:
+            if glulam:
+                phi = 0.9
+                kzc_b = 1
+                kzc_d = 1
+            else:
+                kzc_b = 0
+                kzc_d = 0
+
+            pr = phi * f_c * a * kc * kzc
 
         return pr
 
