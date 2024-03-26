@@ -789,10 +789,10 @@ class Resistances:
             l_d (int): Longueur entre les appuis latéraux pour l'axe fort, mm.
 
             fc (float): Résistance prévue en compression parallèle au fil, MPa.
-            e05 (int): Module d’élasticité pour les calculs des éléments en compression, MPa.
+            e05 (int): Module d'élasticité pour les calculs des éléments en compression, MPa.
 
             ksc (float, optional): Coefficient de conditions d'utilisation pour la compression parallèle au fil.
-            kse (float, optional): Coefficient de conditions d’utilisation relatif au module d’élasticité.
+            kse (float, optional): Coefficient de conditions d'utilisation relatif au module d'élasticité.
 
             end_in_translation (bool, optional): Extrémité libre en translation. Default to False.
             end_in_rotation (int, optional): Extrémités libre en rotation.
