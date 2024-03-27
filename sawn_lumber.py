@@ -833,11 +833,15 @@ class Resistances:
                 raise ValueError(
                     "Les conditions d'appuis aux extrémités sont instables."
                 )
-
         le_b = ke * l_b
         le_d = ke * l_d
-        b = self.b * self.ply
+
+        if connectors in ("clous", "boulons", "anneaux"):
+            b = self.b * self.ply
+        else:
+            b = self.b
         d = self.d
+
         cc_b = le_b / b
         cc_d = le_d / d
         if cc_b > 50:
@@ -866,6 +870,16 @@ class Resistances:
 
         pr_b = phi * f_c * a * kzc_b * kc_b
         pr_d = phi * f_c * a * kzc_d * kc_d
+        if self.ply > 1:
+            if connectors == "clous":
+                pr_b *= 0.6
+            elif connectors == "boulons":
+                pr_b *= 0.75
+            elif connectors == "anneaux":
+                pr_b *= 0.8
+            else:
+                pr_b *= self.ply
+                pr_d *= self.ply
         pr = min(pr_b, pr_d)
 
         # A.6.5.5.3 Éléments en compression assemblés avec cales d’espacement.
@@ -1054,16 +1068,17 @@ def _tests():
         kd=1,
         kh=1,
         kt=1,
-        ply=2,
+        ply=4,
     ).comp_parallel(
-        l_b=1000,
-        l_d=2000,
+        l_b=100,
+        l_d=1000,
         fc=10,
         e05=10000,
         ksc=1,
         kse=1,
         end_in_translation=False,
         end_in_rotation=2,
+        connectors="aucun",
         spacers=False,
         glulam=False,
     )
