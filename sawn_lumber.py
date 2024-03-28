@@ -805,6 +805,9 @@ class Resistances:
             spacers (bool, optional): Éléments assemblés avec cales d'espacement. Default to False.
             glulam (bool, optional): Élément en bois lamellé collé. Default to False.
 
+        Returns:
+            float: Pr = Résistance pondérée à la compression parallèle au fil, N.
+
         Raises:
             ValueError: Lorsque plus de 5 plis pour un élément composé.
             ValueError: Lorsque les conditions d'appuis aux extrémités sont instables.
@@ -918,11 +921,51 @@ class Resistances:
 
         return pr
 
-    def comp_perpendicular(self):
+    def comp_perpendicular(
+        self,
+        g: float,
+        kscp: float = 1,
+        lb2: int = 38,
+        lb1: int = 0,
+        d_lb1: int = 0,
+    ):
         """
         6.5.6 Résistance à la compression perpendiculaire au fil.
 
         """
+        # A.6.5.6 Compression perpendiculaire au fil.
+        L = 1.8125
+        M = 145.038
+        fcp = 0.9 * L * (2243.8 * g - 473.8) / M
+
+        phi = 0.8
+
+        kd = self.kd
+        kt = self.kt
+        f_cp = fcp * (kd * kscp * kt)
+
+        b = self.b
+        ab = b * lb2
+
+        if lb2 <= 12.5:
+            
+
+        d = self.d
+        ratio = b / d
+        if ratio <= 1:
+            kzcp = 1
+        elif ratio < 2:
+            kzcp = 0.15 * ratio + 0.85
+        else:
+            kzcp = 1.15
+
+        lb1 = min(lb1, lb2)
+        ab_prim = min(b * ((lb1 + lb2) / 2), 1.5 * b * lb1)
+
+        qr = phi * f_cp * ab * kb * kzcp
+        qr_prim = (2 / 3) * phi * f_cp * ab_prim * kb * kzcp
+
+        return qr, qr_prim
 
     def comp_angle(self):
         """
