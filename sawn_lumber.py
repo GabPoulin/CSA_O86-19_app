@@ -923,20 +923,23 @@ class Resistances:
 
     def comp_perpendicular(
         self,
-        g: float,
+        fcp: float = 0,
         kscp: float = 1,
         lb2: int = 38,
+        d_lb2: int = 0,
         lb1: int = 0,
         d_lb1: int = 0,
+        g: float = 0,
     ):
         """
         6.5.6 Résistance à la compression perpendiculaire au fil.
 
         """
         # A.6.5.6 Compression perpendiculaire au fil.
-        L = 1.8125
-        M = 145.038
-        fcp = 0.9 * L * (2243.8 * g - 473.8) / M
+        if g > 0:
+            L = 1.8125
+            M = 145.038
+            fcp = 0.9 * L * (2243.8 * g - 473.8) / M
 
         phi = 0.8
 
@@ -947,9 +950,6 @@ class Resistances:
         b = self.b
         ab = b * lb2
 
-        if lb2 <= 12.5:
-            
-
         d = self.d
         ratio = b / d
         if ratio <= 1:
@@ -959,11 +959,20 @@ class Resistances:
         else:
             kzcp = 1.15
 
-        lb1 = min(lb1, lb2)
-        ab_prim = min(b * ((lb1 + lb2) / 2), 1.5 * b * lb1)
+        if d_lb2 - lb2 / 2 < 75:
+            kb2 = 1
 
-        qr = phi * f_cp * ab * kb * kzcp
-        qr_prim = (2 / 3) * phi * f_cp * ab_prim * kb * kzcp
+        qr = phi * f_cp * ab * kb2 * kzcp
+
+        if d_lb1 <= d:
+            lb1 = min(lb1, lb2)
+            lb2 = max(lb1, lb2)
+            ab_prim = min(b * ((lb1 + lb2) / 2), 1.5 * b * lb1)
+            qr_prim = (2 / 3) * phi * f_cp * ab_prim * kb2 * kzcp
+
+        else:
+            ab = b * lb1
+            qr_prim = phi * f_cp * ab * kb1 * kzcp
 
         return qr, qr_prim
 
