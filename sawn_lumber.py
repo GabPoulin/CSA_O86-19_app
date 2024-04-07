@@ -805,6 +805,9 @@ class Resistances:
             spacers (bool, optional): Éléments assemblés avec cales d'espacement. Default to False.
             glulam (bool, optional): Élément en bois lamellé collé. Default to False.
 
+        Returns:
+            float: Pr = Résistance pondérée à la compression parallèle au fil, N.
+
         Raises:
             ValueError: Lorsque plus de 5 plis pour un élément composé.
             ValueError: Lorsque les conditions d'appuis aux extrémités sont instables.
