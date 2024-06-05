@@ -9,29 +9,29 @@ ANSWERED = False
 # Initial prompts
 print("")
 print("CSA O86:19: Règles de calcul des charpentes en bois")
-print("    5  - Conception générale")
-print("    6  - Bois de sciage")
-print("    7  - Bois lamellé-collé")
-print("    8  - Bois lamellé-croisé")
-print("    9  - Panneaux structuraux")
-print("    10 - Éléments de charpente composites")
-print("    11 - Structures résistantes aux charges latérales")
-print("    12 - Assemblages")
-print("    13 - Ouvrages en pilots de bois")
-print("    14 - Ouvrages en poteaux")
-print("    15 - Produits propriétaires en bois de charpente - Calcul")
-print("    16 - Produits propriétaires en bois de charpente - Matériaux et évaluation")
+print("    5  Conception générale")
+print("    6  Bois de sciage")
+print("    7  Bois lamellé-collé")
+print("    8  Bois lamellé-croisé")
+print("    9  Panneaux structuraux")
+print("    10 Éléments de charpente composites")
+print("    11 Structures résistantes aux charges latérales")
+print("    12 Assemblages")
+print("    13 Ouvrages en pilots de bois")
+print("    14 Ouvrages en poteaux")
+print("    15 Produits propriétaires en bois de charpente - Calcul")
+print("    16 Produits propriétaires en bois de charpente - Matériaux et évaluation")
 print("")
 SECTION = input("Section: ")
 
 # Section 5
 if SECTION == "5":
-    print("    5.1 - Calculs aux états limites")
-    print("    5.3 - Conditions et coefficients influant sur la résistance")
-    print("    5.4 - Exigences relatives à la tenue en service")
-    print("    5.5 - Effort de contreventement latéral sur les membrures")
-    print("          d'âme en compression des fermes de toit en bois")
-    print("    5.6 - Résistance au feu")
+    print("    5.1 Calculs aux états limites")
+    print("    5.3 Conditions et coefficients influant sur la résistance")
+    print("    5.4 Exigences relatives à la tenue en service")
+    print("    5.5 Effort de contreventement latéral sur les membrures")
+    print("        d'âme en compression des fermes de toit en bois")
+    print("    5.6 Résistance au feu")
     print("")
     SOUS_SECTION = input("Sous-section: 5.")
 
@@ -46,9 +46,9 @@ if SECTION == "5":
         ANSWERED = True
 
     # Sous-section 5.3
-    if SOUS_SECTION == "3":
-        print("    5.3.2 - Coefficient de durée d'application de la charge, Kd")
-        print("    5.3.8 - Validation de la section transversale")
+    elif SOUS_SECTION == "3":
+        print("    5.3.2 Coefficient de durée d'application de la charge, Kd")
+        print("    5.3.8 Validation de la section transversale")
         print("")
         CLAUSE = input("Clause: 5.3.")
 
@@ -99,13 +99,13 @@ if SECTION == "5":
 
     # Sous-section 5.4
     elif SOUS_SECTION == "4":
-        print("    5.4.1 - Module d'élasticité")
-        print("    5.4.2 - Flèche élastique")
-        print("    5.4.3 - Déformation permanente")
-        print("    5.4.4 - Accumulation d'eau")
-        print("    5.4.5 - Vibration")
-        print("    5.4.6 - Mouvements du bâtiment attribuables au")
-        print("            changement de la teneur en humidité")
+        print("    5.4.1 Module d'élasticité")
+        print("    5.4.2 Flèche élastique")
+        print("    5.4.3 Déformation permanente")
+        print("    5.4.4 Accumulation d'eau")
+        print("    5.4.5 Vibration")
+        print("    5.4.6 Mouvements du bâtiment attribuables au")
+        print("          changement de la teneur en humidité")
         print("")
         CLAUSE = input("Clause: 5.4.")
 
@@ -307,11 +307,11 @@ if SECTION == "5":
 
 # Section 6
 elif SECTION == "6":
-    print("    6.2 - Matériaux")
-    print("    6.3 - Résistances prévues et modules d'élasticité")
-    print("    6.4 - Coefficients de correction")
-    print("    6.5 - Calcul des résistances")
-    print("    6.6 - États limites de tenue en service")
+    print("    6.2 Matériaux")
+    print("    6.3 Résistances prévues et modules d'élasticité")
+    print("    6.4 Coefficients de correction")
+    print("    6.5 Calcul des résistances")
+    print("    6.6 États limites de tenue en service")
     print("")
     SOUS_SECTION = input("Sous-section: 6.")
 
@@ -328,7 +328,7 @@ elif SECTION == "6":
         ANSWERED = True
 
     # Sous-section 6.3
-    if SOUS_SECTION == "3":
+    elif SOUS_SECTION == "3":
         SIDE = False
         CATEGORY = input(
             "\tCatégorie. ('Lumber', 'Light', 'Beam', 'Post', 'MSR' ou 'MEL') = "
@@ -366,7 +366,7 @@ elif SECTION == "6":
         ANSWERED = True
 
     # Sous-section 6.4
-    if SOUS_SECTION == "4":
+    elif SOUS_SECTION == "4":
         WID = input("\tLargeur de l'élément, mm = ")
         DEP = input("\tHauteur de l'élément, mm = ")
         print("\tPropriété évaluée.")
@@ -404,74 +404,96 @@ elif SECTION == "6":
         ANSWERED = True
 
     # Sous-section 6.5
-    if SOUS_SECTION == "5":
-        print("    À venir")
+    elif SOUS_SECTION == "5":
+        print("    6.5.2 Dimensions")
+        print("    6.5.3 Résistance au moment de flexion")
+        print("    6.5.4 Résistance au cisaillement")
+        print("    6.5.5 Résistance à la compression parallèle au fil")
+        print("    6.5.6 Résistance à la compression perpendiculaire au fil")
+        print("    6.5.7 Résistance à la compression oblique par rapport au fil")
+        print("    6.5.8 Résistance à la traction parallèle au fil")
+        print("    6.5.9 Résistance à la flexion et à la charge axiale combinées")
+        print("    6.5.10 Platelage")
+        print("    6.5.11 Fondations permanentes en bois")
+        print("    6.5.12 Applications propres aux fermes")
         print("")
-        ANSWERED = True
+        CLAUSE = input("Clause: 6.5.")
+
+        # Clause 6.5.2
+        if CLAUSE == "2":
+            DIM = input("\tDimmension nominale, po = ")
+            TH = input("\tBois vert (teneur en humidité > 19%). (y/n) = ") == "y"
+            BRUT = input("\tDimensions brutes. (y/n) = ") == "y"
+            dim_nette = sawn_lumber.Resistances(0, 0).sizes(DIM, TH, BRUT)
+            print(f"\tDimension nette = {dim_nette}")
+            print("")
+            ANSWERED = True
 
     # Sous-section 6.6
-    if SOUS_SECTION == "6":
+    elif SOUS_SECTION == "6":
         print("    À venir")
         print("")
         ANSWERED = True
 
 # Section 7
 elif SECTION == "7":
-    print("    À venir")
+    print("    Bois lamellé-collé: À venir")
     print("")
     ANSWERED = True
 
 # Section 8
 elif SECTION == "8":
-    print("    À venir")
+    print("    Bois lamellé-croisé: À venir")
     print("")
     ANSWERED = True
 
 # Section 9
 elif SECTION == "9":
-    print("    À venir")
+    print("    Panneaux structuraux: À venir")
     print("")
     ANSWERED = True
 
 # Section 10
 elif SECTION == "10":
-    print("    À venir")
+    print("    Éléments de charpente composites: À venir")
     print("")
     ANSWERED = True
 
 # Section 11
 elif SECTION == "11":
-    print("    À venir")
+    print("    Structures résistantes aux charges latérales: À venir")
     print("")
     ANSWERED = True
 
 # Section 12
 elif SECTION == "12":
-    print("    À venir")
+    print("    Assemblages: À venir")
     print("")
     ANSWERED = True
 
 # Section 13
 elif SECTION == "13":
-    print("    À venir")
+    print("    Ouvrages en pilots de bois: À venir")
     print("")
     ANSWERED = True
 
 # Section 14
 elif SECTION == "14":
-    print("    À venir")
+    print("    Ouvrages en poteaux: À venir")
     print("")
     ANSWERED = True
 
 # Section 15
 elif SECTION == "15":
-    print("    À venir")
+    print("    Produits propriétaires en bois de charpente - Calcul: À venir")
     print("")
     ANSWERED = True
 
 # Section 16
 elif SECTION == "16":
-    print("    À venir")
+    print(
+        "    Produits propriétaires en bois de charpente - Matériaux et évaluation: À venir"
+    )
     print("")
     ANSWERED = True
 

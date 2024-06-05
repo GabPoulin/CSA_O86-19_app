@@ -1,6 +1,7 @@
 """
 CSA O86:19: Règles de calcul des charpentes en bois.
- 6 Bois de sciage.
+
+6 Bois de sciage.
 ----------------------------------------------------
 
 6.2 Matériaux.
@@ -8,24 +9,40 @@ CSA O86:19: Règles de calcul des charpentes en bois.
 6.3 Résistances prévues et modules d'élasticité.
 
 6.4 Coefficients de correction.
+
     6.4.1 Coefficient de durée d'application de la charge, Kd.
-     6.4.2 Coefficient de conditions d'utilisation, Ks.
-      6.4.3 Coefficient de traitement, Kt.
-       6.4.4 Coefficient de système, Kh.
-        6.4.5 Coefficient de dimensions, Kz.
-        
+    
+    6.4.2 Coefficient de conditions d'utilisation, Ks.
+    
+    6.4.3 Coefficient de traitement, Kt.
+      
+    6.4.4 Coefficient de système, Kh.
+       
+    6.4.5 Coefficient de dimensions, Kz.
+    
 6.5 Calcul des résistances.
+    
     6.5.2 Dimensions.
-     6.5.3 Résistance au moment de flexion.
-      6.5.4 Résistance au cisaillement.
-       6.5.5 Résistance à la compression parallèle au fil.
-        6.5.6 Résistance à la compression perpendiculaire au fil.
-         6.5.7 Résistance à la compression oblique par rapport au fil.
-          6.5.8 Résistance à la traction parallèle au fil.
-           6.5.9 Résistance à la flexion et à la charge axiale combinées.
-            6.5.10 Platelage.
-             6.5.11 Fondations permanentes en bois.
-              6.5.12 Applications propres aux fermes.
+    
+    6.5.3 Résistance au moment de flexion.
+    
+    6.5.4 Résistance au cisaillement.
+       
+    6.5.5 Résistance à la compression parallèle au fil.
+    
+    6.5.6 Résistance à la compression perpendiculaire au fil.
+    
+    6.5.7 Résistance à la compression oblique par rapport au fil.
+    
+    6.5.8 Résistance à la traction parallèle au fil.
+    
+    6.5.9 Résistance à la flexion et à la charge axiale combinées.
+    
+    6.5.10 Platelage.
+    
+    6.5.11 Fondations permanentes en bois.
+    
+    6.5.12 Applications propres aux fermes.
               
 6.6 États limites de tenue en service.
 
@@ -950,6 +967,7 @@ class Resistances:
         b = self.b
         ab = b * lb2
 
+        # 6.5.6.4
         d = self.d
         ratio = b / d
         if ratio <= 1:
@@ -959,9 +977,11 @@ class Resistances:
         else:
             kzcp = 1.15
 
+        # 6.5.6.5
         if d_lb2 - lb2 / 2 < 75:
             kb2 = 1
 
+        # 6.5.6.2
         qr = phi * f_cp * ab * kb2 * kzcp
 
         if d_lb1 <= d:
