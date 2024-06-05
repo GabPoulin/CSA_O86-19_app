@@ -1,6 +1,7 @@
 """
 CSA O86:19: Règles de calcul des charpentes en bois.
- 6 Bois de sciage.
+
+6 Bois de sciage.
 ----------------------------------------------------
 
 6.2 Matériaux.
@@ -8,24 +9,40 @@ CSA O86:19: Règles de calcul des charpentes en bois.
 6.3 Résistances prévues et modules d'élasticité.
 
 6.4 Coefficients de correction.
+
     6.4.1 Coefficient de durée d'application de la charge, Kd.
-     6.4.2 Coefficient de conditions d'utilisation, Ks.
-      6.4.3 Coefficient de traitement, Kt.
-       6.4.4 Coefficient de système, Kh.
-        6.4.5 Coefficient de dimensions, Kz.
-        
+    
+    6.4.2 Coefficient de conditions d'utilisation, Ks.
+    
+    6.4.3 Coefficient de traitement, Kt.
+      
+    6.4.4 Coefficient de système, Kh.
+       
+    6.4.5 Coefficient de dimensions, Kz.
+    
 6.5 Calcul des résistances.
+    
     6.5.2 Dimensions.
-     6.5.3 Résistance au moment de flexion.
-      6.5.4 Résistance au cisaillement.
-       6.5.5 Résistance à la compression parallèle au fil.
-        6.5.6 Résistance à la compression perpendiculaire au fil.
-         6.5.7 Résistance à la compression oblique par rapport au fil.
-          6.5.8 Résistance à la traction parallèle au fil.
-           6.5.9 Résistance à la flexion et à la charge axiale combinées.
-            6.5.10 Platelage.
-             6.5.11 Fondations permanentes en bois.
-              6.5.12 Applications propres aux fermes.
+    
+    6.5.3 Résistance au moment de flexion.
+    
+    6.5.4 Résistance au cisaillement.
+       
+    6.5.5 Résistance à la compression parallèle au fil.
+    
+    6.5.6 Résistance à la compression perpendiculaire au fil.
+    
+    6.5.7 Résistance à la compression oblique par rapport au fil.
+    
+    6.5.8 Résistance à la traction parallèle au fil.
+    
+    6.5.9 Résistance à la flexion et à la charge axiale combinées.
+    
+    6.5.10 Platelage.
+    
+    6.5.11 Fondations permanentes en bois.
+    
+    6.5.12 Applications propres aux fermes.
               
 6.6 États limites de tenue en service.
 
@@ -755,8 +772,7 @@ class Resistances:
                 raise ValueError(
                     f"La profondeur de l'entaille (dn = {dn} mm) ne doit pas dépasser 0,25d = {0.25 * d} mm."
                 )
-            else:
-                an = b * (d - dn)
+            an = b * (d - dn)
             a = 1 - (dn / d)
             n = e / d
             kn = (0.006 * d * (1.6 * ((1 / a) - 1) + n**2 * ((1 / a**3) - 1))) ** (
@@ -780,6 +796,7 @@ class Resistances:
         kse: float = 1,
         end_in_translation: bool = False,
         end_in_rotation: int = 2,
+        connectors: str = "clous",
         spacers: bool = False,
         glulam: bool = False,
     ):
@@ -800,13 +817,26 @@ class Resistances:
             end_in_rotation (int, optional): Extrémités libre en rotation.
                 Choices: 0, 1, 2. Default to 2.
 
+            connectors (str, optional): Connecteurs pour élément composé.
+                Choices: "clous", "boulons", "anneaux", "aucun". Default to "clous".
             spacers (bool, optional): Éléments assemblés avec cales d'espacement. Default to False.
+            glulam (bool, optional): Élément en bois lamellé collé. Default to False.
+
+        Returns:
+            float: Pr = Résistance pondérée à la compression parallèle au fil, N.
 
         Raises:
+            ValueError: Lorsque plus de 5 plis pour un élément composé.
             ValueError: Lorsque les conditions d'appuis aux extrémités sont instables.
-            ValueError: Lorsque Cc > 50.
+            ValueError: Lorsque Cc > 50 (ou Cc > 80 si cales d'espacement).
 
         """
+        if self.ply > 5:
+            raise ValueError(
+                "Un élément composé en compression ne peut avoir plus de 5 plis."
+            )
+
+        # A.6.5.5.1 coefficient de longueur effective, Ke.
         if not end_in_translation:
             if end_in_rotation == 0:
                 ke = 0.65
@@ -823,11 +853,15 @@ class Resistances:
                 raise ValueError(
                     "Les conditions d'appuis aux extrémités sont instables."
                 )
-
         le_b = ke * l_b
         le_d = ke * l_d
-        b = self.b * self.ply
+
+        if connectors in ("clous", "boulons", "anneaux"):
+            b = self.b * self.ply
+        else:
+            b = self.b
         d = self.d
+
         cc_b = le_b / b
         cc_d = le_d / d
         if cc_b > 50:
@@ -856,26 +890,111 @@ class Resistances:
 
         pr_b = phi * f_c * a * kzc_b * kc_b
         pr_d = phi * f_c * a * kzc_d * kc_d
+        if self.ply > 1:
+            if connectors == "clous":
+                pr_b *= 0.6
+            elif connectors == "boulons":
+                pr_b *= 0.75
+            elif connectors == "anneaux":
+                pr_b *= 0.8
+            else:
+                pr_b *= self.ply
+                pr_d *= self.ply
         pr = min(pr_b, pr_d)
 
-        if spacers:
+        # A.6.5.5.3 Éléments en compression assemblés avec cales d’espacement.
+        if self.ply > 1 and spacers:
+            f_c = fc * (kd * ksc * kt)
+
+            b = self.b * (2 * self.ply - 1)
+            a = b * d
+
+            l = max(l_b, l_d)
             if glulam:
                 phi = 0.9
-                kzc_b = 1
-                kzc_d = 1
+                kzc = 1
+                k = 2
             else:
-                kzc_b = 0
-                kzc_d = 0
+                dim = max(b, d)
+                kzc = min((6.3 * (dim * l) ** (-0.13)), 1.3)
+                k = 1.8
 
-            pr = phi * f_c * a * kc * kzc
+            cc = l / self.b
+            ke = 2.5
+            ck = ((0.76 * e05 * kse * ke * kt) / f_c) ** (1 / 2)
+            if cc <= 10:
+                kc = 1
+            elif cc < ck:
+                kc = 1 - (1 / 3) * (cc / ck) ** 4
+            elif cc <= 80:
+                kc = (e05 * kse * ke * kt) / (k * cc**2 * f_c)
+            else:
+                raise ValueError(
+                    f"L'élancement pour éléments avec cales d'espacement (Cc = {round(cc,1)}) ne doit pas dépasser 80."
+                )
+
+            pr_spacers = phi * f_c * a * kc * kzc
+            pr = min(pr_spacers, pr_d)
 
         return pr
 
-    def comp_perpendicular(self):
+    def comp_perpendicular(
+        self,
+        fcp: float = 0,
+        kscp: float = 1,
+        lb2: int = 38,
+        d_lb2: int = 0,
+        lb1: int = 0,
+        d_lb1: int = 0,
+        g: float = 0,
+    ):
         """
         6.5.6 Résistance à la compression perpendiculaire au fil.
 
         """
+        # A.6.5.6 Compression perpendiculaire au fil.
+        if g > 0:
+            L = 1.8125
+            M = 145.038
+            fcp = 0.9 * L * (2243.8 * g - 473.8) / M
+
+        phi = 0.8
+
+        kd = self.kd
+        kt = self.kt
+        f_cp = fcp * (kd * kscp * kt)
+
+        b = self.b
+        ab = b * lb2
+
+        # 6.5.6.4
+        d = self.d
+        ratio = b / d
+        if ratio <= 1:
+            kzcp = 1
+        elif ratio < 2:
+            kzcp = 0.15 * ratio + 0.85
+        else:
+            kzcp = 1.15
+
+        # 6.5.6.5
+        if d_lb2 - lb2 / 2 < 75:
+            kb2 = 1
+
+        # 6.5.6.2
+        qr = phi * f_cp * ab * kb2 * kzcp
+
+        if d_lb1 <= d:
+            lb1 = min(lb1, lb2)
+            lb2 = max(lb1, lb2)
+            ab_prim = min(b * ((lb1 + lb2) / 2), 1.5 * b * lb1)
+            qr_prim = (2 / 3) * phi * f_cp * ab_prim * kb2 * kzcp
+
+        else:
+            ab = b * lb1
+            qr_prim = phi * f_cp * ab * kb1 * kzcp
+
+        return qr, qr_prim
 
     def comp_angle(self):
         """
@@ -1021,18 +1140,21 @@ def _tests():
         kd=1,
         kh=1,
         kt=1,
-        ply=1,
+        ply=4,
     ).comp_parallel(
-        l_b=10,
-        l_d=7000,
+        l_b=100,
+        l_d=1000,
         fc=10,
         e05=10000,
         ksc=1,
         kse=1,
         end_in_translation=False,
         end_in_rotation=2,
+        connectors="aucun",
+        spacers=False,
+        glulam=False,
     )
-    expected_result = 9404.76895414987
+    expected_result = 95226.62728451275
     assert (
         test_comp_parallel == expected_result
     ), f"comp_parallel -> FAILED\n {expected_result = }\n {test_comp_parallel = }"
