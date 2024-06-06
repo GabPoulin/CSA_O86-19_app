@@ -385,7 +385,7 @@ elif SECTION == "6":
             INC = input("\tBois incisé. (y/n) = ") == "y"
         else:
             INC = False
-        SPA = input("\tL'espacement ne dépasse pas 610 mm. (y/n) = ") == "y"
+        SPA = input("\tL'espacement est moins de 610 mm. (y/n) = ") == "y"
         if SPA:
             CON = input("\tSous-plancher fixé. (y/n) = ") == "y"
         else:

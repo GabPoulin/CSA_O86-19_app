@@ -1082,6 +1082,25 @@ def _tests():
         test_modification_factors == expected_result
     ), f"modification_factors -> FAILED\n {expected_result = }\n {test_modification_factors = }"
 
+    # Test modification_factors (2)
+    test_modification_factors_2 = modification_factors(
+        width=150,
+        depth=150,
+        prop="flex",
+        duration="normale",
+        category="MSR",
+        wet_service=True,
+        treated=True,
+        incised=False,
+        _2ft_spacing=False,
+        connected_subfloor=False,
+        built_up_beam=False,
+    )
+    expected_result = (1, 1, 1, 1, 1)
+    assert (
+        test_modification_factors_2 == expected_result
+    ), f"modification_factors_2 -> FAILED\n {expected_result = }\n {test_modification_factors_2 = }"
+
     # Test sizes
     test_sizes = Resistances(38, 140).sizes(dimension=5, green=True, brut=False)
     expected_result = 117
