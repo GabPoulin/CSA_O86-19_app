@@ -1161,7 +1161,7 @@ def _tests():
         kt=1,
         ply=4,
     ).comp_parallel(
-        l_b=100,
+        l_b=1000,
         l_d=1000,
         fc=10,
         e05=10000,
@@ -1169,11 +1169,11 @@ def _tests():
         kse=1,
         end_in_translation=False,
         end_in_rotation=2,
-        connectors="aucun",
+        connectors="clous",
         spacers=False,
         glulam=False,
     )
-    expected_result = 95226.62728451275
+    expected_result = 131397.46647070267
     assert (
         test_comp_parallel == expected_result
     ), f"comp_parallel -> FAILED\n {expected_result = }\n {test_comp_parallel = }"
