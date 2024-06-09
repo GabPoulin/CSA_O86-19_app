@@ -978,12 +978,26 @@ class Resistances:
             kzcp = 1.15
 
         # 6.5.6.5
-        if d_lb2 - lb2 / 2 < 75:
+        if lb2 < 150:
+            if d_lb2 - lb2 / 2 < 75:
+                kb2 = 1
+            else:
+                kb2 = (lb2 + 9.525) / lb2
+        else:
             kb2 = 1
+
+        if lb1 < 150:
+            if d_lb1 + d_lb2 - lb1 / 2 < 75:
+                kb1 = 1
+            else:
+                kb1 = (lb1 + 9.525) / lb1
+        else:
+            kb1 = 1
 
         # 6.5.6.2
         qr = phi * f_cp * ab * kb2 * kzcp
 
+        # 6.5.6.3
         if d_lb1 <= d:
             lb1 = min(lb1, lb2)
             lb2 = max(lb1, lb2)
