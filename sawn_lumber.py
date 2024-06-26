@@ -810,8 +810,8 @@ class Resistances:
             fc (float): Résistance prévue en compression parallèle au fil, MPa.
             e05 (int): Module d'élasticité pour les calculs des éléments en compression, MPa.
 
-            ksc (float, optional): Coefficient de conditions d'utilisation pour la compression parallèle au fil.
-            kse (float, optional): Coefficient de conditions d'utilisation relatif au module d'élasticité.
+            ksc (float, optional): Coefficient de conditions d'utilisation pour la compression parallèle au fil. Default to 1.
+            kse (float, optional): Coefficient de conditions d'utilisation relatif au module d'élasticité. Default to 1.
 
             end_in_translation (bool, optional): Extrémité libre en translation. Default to False.
             end_in_rotation (int, optional): Extrémités libre en rotation.
@@ -940,16 +940,35 @@ class Resistances:
 
     def comp_perpendicular(
         self,
-        fcp: float = 0,
-        kscp: float = 1,
-        lb2: int = 38,
-        d_lb2: int = 0,
         lb1: int = 0,
         d_lb1: int = 0,
+        lb2: int = 38,
+        d_lb2: int = 0,
+        kscp: float = 1,
+        fcp: float = 0,
         g: float = 0,
+        flex: bool = False,
     ):
         """
         6.5.6 Résistance à la compression perpendiculaire au fil.
+
+        Args:
+            lb1 (int, optional): Longueur d'appui haut, mm. Default to 0.
+            d_lb1 (int, optional): Distance entre l'extrémité de l'appui haut et l'extrémité de l'élément, mm. Default to 0.
+
+            lb2 (int, optional): Longueur d'appui bas, mm. Default to 38.
+            d_lb2 (int, optional): Distance entre l'extrémité de l'appui bas et l'extrémité de l'élément, mm. Default to 0.
+
+            kscp (float, optional): Coefficient de conditions d'utilisation pour la compression perpendiculaire au fil.
+
+            fcp (float, optional): Résistance prévue en compression perpendiculaire au fil, MPa. Default to 0.
+            g (float, optional): Densité moyenne du bois anhydre. Default to 0.
+
+            flex (bool, optional): Surface d'appui 1 aux endroits soumis à de fortes contraintes de flexion. Default to False.
+
+        Returns:
+            float: Qr = Résistance pondérée à la compression perpendiculaire au fil à l'appui, N.
+            float: Qr' = Résistance pondérée à la compression perpendiculaire au fil au point de charge, N.
 
         """
         # A.6.5.6 Compression perpendiculaire au fil.
@@ -958,16 +977,8 @@ class Resistances:
             M = 145.038
             fcp = 0.9 * L * (2243.8 * g - 473.8) / M
 
-        phi = 0.8
-
-        kd = self.kd
-        kt = self.kt
-        f_cp = fcp * (kd * kscp * kt)
-
-        b = self.b
-        ab = b * lb2
-
         # 6.5.6.4
+        b = self.b * self.ply
         d = self.d
         ratio = b / d
         if ratio <= 1:
@@ -979,15 +990,15 @@ class Resistances:
 
         # 6.5.6.5
         if lb2 < 150:
-            if d_lb2 - lb2 / 2 < 75:
-                kb2 = 1
+            if d_lb2 < 75:
+                kb = 1
             else:
-                kb2 = (lb2 + 9.525) / lb2
+                kb = (lb2 + 9.525) / lb2
         else:
-            kb2 = 1
+            kb = 1
 
-        if lb1 < 150:
-            if d_lb1 + d_lb2 - lb1 / 2 < 75:
+        if lb1 < 150 and not flex:
+            if d_lb1 < 75:
                 kb1 = 1
             else:
                 kb1 = (lb1 + 9.525) / lb1
@@ -995,17 +1006,30 @@ class Resistances:
             kb1 = 1
 
         # 6.5.6.2
-        qr = phi * f_cp * ab * kb2 * kzcp
+        phi = 0.8
+
+        kd = self.kd
+        kt = self.kt
+        f_cp = fcp * (kd * kscp * kt)
+
+        ab = b * lb2
+
+        qr = phi * f_cp * ab * kb * kzcp
 
         # 6.5.6.3
-        if d_lb1 <= d:
-            lb1 = min(lb1, lb2)
-            lb2 = max(lb1, lb2)
-            ab_prim = min(b * ((lb1 + lb2) / 2), 1.5 * b * lb1)
-            qr_prim = (2 / 3) * phi * f_cp * ab_prim * kb2 * kzcp
+        if d_lb1 + (lb1 / 2) - (lb2 / 2) <= d:
 
+            # 6.5.6.3.2
+            ab_prim = min(b * ((lb1 + lb2) / 2), 1.5 * b * min(lb1, lb2))
+
+            # 6.5.6.3.1
+            kb = min(kb, kb1)
+            qr_prim = (2 / 3) * phi * f_cp * ab_prim * kb * kzcp
+
+        # 6.5.6.2
         else:
             ab = b * lb1
+
             qr_prim = phi * f_cp * ab * kb1 * kzcp
 
         return qr, qr_prim
@@ -1191,6 +1215,29 @@ def _tests():
     assert (
         test_comp_parallel == expected_result
     ), f"comp_parallel -> FAILED\n {expected_result = }\n {test_comp_parallel = }"
+
+    # Test comp_perpendicular
+    test_comp_perpendicular = Resistances(
+        b=38,
+        d=140,
+        kd=1,
+        kh=1,
+        kt=1,
+        ply=3,
+    ).comp_perpendicular(
+        lb1=150,
+        d_lb1=100,
+        lb2=100,
+        d_lb2=0,
+        kscp=1,
+        fcp=5.3,
+        g=0,
+        flex=False,
+    )
+    expected_result = (48336, 40280)
+    assert (
+        test_comp_perpendicular == expected_result
+    ), f"comp_perpendicular -> FAILED\n {expected_result = }\n {test_comp_perpendicular = }"
 
 
 # RUN FILE
