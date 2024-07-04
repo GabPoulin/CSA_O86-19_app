@@ -55,9 +55,9 @@ ________________________________________________________________________________
 
 # IMPORTS
 from dataclasses import dataclass
+import math
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 import general_design
-import math
 
 
 # DB CONNECTION
@@ -606,6 +606,41 @@ def modification_factors(
     return kd, ks, kt, kh, kz
 
 
+def sizes(
+    dimension: int,
+    green: bool = False,
+    brut: bool = False,
+):
+    """
+    6.5.2 Dimensions.
+
+    Args:
+        dimension (int): Dimension nominale, po.
+        green (bool, optional): Bois vert (teneur en humidité > 19%). Default to False.
+        brut (bool, optional): Dimensions brutes. Default to False.
+
+    Returns:
+        int: Dimension nette, mm.
+
+    """
+    table = (
+        LumberSizes.session.query(LumberSizes)
+        .filter(LumberSizes.nominal == dimension)
+        .first()
+    )
+    if not table:
+        dim = int(round(dimension * 25.4))
+    elif green and brut:
+        dim = table.green_brut
+    elif brut:
+        dim = table.dry_brut
+    elif green:
+        dim = table.green
+    else:
+        dim = table.dry
+    return dim
+
+
 @dataclass
 class Resistances:
     """
@@ -627,43 +662,6 @@ class Resistances:
     kh: float = 1
     kt: float = 1
     ply: int = 1
-
-    def sizes(
-        self,
-        dimension: int,
-        green: bool = False,
-        brut: bool = False,
-    ):
-        """
-        6.5.2 Dimensions.
-
-        Args:
-            dimension (int): Dimension nominale, po.
-            green (bool, optional): Bois vert (teneur en humidité > 19%). Default to False.
-            brut (bool, optional): Dimensions brutes. Default to False.
-
-        returns:
-            int: Dimension nette, mm.
-
-        """
-        table = (
-            LumberSizes.session.query(LumberSizes)
-            .filter(LumberSizes.nominal == dimension)
-            .first()
-        )
-
-        if not table:
-            dim = int(round(dimension * 25.4))
-        elif green and brut:
-            dim = table.green_brut
-        elif brut:
-            dim = table.dry_brut
-        elif green:
-            dim = table.green
-        else:
-            dim = table.dry
-
-        return dim
 
     def bending_moment(
         self,
@@ -1040,56 +1038,59 @@ class Resistances:
 
         return qr, qr_prim
 
-    def comp_angle(self, theta: int, pr: int, qr: int):
-        """
-        6.5.7 Résistance à la compression oblique par rapport au fil.
-
-        Args:
-            theta (int): angle entre la direction du fil et la direction de la charge, degrés.
-            pr (int): résistance pondérée à la compression parallèle au fil, N.
-            (voir l’article 6.5.5.2.4, en supposant que KC = 1,00)
-            qr (int): ésistance pondérée à la compression perpendiculaire au fil, N.
-            (voir l’article 6.5.6.2)
-
-        Returns:
-            float: Nr = Résistance à la compression oblique par rapport au fil, N.
-
-        """
-        theta = math.radians(theta)
-
-        nr = (pr * qr) / (pr * math.sin(theta) ** 2 + qr * math.cos(theta) ** 2)
-
-        return nr
-
     def tensile_parallel(self):
         """
         6.5.8 Résistance à la traction parallèle au fil.
-
         """
 
-    def combined_bending_axial(self):
-        """
-        6.5.9 Résistance à la flexion et à la charge axiale combinées.
 
-        """
+def comp_angle(
+    theta: int,
+    pr: int,
+    qr: int,
+):
+    """
+    6.5.7 Résistance à la compression oblique par rapport au fil.
 
-    def decking(self):
-        """
-        6.5.10 Platelage.
+    Args:
+        theta (int): angle entre la direction du fil et la direction de la charge, degrés.
+        pr (int): résistance pondérée à la compression parallèle au fil, N.
+        (voir l’article 6.5.5.2.4, en supposant que KC = 1,00)
+        qr (int): ésistance pondérée à la compression perpendiculaire au fil, N.
+        (voir l’article 6.5.6.2)
 
-        """
+    Returns:
+        float: Nr = Résistance à la compression oblique par rapport au fil, N.
 
-    def foundations(self):
-        """
-        6.5.11 Fondations permanentes en bois.
+    """
+    theta = math.radians(theta)
+    nr = (pr * qr) / (pr * math.sin(theta) ** 2 + qr * math.cos(theta) ** 2)
 
-        """
+    return nr
 
-    def truss(self):
-        """
-        6.5.12 Applications propres aux fermes.
 
-        """
+def combined_bending_axial():
+    """
+    6.5.9 Résistance à la flexion et à la charge axiale combinées.
+    """
+
+
+def decking():
+    """
+    6.5.10 Platelage.
+    """
+
+
+def foundations():
+    """
+    6.5.11 Fondations permanentes en bois.
+    """
+
+
+def truss():
+    """
+    6.5.12 Applications propres aux fermes.
+    """
 
 
 # TESTS
@@ -1163,7 +1164,7 @@ def _tests():
     ), f"modification_factors_2 -> FAILED\n {expected_result = }\n {test_modification_factors_2 = }"
 
     # Test sizes
-    test_sizes = Resistances(38, 140).sizes(dimension=5, green=True, brut=False)
+    test_sizes = sizes(dimension=5, green=True, brut=False)
     expected_result = 117
     assert (
         test_sizes == expected_result
@@ -1263,14 +1264,7 @@ def _tests():
     ), f"comp_perpendicular -> FAILED\n {expected_result = }\n {test_comp_perpendicular = }"
 
     # Test comp_angle
-    test_comp_angle = Resistances(
-        b=38,
-        d=140,
-        kd=1,
-        kh=1,
-        kt=1,
-        ply=3,
-    ).comp_angle(
+    test_comp_angle = comp_angle(
         theta=10,
         pr=10000,
         qr=1000,
