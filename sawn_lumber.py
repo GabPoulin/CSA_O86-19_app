@@ -1057,7 +1057,7 @@ class Resistances:
             reduct_d (int, optional): Longueur à réduire sur la hauteur, mm. Default to 0.
 
         Returns:
-            float:
+            float: Tr = Résistance pondérée à la traction parallèle au fil, N.
 
         """
         phi = 0.9
