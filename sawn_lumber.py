@@ -1098,6 +1098,8 @@ def _tests():
     Tests pour les calculs de bois de sciage.
 
     """
+    print("Starting tests")
+
     # Test lumber_category
     test_lumber_category = lumber_category(
         width=38,
@@ -1259,6 +1261,26 @@ def _tests():
     assert (
         test_comp_perpendicular == expected_result
     ), f"comp_perpendicular -> FAILED\n {expected_result = }\n {test_comp_perpendicular = }"
+
+    # Test comp_angle
+    test_comp_angle = Resistances(
+        b=38,
+        d=140,
+        kd=1,
+        kh=1,
+        kt=1,
+        ply=3,
+    ).comp_angle(
+        theta=10,
+        pr=10000,
+        qr=1000,
+    )
+    expected_result = 7865.44918098836
+    assert (
+        test_comp_angle == expected_result
+    ), f"comp_angle -> FAILED\n {expected_result = }\n {test_comp_angle = }"
+
+    print("All tests passed.")
 
 
 # RUN FILE
