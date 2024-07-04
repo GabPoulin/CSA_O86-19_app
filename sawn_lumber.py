@@ -1051,8 +1051,8 @@ class Resistances:
 
         Args:
             ft (float): Résistance prévue en traction parallèle au fil, MPa.
-            kst (int, optional): Coefficient de conditions d'utilisation pour la traction parallèle au fil. Default to 1.
-            kzt (int, optional): Coefficient de dimensions en traction. Default to 1.
+            kst (float, optional): Coefficient de conditions d'utilisation pour la traction parallèle au fil. Default to 1.
+            kzt (float, optional): Coefficient de dimensions en traction. Default to 1.
             reduct_b (int, optional): Longueur à réduire sur la largeur, mm. Default to 0.
             reduct_d (int, optional): Longueur à réduire sur la hauteur, mm. Default to 0.
 
