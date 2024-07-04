@@ -57,6 +57,7 @@ ________________________________________________________________________________
 from dataclasses import dataclass
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 import general_design
+import math
 
 
 # DB CONNECTION
@@ -627,7 +628,12 @@ class Resistances:
     kt: float = 1
     ply: int = 1
 
-    def sizes(self, dimension: int, green: bool = False, brut: bool = False):
+    def sizes(
+        self,
+        dimension: int,
+        green: bool = False,
+        brut: bool = False,
+    ):
         """
         6.5.2 Dimensions.
 
@@ -1034,11 +1040,26 @@ class Resistances:
 
         return qr, qr_prim
 
-    def comp_angle(self):
+    def comp_angle(self, theta: int, pr: int, qr: int):
         """
         6.5.7 Résistance à la compression oblique par rapport au fil.
 
+        Args:
+            theta (int): angle entre la direction du fil et la direction de la charge, degrés.
+            pr (int): résistance pondérée à la compression parallèle au fil, N.
+            (voir l’article 6.5.5.2.4, en supposant que KC = 1,00)
+            qr (int): ésistance pondérée à la compression perpendiculaire au fil, N.
+            (voir l’article 6.5.6.2)
+
+        Returns:
+            float: Nr = Résistance à la compression oblique par rapport au fil, N.
+
         """
+        theta = math.radians(theta)
+
+        nr = (pr * qr) / (pr * math.sin(theta) ** 2 + qr * math.cos(theta) ** 2)
+
+        return nr
 
     def tensile_parallel(self):
         """
