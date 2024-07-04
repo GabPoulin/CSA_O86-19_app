@@ -1038,10 +1038,49 @@ class Resistances:
 
         return qr, qr_prim
 
-    def tensile_parallel(self):
+    def tensile_parallel(
+        self,
+        ft: float,
+        kst: float = 1,
+        kzt: float = 1,
+        reduct_b: int = 0,
+        reduct_d: int = 0,
+    ):
         """
         6.5.8 Résistance à la traction parallèle au fil.
+
+        Args:
+            ft (float): Résistance prévue en traction parallèle au fil, MPa.
+            kst (int, optional): Coefficient de conditions d'utilisation pour la traction parallèle au fil. Default to 1.
+            kzt (int, optional): Coefficient de dimensions en traction. Default to 1.
+            reduct_b (int, optional): Longueur à réduire sur la largeur, mm. Default to 0.
+            reduct_d (int, optional): Longueur à réduire sur la hauteur, mm. Default to 0.
+
+        Returns:
+            float:
+
         """
+        phi = 0.9
+
+        kd = self.kd
+        kh = self.kh
+        kt = self.kt
+        f_t = ft * (kd * kh * kst * kt)
+
+        b = self.b * self.ply
+        d = self.d
+        ab = b * d
+
+        # 5.3.8
+        if reduct_d > 0 or reduct_d > 0:
+            an = (b - reduct_b) * (d - reduct_d)
+            general_design.cross_section(an, ab)
+        else:
+            an = ab
+
+        tr = phi * f_t * an * kzt
+
+        return tr
 
 
 def comp_angle(
