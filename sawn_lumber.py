@@ -1138,8 +1138,6 @@ def _tests():
     Tests pour les calculs de bois de sciage.
 
     """
-    print("Starting tests")
-
     # Test lumber_category
     test_lumber_category = lumber_category(
         width=38,
@@ -1212,22 +1210,22 @@ def _tests():
     # Test bending_moment
     test_bending_moment = Resistances(
         b=38,
-        d=140,
+        d=89,
         kd=1,
         kh=1,
         kt=1,
         ply=1,
     ).bending_moment(
-        fb=6,
+        fb=11.8,
         ksb=1,
-        kzb=1,
-        lateral_support=True,
+        kzb=1.7,
+        lateral_support=False,
         compressive_edge_support=True,
-        tensile_edge_support=True,
+        tensile_edge_support=False,
         blocking_support=False,
         tie_rods_support=False,
     )
-    expected_result = 670320
+    expected_result = 905702.9820000001
     assert (
         test_bending_moment == expected_result
     ), f"bending_moment -> FAILED\n {expected_result = }\n {test_bending_moment = }"
