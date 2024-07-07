@@ -1094,9 +1094,9 @@ def comp_angle(
     Args:
         theta (int): angle entre la direction du fil et la direction de la charge, degrés.
         pr (int): résistance pondérée à la compression parallèle au fil, N.
-        (voir l’article 6.5.5.2.4, en supposant que KC = 1,00)
+        (voir l'article 6.5.5.2.4, en supposant que Kc = 1,00)
         qr (int): ésistance pondérée à la compression perpendiculaire au fil, N.
-        (voir l’article 6.5.6.2)
+        (voir l'article 6.5.6.2)
 
     Returns:
         float: Nr = Résistance à la compression oblique par rapport au fil, N.
