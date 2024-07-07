@@ -424,7 +424,7 @@ elif SECTION == "6":
             DIM = input("\tDimmension nominale, po = ")
             TH = input("\tBois vert (teneur en humidité > 19%). (y/n) = ") == "y"
             BRUT = input("\tDimensions brutes. (y/n) = ") == "y"
-            dim_nette = sawn_lumber.Resistances(0, 0).sizes(DIM, TH, BRUT)
+            dim_nette = sawn_lumber.sizes(DIM, TH, BRUT)
             print(f"\tDimension nette = {dim_nette}")
             print("")
             ANSWERED = True
