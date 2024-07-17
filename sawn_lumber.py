@@ -1111,6 +1111,15 @@ def comp_angle(
 def combined_bending_axial():
     """
     6.5.9 Résistance à la flexion et à la charge axiale combinées.
+
+    Args:
+        mr (int): moment de flexion pondéré, N.
+        mf (int): résistance pndérée au moment de flexion, N.
+        (voir l'article 6.5.3)
+
+    Returns:
+        float: Nr = Résistance à la compression oblique par rapport au fil, N.
+
     """
 
 
