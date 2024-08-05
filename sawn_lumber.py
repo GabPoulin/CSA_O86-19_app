@@ -1262,18 +1262,18 @@ def _tests():
 
     # Test comp_parallel
     test_comp_parallel = Resistances(
-        b=38,
-        d=140,
+        b=89,
+        d=89,
         kd=1,
         kh=1,
         kt=1,
-        ply=4,
+        ply=1,
     ).comp_parallel(
-        l_b=1000,
-        l_d=1000,
-        fc=10,
-        e05=10000,
-        ksc=1,
+        l_b=10,
+        l_d=10,
+        fc=9.9,
+        e05=4500,
+        ksc=0.91,
         kse=1,
         end_in_translation=False,
         end_in_rotation=2,
@@ -1281,7 +1281,7 @@ def _tests():
         spacers=False,
         glulam=False,
     )
-    expected_result = 131397.46647070267
+    expected_result = 74214.69273184793
     assert (
         test_comp_parallel == expected_result
     ), f"comp_parallel -> FAILED\n {expected_result = }\n {test_comp_parallel = }"
