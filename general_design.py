@@ -173,7 +173,7 @@ def elastic_deflection(span: float, delta: float) -> str:
         delta (float): Flèche, mm.
 
     Returns:
-        str: Message de validation du critère de flèche élastique.
+        str: message de validation du critère de flèche élastique.
 
     """
     criteria = span / delta
