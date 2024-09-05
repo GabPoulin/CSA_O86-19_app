@@ -1,4 +1,4 @@
-"""Permet d'utiliser la CSA O86:19 dans le terminal."""
+"""Permet d'utiliser la CSA O86:19 dans le terminal"""
 
 import general_design
 import sawn_lumber
