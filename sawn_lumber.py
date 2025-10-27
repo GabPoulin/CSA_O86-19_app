@@ -1108,19 +1108,47 @@ def comp_angle(
     return nr
 
 
-def combined_bending_axial():
+def combined_bending_axial(
+    f: int,
+    r: int,
+    mf: int,
+    mr: int,
+    compression: bool = True,
+    e05: int = 0,
+    _i: int = 0,
+    l: int = 0,
+    ke: int = 1,
+    kse: int = 1,
+    kt: int = 1,
+):
     """
     6.5.9 Résistance à la flexion et à la charge axiale combinées.
 
     Args:
-        mr (int): moment de flexion pondéré, N.
-        mf (int): résistance pndérée au moment de flexion, N.
-        (voir l'article 6.5.3)
+        f (int): charge axiale pondérée en compression ou en traction, N.
+        r (int): résistance pondérée à la compression ou à la traction parallèle au fil, N.
+        mf (int): moment de flexion pondéré, N*mm.
+        mr (int): résistance pondérée au moment de flexion, N*mm.
+        compression (bool, optional): True pour compression, False pour tension. Default to True.
+        e05 (int, optional): module d'élasticité pour le calcul des éléments en compression, Mpa. Default to 0
+        _i (int, optional): moment d'inertie dans le plan du moment appliqué, mm4. Default to 0
+        l (int, optional): longueur effective dans le plan du moment appliqué, mm. Default to 0
+        ke (int, optional): coefficient de longueur effective. Default to 1.
+        kse (int, optional): coefficient de condition d'utilisation. Default to 1.
+        kt (int, optional): coefficient de traitement. Default to 1.
 
     Returns:
-        float: Nr = Résistance à la compression oblique par rapport au fil, N.
+        float: ratio pour la résistance combiné.
 
     """
+    if compression:
+        le = l * ke
+        pe = (math.pi**2 * e05 * kse * kt * _i) / le**2
+        ratio = (f / r) ** 2 + (mf / mr) * (1 / (1 - f / pe))
+    else:
+        ratio = f / r + mf / mr
+
+    return ratio
 
 
 def decking():
@@ -1320,6 +1348,43 @@ def _tests():
         test_comp_angle == expected_result
     ), f"comp_angle -> FAILED\n {expected_result = }\n {test_comp_angle = }"
 
+    # Test combined_bending_axial_1
+    test_combined_bending_axial_1 = combined_bending_axial(
+        f=50,
+        r=1000,
+        mf=50,
+        mr=1000,
+        compression=False,
+        e05=1000,
+        _i=1000,
+        l=5000,
+        ke=1,
+        kse=1,
+        kt=1,
+    )
+    expected_result = 0.1
+    assert (
+        test_combined_bending_axial_1 == expected_result
+    ), f"combined_bending_axial_1 -> FAILED\n {expected_result = }\n {test_combined_bending_axial_1 = }"
+
+    # Test combined_bending_axial_2
+    test_combined_bending_axial_2 = combined_bending_axial(
+        f=50,
+        r=1000,
+        mf=50,
+        mr=1000,
+        compression=True,
+        e05=1000,
+        _i=1000,
+        l=5000,
+        ke=1,
+        kse=1,
+        kt=1,
+    )
+    expected_result = 0.002102073925608327
+    assert (
+        test_combined_bending_axial_2 == expected_result
+    ), f"combined_bending_axial_2 -> FAILED\n {expected_result = }\n {test_combined_bending_axial_2 = }"
     print("All tests passed.")
 
 
