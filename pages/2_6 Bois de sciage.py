@@ -91,14 +91,13 @@ with st.container(horizontal_alignment="center"):
             """,
         )
 
+    # choix de la classe ou essence de bois
     # note pour indiquer l'essence choisie en cas de MSR ou MEL
     if msr or mel:
-        st.warning(
-            "Le groupe d'essence SPF est utilisé pour caractériser le bois classé mécaniquement.",
-            icon="⚠️",
+        st.markdown(
+            ":red[Le groupe d'essences SPF est utilisé pour caractériser le bois classé mécaniquement!]"
         )
 
-    # choix de la classe ou essence de bois
     if msr:
         specie = st.pills(
             label="Classe:",
@@ -117,7 +116,7 @@ with st.container(horizontal_alignment="center"):
             options=("df", "hf", "spf", "ns"),
             default="spf",
             width="stretch",
-            help="Si aucune essence n'est sélectionnée, le groupe 'spf' est utilisée par défaut.",
+            help="Si aucune essence n'est sélectionnée, le groupe 'spf' est utilisé par défaut.",
         )
         if not specie:
             specie = "spf"
