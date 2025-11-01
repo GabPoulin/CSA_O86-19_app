@@ -7,29 +7,29 @@ CSA O86:19: Règles de calcul des charpentes en bois.
 5.3 Conditions et coefficients influant sur la résistance.
 
     5.3.2 Coefficient de durée d'application de la charge, Kd.
-    
+
     5.3.8 Réduction de la section transversale.
-    
+
 5.4 Exigences relatives à la tenue en service.
-    
+
     5.4.1 Module d'élasticité.
-    
+
     5.4.2 Flèche élastique.
-    
+
     5.4.3 Déformation permanente.
-    
+
     5.4.4 Accumulation d'eau.
-    
+
     5.4.5 Vibration.
 
     5.4.6 Mouvements du bâtiment attribuables au changement de la teneur en humidité.
-        
+
 5.5 Effort de contreventement latéral sur les membrures d'âme en compression des fermes de toit en bois.
-        
+
 5.6 Résistance au feu.
 
 ____________________________________________________________________________________________________
-    
+
     auteur: GabPoulin
     email: poulin33@me.com
 

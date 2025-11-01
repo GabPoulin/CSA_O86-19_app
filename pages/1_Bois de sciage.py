@@ -33,7 +33,8 @@ class SawnLumberStrengths(orm.declarative_base()):
 
 
 # CODE
-st.title("6 | Bois de Sciage")
+st.title("Calculatrice | CSA-O86")
+st.header("Bois de Sciage")
 st.page_link("Accueil.py", label="Retour à l'accueil")
 
 st.divider()
@@ -94,8 +95,9 @@ with st.container(horizontal_alignment="center"):
     # choix de la classe ou essence de bois
     # note pour indiquer l'essence choisie en cas de MSR ou MEL
     if msr or mel:
-        st.markdown(
-            ":red[Le groupe d'essences SPF est utilisé pour caractériser le bois classé mécaniquement!]"
+        st.info(
+            "Le groupe d'essences SPF est utilisé pour caractériser le bois classé mécaniquement!",
+            width=600,
         )
 
     if msr:
