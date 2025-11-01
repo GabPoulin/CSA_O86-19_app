@@ -96,7 +96,7 @@ with st.container(horizontal_alignment="center"):
     # note pour indiquer l'essence choisie en cas de MSR ou MEL
     if msr or mel:
         st.info(
-            "Le groupe d'essences SPF est utilisé pour caractériser le bois classé mécaniquement!",
+            "Le groupe d'essences SPF est utilisé par défaut pour caractériser le bois classé mécaniquement.",
             width=600,
         )
 
