@@ -4,7 +4,8 @@
 from dataclasses import dataclass
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 import streamlit as st
-import sawn_lumber as saw
+import sawn_lumber
+import Accueil
 
 
 # DB CONNECTION
@@ -33,16 +34,29 @@ class SawnLumberStrengths(orm.declarative_base()):
 
 
 # CODE
-st.title("Calculatrice | CSA-O86")
-st.header("Bois de Sciage")
-st.page_link("Accueil.py", label="Retour à l'accueil")
 
+# ---- en-tête ----
+st.title(Accueil.TITLE)
+st.page_link("Accueil.py", label="Retour à l'accueil")
 st.divider()
 
+# --- container principal ---
 with st.container(horizontal_alignment="center"):
+    st.header(
+        "Bois de Sciage",
+        help="""Les méthodes et les données de calcul de ne s’appliquent qu’au bois de charpente 
+        conforme à CSA O141.""",
+    )
 
-    # inputs pour déterminer la catégorie
-    col1, col2 = st.columns(spec=2, gap="large")
+    # --- inputs pour déterminer la catégorie ---
+    st.subheader(
+        "Matériaux",
+        help=""" Les calculs reposent sur l’utilisation de bois d’œuvre classé suivant les Règles 
+        de classification pour le bois d’œuvre canadien de la NLGA, et identifié au moyen de 
+        l’estampille d’une association ou d’un organisme indépendant de classement, conformément 
+        à CSA O141.""",
+    )
+    col1, col2 = st.columns(2, gap="medium")
     width = col1.number_input(
         label="Largeur de l'élément (mm)",
         min_value=38,
@@ -57,50 +71,49 @@ with st.container(horizontal_alignment="center"):
         options=("MSR", "MEL"),
         width="stretch",
     )
-    msr, mel = False, False
+    MSR, MEL = False, False
     if msr_mel == "MSR":
-        msr = True
+        MSR = True
     elif msr_mel == "MEL":
-        mel = True
+        MEL = True
 
-    category = saw.lumber_category(
+    # --- calcul pour déterminer la catégorie ---
+    CATEGORY = sawn_lumber.lumber_category(
         width=width,
         depth=depth,
-        is_msr=msr,
-        is_mel=mel,
-    )
-    col2.metric(
-        label="Catégorie:",
-        value=category,
-        width="stretch",
-        border=True,
+        is_msr=MSR,
+        is_mel=MEL,
     )
 
-    # st.divider()
+    # --- afficher le résultat de la catégorie ---
+    with col2.expander("Catégorie", expanded=True):
+        st.text(CATEGORY)
 
-    # inputs pour déterminer les résistances spécifiques
-    # choix de la classe
-    side = False
-    if category == "Beam":
-        side = st.toggle(
+    # --- inputs pour déterminer les résistances prévues ---
+    st.subheader(
+        "Résistances prévues et modules d’élasticité",
+        help="""Pour plus d'informations, consultez les tableaux 6.4 à 6.9 de la norme CSA O86.""",
+    )
+    SIDE = False
+    if CATEGORY == "Beam":
+        SIDE = st.toggle(
             "Charges appliquées sur la grande face?",
             help="""
             Les résistances prévues des poutres et des longerons sont fondées sur des charges
             appliquées sur leur face étroite. Si les charges sont appliquées sur leur grande face,
-            la résistance prévue en flexion à la fibre extrême et le module d’élasticité prévu doivent
-            être multipliés par des coefficients de correction (CSA O86 - tableau 6.6)
+            la résistance prévue en flexion à la fibre extrême et le module d’élasticité prévu 
+            doivent être multipliés par des coefficients de correction (CSA O86 - tableau 6.6)
             """,
         )
 
-    # choix de la classe ou essence de bois
-    # note pour indiquer l'essence choisie en cas de MSR ou MEL
-    if msr or mel:
+    # --- choix de la classe ou essence de bois ---
+    if MSR or MEL:
         st.info(
-            "Le groupe d'essences SPF est utilisé par défaut pour caractériser le bois classé mécaniquement.",
-            width=600,
+            """Le groupe d'essences SPF est utilisé par défaut pour caractériser le bois classé 
+            mécaniquement"""
         )
 
-    if msr:
+    if MSR:
         specie = st.pills(
             label="Classe:",
             options=("normal", "courant", "rare"),
@@ -110,7 +123,7 @@ with st.container(horizontal_alignment="center"):
         )
         if not specie:
             specie = "courant"
-    elif mel:
+    elif MEL:
         specie = "normal"
     else:
         specie = st.pills(
@@ -123,45 +136,54 @@ with st.container(horizontal_alignment="center"):
         if not specie:
             specie = "spf"
 
-    # choix du grade
+    # --- choix du grade ---
     grade_options = (
         SawnLumberStrengths.session.query(SawnLumberStrengths)
-        .filter(SawnLumberStrengths.category == category)
+        .filter(SawnLumberStrengths.category == CATEGORY)
         .filter(SawnLumberStrengths.specie == specie)
         .with_entities(SawnLumberStrengths.grade)
     )
 
     grade = st.pills(
-        label="Grade:",
+        label="Classe:",
         options=grade_options,
         default=grade_options[1][0],
         width="stretch",
-        help=f"Si aucun grade n'est sélectionnée, '{grade_options[1][0]}' est utilisé par défaut.",
+        help=f"Si aucune classe n'est sélectionnée, '{grade_options[1][0]}' est utilisé par défaut.",
     )
     if not grade:
         grade = grade_options[1][0]
 
-    resistance = saw.specified_strengths(
-        category=category,
+    # --- calculer les résultats de résistances prévues ---
+    resistance = sawn_lumber.specified_strengths(
+        category=CATEGORY,
         specie=specie,
         grade=grade,
-        side=side,
+        side=SIDE,
     )
 
-    st.header("Résistances prévues:")
-    value_name = [
-        ("Flexion", "$f_b$"),
-        ("Cisaillement longitudinal", "$f_v$"),
-        ("Compression parallèle au fil", "$f_c$"),
-        ("Compression perpendiculaire au fil", "$f_{cp}$"),
-        ("Traction parallèle au fil", "$f_t$"),
-        ("Module d’élasticité", "$E$"),
-        (
-            "Module d’élasticité pour les calculs des éléments en compression",
-            "$E_{05}$",
-        ),
-    ]
-    col1, col2 = st.columns([3, 1])
-    for i in range(0, int(len(resistance))):
-        col1.markdown(f"{value_name[i][0]} :")
-        col2.markdown(f"{value_name[i][1]} $= {resistance[i]} MPa$")
+    # --- afficher les résultats de résistances prévues ---
+    with st.expander("Résistances prévues", expanded=True):
+        value_name = [
+            ("Flexion", "$f_b$"),
+            ("Cisaillement longitudinal", "$f_v$"),
+            ("Compression parallèle au fil", "$f_c$"),
+            ("Compression perpendiculaire au fil", "$f_{cp}$"),
+            ("Traction parallèle au fil", "$f_t$"),
+            ("Module d’élasticité", "$E$"),
+            (
+                "Module d’élasticité pour les calculs des éléments en compression",
+                "$E_{05}$",
+            ),
+        ]
+        for i in range(0, int(len(resistance))):
+            col1, col2 = st.columns(
+                [3, 1],
+                gap=None,
+                vertical_alignment="bottom",
+                width=620,
+            )
+            col1.markdown(f"{value_name[i][0]} :")
+            col2.markdown(f"{value_name[i][1]} $= {resistance[i]} MPa$")
+
+    #
