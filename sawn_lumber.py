@@ -703,27 +703,24 @@ class Resistances:
         d = self.d
         s = (b * d**2) / 6
 
+        kl = 1
+
         rapport_h_l = d / b
+        criteria = 2.5
         if lateral_support:
-            if compressive_edge_support:
-                if tensile_edge_support:
-                    criteria = 9
-                elif blocking_support:
-                    criteria = 7.5
-                else:
-                    criteria = 6.5
-            elif tie_rods_support:
+            criteria = 4
+            if tie_rods_support:
                 criteria = 5
-            else:
-                criteria = 4
-        else:
-            criteria = 2.5
+            elif compressive_edge_support:
+                criteria = 6.5
+                if blocking_support:
+                    criteria = 7.5
+                elif tensile_edge_support:
+                    criteria = 9
 
         if rapport_h_l > criteria:
-            kl = 1
-            print("\nATTENTION!!!\tValider Kl selon 7.5.6.4\n")
-        else:
-            kl = 1
+            kl = 0
+            raise Warning("\nATTENTION!!!\tValider Kl selon 7.5.6.4\n")
 
         mr = phi * f_b * s * kzb * kl
 
