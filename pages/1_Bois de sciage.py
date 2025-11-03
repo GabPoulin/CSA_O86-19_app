@@ -359,10 +359,7 @@ with st.container(horizontal_alignment="center"):
 
 # --- section calcul des résistances ---
 st.divider()
-st.subheader(
-    "Calcul des résistances",
-    help="Méthodes de calcul applicables au bois d’œuvre de section rectangulaire",
-)
+st.subheader("Calcul des résistances")
 flex, shear, comp_para, comp_perp, comp_angle, trac, combi = st.tabs(
     [
         "Moment de flexion",
