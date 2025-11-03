@@ -34,7 +34,6 @@ class SawnLumberStrengths(orm.declarative_base()):
 
 
 # CODE
-
 # ---- en-tête ----
 st.title(Accueil.TITLE)
 st.page_link("Accueil.py", label="Retour à l'accueil")
@@ -45,63 +44,66 @@ st.header(
 )
 
 
-# --- container principal ---
+# --- section matériaux ---
 st.divider()
-with st.container(horizontal_alignment="center"):
+st.subheader(
+    "Matériaux",
+    help=""" Les calculs reposent sur l’utilisation de bois d’œuvre classé suivant les Règles
+    de classification pour le bois d’œuvre canadien de la NLGA, et identifié au moyen de 
+    l’estampille d’une association ou d’un organisme indépendant de classement, conformément 
+    à CSA O141""",
+)
 
+with st.container(horizontal_alignment="center"):
     # --- inputs pour déterminer la catégorie ---
-    st.subheader(
-        "Matériaux",
-        help=""" Les calculs reposent sur l’utilisation de bois d’œuvre classé suivant les Règles
-        de classification pour le bois d’œuvre canadien de la NLGA, et identifié au moyen de 
-        l’estampille d’une association ou d’un organisme indépendant de classement, conformément 
-        à CSA O141""",
-    )
     col1, col2 = st.columns(
         2,
         gap="medium",
         width=550,
     )
-    width_input = col1.number_input(
-        "Largeur nominale de l'élément (po)",
-        min_value=2,
-    )
-    depth_input = col1.number_input(
-        "Hauteur nominale de l'élément (po)",
-        min_value=2,
-        value=6,
-    )
-    GREEN = col1.toggle(
-        "Bois vert",
-        help="Bois d’œuvre dont la teneur en humidité dépasse 19 % (H > 19%)",
-    )
-    BRUT = col1.toggle(
-        "Dimensions brutes",
-        help="Utilise les dimensions nominales en tant que dimensions réelles",
-    )
-    built_up = col1.radio(
-        "Élément composé (plis)",
-        options=(1, 2, 3, 4, 5),
-        horizontal=True,
-        # value=1,
-        help="Élément assemblé composé de plusieurs plis",
-    )
-    width = sawn_lumber.sizes(width_input, GREEN, BRUT)
-    col2.metric("Largeur nette de l'élément, b", f"{width} mm")
-    depth = sawn_lumber.sizes(depth_input, GREEN, BRUT)
-    col2.metric("Hauteur nette de l'élément, d", f"{depth} mm")
-    msr_mel = col2.pills(
-        label="Bois classé mécaniquement?",
-        options=("MSR", "MEL"),
-        width="stretch",
-        help="""Bois de charpente classé mécaniquement par résistance (MSR) et
-        bois de charpente évalué par machine (MEL)""",
-    )
-    MSR, MEL = False, False
-    if msr_mel == "MSR":
-        MSR = True
-    elif msr_mel == "MEL":
-        MEL = True
+
+    with col1:
+        width_input = st.number_input(
+            "Largeur nominale de l'élément (po)",
+            min_value=2,
+        )
+        depth_input = st.number_input(
+            "Hauteur nominale de l'élément (po)",
+            min_value=2,
+            value=6,
+        )
+        GREEN = st.toggle(
+            "Bois vert",
+            help="Bois d’œuvre dont la teneur en humidité dépasse 19 % (H > 19%)",
+        )
+        BRUT = st.toggle(
+            "Dimensions brutes",
+            help="Utilise les dimensions nominales en tant que dimensions réelles",
+        )
+        built_up = st.radio(
+            "Élément composé (plis)",
+            options=(1, 2, 3, 4, 5),
+            horizontal=True,
+            help="Élément assemblé composé de plusieurs plis",
+        )
+
+    with col2:
+        width = sawn_lumber.sizes(width_input, GREEN, BRUT)
+        st.metric("Largeur nette de l'élément, b", f"{width} mm")
+        depth = sawn_lumber.sizes(depth_input, GREEN, BRUT)
+        st.metric("Hauteur nette de l'élément, d", f"{depth} mm")
+        msr_mel = col2.pills(
+            label="Bois classé mécaniquement?",
+            options=("MSR", "MEL"),
+            width="stretch",
+            help="""Bois de charpente classé mécaniquement par résistance (MSR) et
+            bois de charpente évalué par machine (MEL)""",
+        )
+        MSR, MEL = False, False
+        if msr_mel == "MSR":
+            MSR = True
+        elif msr_mel == "MEL":
+            MEL = True
 
     # --- calcul pour déterminer la catégorie ---
     CATEGORY = sawn_lumber.lumber_category(
@@ -194,23 +196,26 @@ with st.container(horizontal_alignment="center"):
         label="Classe:",
         options=grade_options,
         default=grade_options[1][0],
-        help=f"Si aucune classe n'est sélectionnée, '{grade_options[1][0]}' est utilisé par défaut",
         width=650,
+        help=f"Si aucune classe n'est sélectionnée, '{grade_options[1][0]}' est utilisé par défaut",
     )
     if not grade:
         grade = grade_options[1][0]
 
-    # --- calculer les résultats de résistances prévues ---
-    st.divider()
-    st.subheader("Résistances prévues et modules d’élasticité")
 
-    compute_resistance = sawn_lumber.specified_strengths(
-        category=CATEGORY,
-        specie=specie[SPECIE],
-        grade=grade,
-        side=SIDE,
-    )
+# --- section résistances prévues ---
+st.divider()
+st.subheader("Résistances prévues et modules d’élasticité")
 
+# --- calculer les résultats de résistances prévues ---
+compute_resistance = sawn_lumber.specified_strengths(
+    category=CATEGORY,
+    specie=specie[SPECIE],
+    grade=grade,
+    side=SIDE,
+)
+
+with st.container(horizontal_alignment="center"):
     # --- afficher les résultats de résistances prévues ---
     with st.expander("Résistances", width=650):
         display_resistance = [
@@ -248,10 +253,13 @@ with st.container(horizontal_alignment="center"):
             col1.text(f"{display_resistance[i][0]}:")
             col2.markdown(f"{display_resistance[i][1]} $={compute_resistance[i]}MPa$")
 
-    # --- inputs pour déterminer les coefficients ---
-    st.divider()
-    st.subheader("Coefficients de correction")
 
+# --- section coefficients ---
+st.divider()
+st.subheader("Coefficients de correction")
+
+with st.container(horizontal_alignment="center"):
+    # --- inputs pour déterminer les coefficients ---
     col1, col2 = st.columns(2, vertical_alignment="bottom", width=550)
     duration = {
         "Courte (≤ 7 jours)": "courte",
@@ -295,8 +303,9 @@ with st.container(horizontal_alignment="center"):
         espacés de 150 mm aux rives des panneaux de revêtement et de 300 mm aux autres
         endroits""",
     )
+    PLIS = True
     if built_up == 1:
-        built_up = False
+        PLIS = False
 
     # --- afficher les résultats des corfficients ---
     with st.expander("Coefficients", width=650):
@@ -331,7 +340,7 @@ with st.container(horizontal_alignment="center"):
             incised=incised,
             _2ft_spacing=group,
             connected_subfloor=subfloor,
-            built_up_beam=built_up,
+            built_up_beam=PLIS,
         )
 
         display_coefficients = [
@@ -346,17 +355,62 @@ with st.container(horizontal_alignment="center"):
             col1.markdown(f"{display_coefficients[i][0]}:")
             col2.markdown(f"{display_coefficients[i][1]} $={compute_coefficients[i]}$")
 
-    # --- calcul des résistances ---
-    st.divider()
-    st.subheader("Calcul des résistances")
-    tab1 = st.tabs(
-        [
-            "Moment de flexion",
-            "Cisaillement",
-            "Compression parallèle au fil",
-            "Compression perpendiculaire au fil",
-            "Compression oblique par rapport au fil",
-            "Traction parallèle au fil",
-            "Flexion et charge axiale combinée",
-        ]
+
+# --- section calcul des résistances ---
+st.divider()
+st.subheader(
+    "Calcul des résistances",
+    help="Méthodes de calcul applicables au bois d’œuvre de section rectangulaire",
+)
+flex, shear, comp_para, comp_perp, comp_angle, trac, combi = st.tabs(
+    [
+        "Moment de flexion",
+        "Cisaillement",
+        "Compression parallèle au fil",
+        "Compression perpendiculaire au fil",
+        "Compression oblique par rapport au fil",
+        "Traction parallèle au fil",
+        "Flexion et charge axiale combinée",
+    ]
+)
+
+with flex:
+    kd, ksb, kt, kh, kzb = sawn_lumber.modification_factors(
+        width=width,
+        depth=depth,
+        prop="flex",
+        duration=duration[DURATION],
+        category=CATEGORY,
+        wet_service=wet,
+        treated=treated,
+        incised=incised,
+        _2ft_spacing=group,
+        connected_subfloor=subfloor,
+        built_up_beam=built_up,
     )
+    beam_flex = sawn_lumber.Resistances(
+        b=width,
+        d=depth,
+        kd=kd,
+        kh=kh,
+        kt=kt,
+        ply=built_up,
+    )
+
+    with st.container(horizontal_alignment="center"):
+        LATERAL = st.toggle("Support latéral aux appuis")
+        COMP_EDGE = st.toggle("Rive comprimée maintenu")
+        TEN_EDGE = st.toggle("Rive en tension maintenu")
+        BLOCK = st.toggle("Présence d'entremises")
+        TIE_ROD = st.toggle("Pannes ou tirants")
+
+        mr = beam_flex.bending_moment(
+            fb=compute_resistance[0],
+            ksb=ksb,
+            kzb=kzb,
+            lateral_support=LATERAL,
+            compressive_edge_support=COMP_EDGE,
+            tensile_edge_support=TEN_EDGE,
+            blocking_support=BLOCK,
+            tie_rods_support=TIE_ROD,
+        )
