@@ -4,8 +4,9 @@
 from dataclasses import dataclass
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 import streamlit as st
-import sawn_lumber
 import Accueil
+import sawn_lumber
+import general_design
 
 
 # DB CONNECTIONS
@@ -398,19 +399,49 @@ with flex:
     )
 
     with st.container(horizontal_alignment="center"):
-        LATERAL = st.toggle("Support latéral aux appuis")
-        COMP_EDGE = st.toggle("Rive comprimée maintenu")
-        TEN_EDGE = st.toggle("Rive en tension maintenu")
-        BLOCK = st.toggle("Présence d'entremises")
-        TIE_ROD = st.toggle("Pannes ou tirants")
+        col1, col2 = st.columns(2, width=550)
+        with col1:
+            LATERAL = st.toggle(
+                "Support latéral aux appuis",
+                help="""Support latéral assuré aux points d’appui afin d’empêcher le déplacement
+                latéral et la rotation""",
+            )
+            COMP_EDGE = st.toggle(
+                "Rive supérieure maintenue",
+                help="""Rive comprimée maintenu par fixation directe du platelage ou par des solives
+                dont l’espacement ne dépasse pas 610 mm""",
+                value=subfloor,
+            )
+            TEN_EDGE = st.toggle(
+                "Rive inférieure maintenue",
+                help="Rive en tension maintenue",
+            )
+        with col2:
+            TIE_ROD = st.toggle(
+                "Pannes ou tirants",
+                help="Alignement maintenu à l’aide de pannes ou de tirants",
+            )
+            BLOCK = st.toggle(
+                "Entremises",
+                help=f"""Présence d'entretoises ou d'entremises dont l’espacement ne
+                dépasse pas huit fois la hauteur de la section de l’élément -> $ 8 \cdot d = {8*depth} $
+                mm c/c""",
+            )
 
-        mr = beam_flex.bending_moment(
-            fb=compute_resistance[0],
-            ksb=ksb,
-            kzb=kzb,
-            lateral_support=LATERAL,
-            compressive_edge_support=COMP_EDGE,
-            tensile_edge_support=TEN_EDGE,
-            blocking_support=BLOCK,
-            tie_rods_support=TIE_ROD,
+        mr = (
+            beam_flex.bending_moment(
+                fb=compute_resistance[0],
+                ksb=ksb,
+                kzb=kzb,
+                lateral_support=LATERAL,
+                compressive_edge_support=COMP_EDGE,
+                tensile_edge_support=TEN_EDGE,
+                blocking_support=BLOCK,
+                tie_rods_support=TIE_ROD,
+            )
+            / 1000000
         )
+        col2.write(f"$Mr = {round(mr,2)} kN \cdot m$")
+        mf = st.number_input("$Mf: (kN \cdot m)$", 0.00, width=550)
+        verif = general_design.limit_states_design(mf, mr)
+        st.text(verif)
