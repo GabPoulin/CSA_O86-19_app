@@ -720,7 +720,7 @@ class Resistances:
 
         if rapport_h_l > criteria:
             kl = 0
-            raise Warning("\nATTENTION!!!\tValider Kl selon 7.5.6.4\n")
+            raise Warning("Valider Kl selon 7.5.6.4 - Fonctionnalité à venir")
 
         mr = phi * f_b * s * kzb * kl
 
