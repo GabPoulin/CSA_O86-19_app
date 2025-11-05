@@ -90,7 +90,14 @@ with st.container(horizontal_alignment="center"):
 
     with col2:
         width = sawn_lumber.sizes(width_input, GREEN, BRUT)
-        st.metric("Largeur nette de l'élément, b", f"{width} mm")
+        if built_up == 1:
+            st.metric("Largeur nette de l'élément, b", f"{width} mm")
+        else:
+            st.metric(
+                "Largeur nette de l'élément, b",
+                f"{built_up}*{width} = {built_up*width} mm",
+            )
+
         depth = sawn_lumber.sizes(depth_input, GREEN, BRUT)
         st.metric("Hauteur nette de l'élément, d", f"{depth} mm")
         msr_mel = col2.pills(
@@ -441,4 +448,4 @@ with flex:
         col2.write(f"$Mr = {round(mr,2)} kN \cdot m$")
         mf = st.number_input("$Mf: (kN \cdot m)$", 0.00, width=550)
         verif = general_design.limit_states_design(mf, mr)
-        st.text(verif)
+        st.subheader(verif)
