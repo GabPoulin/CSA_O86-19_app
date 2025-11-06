@@ -259,7 +259,8 @@ with st.container(horizontal_alignment="center"):
         for i in range(0, int(len(compute_resistance))):
             col1, col2 = st.columns([3, 1])
             col1.text(f"{display_resistance[i][0]}:")
-            col2.markdown(f"{display_resistance[i][1]} $={compute_resistance[i]}MPa$")
+            col2.markdown(
+                f"{display_resistance[i][1]} $={compute_resistance[i]}MPa$")
 
 
 # --- section coefficients ---
@@ -361,7 +362,8 @@ with st.container(horizontal_alignment="center"):
         for i in range(0, int(len(compute_coefficients))):
             col1, col2 = st.columns([3, 1])
             col1.markdown(f"{display_coefficients[i][0]}:")
-            col2.markdown(f"{display_coefficients[i][1]} $={compute_coefficients[i]}$")
+            col2.markdown(
+                f"{display_coefficients[i][1]} $={compute_coefficients[i]}$")
 
 
 # --- section calcul des résistances ---
