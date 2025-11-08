@@ -326,21 +326,21 @@ with st.container(horizontal_alignment="center"):
             "Traction parallèle au fil": "trac",
             "Module d'élasticité": "moe",
         }
-        prop_key = st.segmented_control(
+        PROP_KEY = st.segmented_control(
             "Propriété affichée:",
             options=prop_options,
             width="stretch",
             default="Flexion",
             help="Si aucune propriété n'est sélectionné, 'Flexion' est sélectionné par défaut",
         )
-        if not prop_key:
-            prop_key = "Flexion"
+        if not PROP_KEY:
+            PROP_KEY = "Flexion"
 
         # --- calculer les corfficients ---
         compute_coefficients = sawn_lumber.modification_factors(
             width=width,
             depth=depth,
-            prop=prop_options[prop_key],
+            prop=prop_options[PROP_KEY],
             duration=duration[DURATION],
             category=CATEGORY,
             wet_service=wet,
@@ -447,5 +447,90 @@ with flex:
         )
         col2.write(f"$Mr = {round(mr,2)} kN \cdot m$")
         mf = st.number_input("$Mf: (kN \cdot m)$", 0.00, width=550)
-        verif = general_design.limit_states_design(mf, mr)
-        st.subheader(verif)
+        VERIF = general_design.limit_states_design(mf, mr)
+        st.subheader(VERIF, width=650)
+
+with shear:
+    kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
+        width=width,
+        depth=depth,
+        prop="cis_v",
+        duration=duration[DURATION],
+        category=CATEGORY,
+        wet_service=wet,
+        treated=treated,
+        incised=incised,
+        _2ft_spacing=group,
+        connected_subfloor=subfloor,
+        built_up_beam=PLIS,
+    )
+    beam_shear = sawn_lumber.Resistances(
+        b=width,
+        d=depth,
+        kd=kd,
+        kh=kh,
+        kt=kt,
+        ply=built_up,
+    )
+    with st.container(horizontal_alignment="center"):
+        col1, col2 = st.columns(2, width=550)
+        notch_depth = col1.number_input(
+            "Profondeur de l'entaille",
+            min_value=0,
+            value=0,
+        )
+        notch_length = col1.number_input(
+            "Longueur de l'entaille",
+            min_value=0,
+            value=0,
+        )
+        if notch_depth > 0 and notch_length > 0:
+            kd, ksf, kt, kh, kzf = sawn_lumber.modification_factors(
+                width=width,
+                depth=depth,
+                prop="cis_f",
+                duration=duration[DURATION],
+                category=CATEGORY,
+                wet_service=wet,
+                treated=treated,
+                incised=incised,
+                _2ft_spacing=group,
+                connected_subfloor=subfloor,
+                built_up_beam=PLIS,
+            )
+            vf = col2.number_input("$Ff: (kN)$", 0.00, width=550)
+        else:
+            ksf = 1
+            vf = col2.number_input("$Vf: (kN)$", 0.00, width=550)
+
+        vr, fr = beam_shear.shear(
+            fv=compute_resistance[1],
+            ksv=ksv,
+            ksf=ksf,
+            kzv=kzv,
+            dn=notch_depth,
+            e=notch_length,
+        )
+        vr = vr / 1000
+        fr = fr / 1000
+        col2.write(f"$Vr = {round(vr,2)} kN$")
+        col2.write(f"$Fr = {round(fr,2)} kN$")
+        if fr > 0:
+            vr = min(vr, fr)
+        VERIF = general_design.limit_states_design(vf, vr)
+        st.subheader(VERIF, width=650)
+
+with comp_para:
+    pass
+
+with comp_perp:
+    pass
+
+with comp_angle:
+    pass
+
+with trac:
+    pass
+
+with combi:
+    pass
