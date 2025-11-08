@@ -64,15 +64,6 @@ with st.container(horizontal_alignment="center"):
     )
 
     with col1:
-        width_input = st.number_input(
-            "Largeur nominale de l'élément (po)",
-            min_value=2,
-        )
-        depth_input = st.number_input(
-            "Hauteur nominale de l'élément (po)",
-            min_value=2,
-            value=6,
-        )
         GREEN = st.toggle(
             "Bois vert",
             help="Bois d'œuvre dont la teneur en humidité dépasse 19 % (H > 19%)",
@@ -80,6 +71,20 @@ with st.container(horizontal_alignment="center"):
         BRUT = st.toggle(
             "Dimensions brutes",
             help="Utilise les dimensions nominales en tant que dimensions réelles",
+        )
+        MIN_VALUE = 2
+        VALUE = 6
+        if BRUT:
+            MIN_VALUE = 2.00
+            VALUE = 6.00
+        width_input = st.number_input(
+            "Largeur nominale de l'élément (po)",
+            min_value=MIN_VALUE,
+        )
+        depth_input = st.number_input(
+            "Hauteur nominale de l'élément (po)",
+            min_value=MIN_VALUE,
+            value=VALUE,
         )
         built_up = st.radio(
             "Élément composé (plis)",
@@ -475,12 +480,12 @@ with shear:
     with st.container(horizontal_alignment="center"):
         col1, col2 = st.columns(2, width=550)
         notch_depth = col1.number_input(
-            "Profondeur de l'entaille",
+            "Profondeur de l'entaille $(d_n)$",
             min_value=0,
             value=0,
         )
         notch_length = col1.number_input(
-            "Longueur de l'entaille",
+            "Longueur de l'entaille $(e)$",
             min_value=0,
             value=0,
         )
@@ -519,11 +524,11 @@ with shear:
             vr = min(vr, fr)
         VERIF = general_design.limit_states_design(vf, vr)
         st.subheader(VERIF, width=650)
-        st.image(
-            "images/notch.png",
-            caption="Longueur et profondeur de l'entaille",
-            width=650,
-        )
+        st.toast(VERIF)
+        col1, col2, col3 = st.columns(3, width=650)
+        col1.image("images/notch_1.png")
+        col2.image("images/notch_2.png")
+        col3.image("images/notch_3.png")
 
 with comp_para:
     pass
