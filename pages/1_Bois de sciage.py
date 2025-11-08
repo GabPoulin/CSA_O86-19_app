@@ -40,7 +40,7 @@ st.title(Accueil.TITLE)
 st.page_link("Accueil.py", label="Retour à l'accueil")
 st.header(
     "Bois de Sciage",
-    help="""Les méthodes et les données de calcul ne s’appliquent qu’au bois de charpente
+    help="""Les méthodes et les données de calcul ne s'appliquent qu'au bois de charpente
     conforme à CSA O141""",
 )
 
@@ -49,9 +49,9 @@ st.header(
 st.divider()
 st.subheader(
     "Matériaux",
-    help=""" Les calculs reposent sur l’utilisation de bois d’œuvre classé suivant les Règles
-    de classification pour le bois d’œuvre canadien de la NLGA, et identifié au moyen de 
-    l’estampille d’une association ou d’un organisme indépendant de classement, conformément 
+    help=""" Les calculs reposent sur l'utilisation de bois d'œuvre classé suivant les Règles
+    de classification pour le bois d'œuvre canadien de la NLGA, et identifié au moyen de 
+    l'estampille d'une association ou d'un organisme indépendant de classement, conformément 
     à CSA O141""",
 )
 
@@ -75,7 +75,7 @@ with st.container(horizontal_alignment="center"):
         )
         GREEN = st.toggle(
             "Bois vert",
-            help="Bois d’œuvre dont la teneur en humidité dépasse 19 % (H > 19%)",
+            help="Bois d'œuvre dont la teneur en humidité dépasse 19 % (H > 19%)",
         )
         BRUT = st.toggle(
             "Dimensions brutes",
@@ -148,7 +148,7 @@ with st.container(horizontal_alignment="center"):
             help="""
             Les résistances prévues des poutres et des longerons sont fondées sur des charges
             appliquées sur leur face étroite. Si les charges sont appliquées sur leur grande face,
-            la résistance prévue en flexion à la fibre extrême et le module d’élasticité prévu 
+            la résistance prévue en flexion à la fibre extrême et le module d'élasticité prévu 
             doivent être multipliés par des coefficients de correction (CSA O86 - Tableau 6.6)
             """,
             width=550,
@@ -213,7 +213,7 @@ with st.container(horizontal_alignment="center"):
 
 # --- section résistances prévues ---
 st.divider()
-st.subheader("Résistances prévues et modules d’élasticité")
+st.subheader("Résistances prévues et modules d'élasticité")
 
 # --- calculer les résultats de résistances prévues ---
 compute_resistance = sawn_lumber.specified_strengths(
@@ -248,11 +248,11 @@ with st.container(horizontal_alignment="center"):
                 "$f_t$",
             ),
             (
-                "Module d’élasticité",
+                "Module d'élasticité",
                 "$E$",
             ),
             (
-                "Module d’élasticité pour les calculs des éléments en compression",
+                "Module d'élasticité pour les calculs des éléments en compression",
                 "$E_{05}$",
             ),
         ]
@@ -285,9 +285,9 @@ with st.container(horizontal_alignment="center"):
     )
     treated = col2.checkbox(
         "Bois traité",
-        help="""Dans le cas du bois d’œuvre traité par ignifugation ou avec d’autres produits
+        help="""Dans le cas du bois d'œuvre traité par ignifugation ou avec d'autres produits
         chimiques qui réduisent la résistance, les résistances et la rigidité doivent être
-        basées sur des résultats d’essais documentés qui doivent tenir compte de l’effet du
+        basées sur des résultats d'essais documentés qui doivent tenir compte de l'effet du
         temps, de la température et de la teneur en humidité""",
     )
     incised = col2.checkbox(
@@ -297,17 +297,17 @@ with st.container(horizontal_alignment="center"):
         "3 éléments ou + @ ≤ 2 pi c/c",
         help="""Cas 1 - Système d'éléments de charpente rapprochés comme les
         fermes à ossature légère, les éléments de charpente composés et les éléments de
-        charpente en bois lamellé-collé. Peut aussi s’appliquer à certains systèmes
+        charpente en bois lamellé-collé. Peut aussi s'appliquer à certains systèmes
         traditionnels de solives et de chevrons où les détails de charpente ne satisfont pas
         au cas 2""",
     )
     subfloor = col2.checkbox(
         "Revêtement ou sous-plancher",
-        help="""Cas 2 - Système d'éléments revêtus d’un contreplaqué ou d’un panneau OSB d’au
-        moins 9,5 mm d’épaisseur, ou de bois d’au moins 17 mm d’épaisseur combiné à un
-        recouvrement de panneaux tel qu’une sous-finition ou un parquet de bois. Le revêtement
+        help="""Cas 2 - Système d'éléments revêtus d'un contreplaqué ou d'un panneau OSB d'au
+        moins 9,5 mm d'épaisseur, ou de bois d'au moins 17 mm d'épaisseur combiné à un
+        recouvrement de panneaux tel qu'une sous-finition ou un parquet de bois. Le revêtement
         ou le sous-plancher est fixé aux éléments de charpente de manière à procurer une
-        rigidité minimale équivalente à celle obtenue à l’aide de clous ordinaires de 2 po
+        rigidité minimale équivalente à celle obtenue à l'aide de clous ordinaires de 2 po
         espacés de 150 mm aux rives des panneaux de revêtement et de 300 mm aux autres
         endroits""",
     )
@@ -324,7 +324,7 @@ with st.container(horizontal_alignment="center"):
             "Compression parallèle au fil": "comp_para",
             "Compression perpendiculaire au fil": "comp_perp",
             "Traction parallèle au fil": "trac",
-            "Module d’élasticité": "moe",
+            "Module d'élasticité": "moe",
         }
         prop_key = st.segmented_control(
             "Propriété affichée:",
@@ -352,7 +352,7 @@ with st.container(horizontal_alignment="center"):
         )
 
         display_coefficients = [
-            ("Coefficient de durée d’application de la charge", "$K_D$"),
+            ("Coefficient de durée d'application de la charge", "$K_D$"),
             ("Coefficient de conditions d'utilisation", "$K_S$"),
             ("Coefficient de traitement", "$K_T$"),
             ("Coefficient de système", "$K_H$"),
@@ -407,13 +407,13 @@ with flex:
         with col1:
             LATERAL = st.toggle(
                 "Support latéral aux appuis",
-                help="""Support latéral assuré aux points d’appui afin d’empêcher le déplacement
+                help="""Support latéral assuré aux points d'appui afin d'empêcher le déplacement
                 latéral et la rotation""",
             )
             COMP_EDGE = st.toggle(
                 "Rive supérieure maintenue",
                 help="""Rive comprimée maintenu par fixation directe du platelage ou par des solives
-                dont l’espacement ne dépasse pas 610 mm""",
+                dont l'espacement ne dépasse pas 610 mm""",
                 value=subfloor,
             )
             TEN_EDGE = st.toggle(
@@ -423,12 +423,12 @@ with flex:
         with col2:
             TIE_ROD = st.toggle(
                 "Pannes ou tirants",
-                help="Alignement maintenu à l’aide de pannes ou de tirants",
+                help="Alignement maintenu à l'aide de pannes ou de tirants",
             )
             BLOCK = st.toggle(
                 "Entremises",
-                help=f"""Présence d'entretoises ou d'entremises dont l’espacement ne
-                dépasse pas huit fois la hauteur de la section de l’élément -> $ 8 \cdot d = {8*depth} $
+                help=f"""Présence d'entretoises ou d'entremises dont l'espacement ne
+                dépasse pas huit fois la hauteur de la section de l'élément -> $ 8 \cdot d = {8*depth} $
                 mm c/c""",
             )
 
