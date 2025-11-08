@@ -607,7 +607,7 @@ def modification_factors(
 
 
 def sizes(
-    dimension: int,
+    dimension: float,
     green: bool = False,
     brut: bool = False,
 ):

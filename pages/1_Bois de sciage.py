@@ -414,6 +414,7 @@ with flex:
                 "Support latéral aux appuis",
                 help="""Support latéral assuré aux points d'appui afin d'empêcher le déplacement
                 latéral et la rotation""",
+                value=True,
             )
             COMP_EDGE = st.toggle(
                 "Rive supérieure maintenue",
@@ -432,8 +433,8 @@ with flex:
             )
             BLOCK = st.toggle(
                 "Entremises",
-                help=f"""Présence d'entretoises ou d'entremises dont l'espacement ne
-                dépasse pas huit fois la hauteur de la section de l'élément -> $ 8 \cdot d = {8*depth} $
+                help=f"""Présence d'entretoises ou d'entremises dont l'espacement ne dépasse pas
+                huit fois la hauteur de la section de l'élément -> $ 8 \cdot d = {8*depth} $
                 mm c/c""",
             )
 
@@ -450,10 +451,15 @@ with flex:
             )
             / 1000000
         )
+        mf = col2.number_input(
+            "$Mf: (kN \cdot m)$",
+            min_value=0.00,
+            value=None,
+            width=550,
+        )
         col2.write(f"$Mr = {round(mr,2)} kN \cdot m$")
-        mf = st.number_input("$Mf: (kN \cdot m)$", 0.00, width=550)
         VERIF = general_design.limit_states_design(mf, mr)
-        st.subheader(VERIF, width=650)
+        col1.warning(VERIF, width=650)
 
 with shear:
     kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
@@ -503,10 +509,10 @@ with shear:
                 connected_subfloor=subfloor,
                 built_up_beam=PLIS,
             )
-            vf = col2.number_input("$Ff: (kN)$", 0.00, width=550)
+            vf = col2.number_input("$Ff: (kN)$", 0.00, value=None, width=550)
         else:
             ksf = 1
-            vf = col2.number_input("$Vf: (kN)$", 0.00, width=550)
+            vf = col2.number_input("$Vf: (kN)$", 0.00, value=None, width=550)
 
         vr, fr = beam_shear.shear(
             fv=compute_resistance[1],
@@ -523,12 +529,10 @@ with shear:
         if fr > 0:
             vr = min(vr, fr)
         VERIF = general_design.limit_states_design(vf, vr)
-        st.subheader(VERIF, width=650)
-        st.toast(VERIF)
-        col1, col2, col3 = st.columns(3, width=650)
         col1.image("images/notch_1.png")
-        col2.image("images/notch_2.png")
-        col3.image("images/notch_3.png")
+        col1.image("images/notch_2.png")
+        col2.image("images/notch_3.png")
+        col2.warning(VERIF, width=650)
 
 with comp_para:
     pass

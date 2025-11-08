@@ -63,7 +63,7 @@ class SubfloorProperties(orm.declarative_base()):
 
 
 # CODE
-def limit_states_design(load: float, resistance: float) -> str:
+def limit_states_design(load: float | None, resistance: float) -> str:
     """
     5.1 Calculs aux états limites.
 
@@ -75,11 +75,13 @@ def limit_states_design(load: float, resistance: float) -> str:
         str: Message de validation de la résistance.
 
     """
-    verif = round((load / resistance) * 100)
-    if verif < 100:
-        message = f"État limite respecté: sollicitation atteinte à {verif}%"
+    if not load or not resistance:
+        message = "Veuillez spécifier une charge pour compléter la validation."
     else:
+        verif = round((load / resistance) * 100)
         message = f"État limite non-respecté: sollicitation atteinte à {verif}%"
+        if verif < 100:
+            message = f"État limite respecté: sollicitation atteinte à {verif}%"
 
     return message
 
@@ -117,8 +119,7 @@ def load_duration(
     elif duration == "normale":
         kd = 1
     else:
-        raise ValueError(
-            f"Durée d'application de la charge invalide: {duration}")
+        raise ValueError(f"Durée d'application de la charge invalide: {duration}")
 
     kd = min(kd, 1.15)
 
@@ -431,8 +432,7 @@ class Vibration:
         kj = ei_eff / span**3
         k1 = kj / (kj + kl)
 
-        ktss = 0.0294 + (0.536 * k1**0.25) + \
-            (0.516 * k1**0.5) + (0.31 * k1**0.75)
+        ktss = 0.0294 + (0.536 * k1**0.25) + (0.516 * k1**0.5) + (0.31 * k1**0.75)
 
         return ktss
 
@@ -739,8 +739,7 @@ def _tests():
     ), f"limit_states_design -> FAILED\n {expected_result = }\n {test_limit_states_design = }"
 
     # Test load_duration
-    test_load_duration = load_duration(
-        duration="continue", dead=1, live=0.5, snow=0.1)
+    test_load_duration = load_duration(duration="continue", dead=1, live=0.5, snow=0.1)
     expected_result = 0.8701813447471219
     assert (
         test_load_duration == expected_result
