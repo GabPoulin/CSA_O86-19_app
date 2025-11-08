@@ -519,6 +519,11 @@ with shear:
             vr = min(vr, fr)
         VERIF = general_design.limit_states_design(vf, vr)
         st.subheader(VERIF, width=650)
+        st.image(
+            "images/notch.png",
+            caption="Longueur et profondeur de l'entaille",
+            width=650,
+        )
 
 with comp_para:
     pass
