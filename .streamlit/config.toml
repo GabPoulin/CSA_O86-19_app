@@ -14,6 +14,7 @@ toolbarMode = "auto"
 showSidebarNavigation = true
 
 [theme]
+base = "dark"
 primaryColor = "#CC7700"
 backgroundColor = "#F9F5F0"
 secondaryBackgroundColor = "#F9F5F0"
