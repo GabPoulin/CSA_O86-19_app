@@ -38,7 +38,7 @@ class SawnLumberStrengths(orm.declarative_base()):
 # ---- en-tête ----
 st.title(Accueil.TITLE, anchor=False)
 st.page_link(
-    "main.py",
+    "Accueil.py",
     label="Retour à l'accueil",
     icon=":material/home:",
     use_container_width=True,
