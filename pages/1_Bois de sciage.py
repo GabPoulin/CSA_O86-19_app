@@ -506,9 +506,7 @@ with shear:
                 value=None,
                 placeholder="Optionnel",
             )
-            # st.image("images/notch_1.png")
             st.image("images/notch_2.png")
-            # st.image("images/notch_3.png")
 
         with col2:
             vf = st.number_input(
