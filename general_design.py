@@ -68,20 +68,20 @@ def limit_states_design(load: float | None, resistance: float) -> str:
     5.1 Calculs aux états limites.
 
     Args:
-        load (float): Charge pondérée ou charge spécifiée.
-        resistance (float): Résistance correspondante.
+        load (float|None): Charge pondérée ou charge spécifiée.
+        resistance (float|None): Résistance correspondante.
 
     Returns:
         str: Message de validation de la résistance.
 
     """
-    if not load or not resistance:
-        message = "Spécifiez une charge pour vérifier l'état limite"
-    else:
+    if load and resistance:
         verif = round((load / resistance) * 100)
         message = f"État limite dépassé: {verif}%"
         if verif < 100:
             message = f"État limite respecté: {verif}%"
+    else:
+        message = "Spécifiez une charge pour vérifier l'état limite"
 
     return message
 
