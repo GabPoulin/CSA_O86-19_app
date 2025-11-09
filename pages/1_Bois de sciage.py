@@ -549,9 +549,9 @@ with shear:
             VERIF = general_design.limit_states_design(vf, vr)
             st.warning(VERIF, width=650)
         with col2:
-            st.image("images/notch_1.png")
+            # st.image("images/notch_1.png")
             st.image("images/notch_2.png")
-            st.image("images/notch_3.png")
+            # st.image("images/notch_3.png")
 
 with comp_para:
     pass
