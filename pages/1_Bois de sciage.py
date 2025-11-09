@@ -506,6 +506,11 @@ with shear:
                 value=None,
                 placeholder="Optionnel",
             )
+            # st.image("images/notch_1.png")
+            st.image("images/notch_2.png")
+            # st.image("images/notch_3.png")
+
+        with col2:
             vf = st.number_input(
                 "$Vf: (kN)$",
                 0.00,
@@ -548,10 +553,6 @@ with shear:
                 st.write(f"$Vr = {round(vr,2)} kN$")
             VERIF = general_design.limit_states_design(vf, vr)
             st.warning(VERIF, width=650)
-        with col2:
-            # st.image("images/notch_1.png")
-            st.image("images/notch_2.png")
-            # st.image("images/notch_3.png")
 
 with comp_para:
     pass
