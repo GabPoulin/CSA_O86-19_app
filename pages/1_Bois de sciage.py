@@ -555,16 +555,16 @@ with shear:
             st.warning(VERIF, width=650)
 
 with comp_para:
-    pass
+    st.warning("Fonctionnalité à venir.", width=650)
 
 with comp_perp:
-    pass
+    st.warning("Fonctionnalité à venir.", width=650)
 
 with comp_angle:
-    pass
+    st.warning("Fonctionnalité à venir.", width=650)
 
 with trac:
-    pass
+    st.warning("Fonctionnalité à venir.", width=650)
 
 with combi:
-    pass
+    st.warning("Fonctionnalité à venir.", width=650)
