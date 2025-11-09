@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 import streamlit as st
-import main
+import Accueil
 import sawn_lumber
 import general_design
 
@@ -36,7 +36,7 @@ class SawnLumberStrengths(orm.declarative_base()):
 
 # CODE
 # ---- en-tête ----
-st.title(main.TITLE, anchor=False)
+st.title(Accueil.TITLE, anchor=False)
 st.page_link(
     "main.py",
     label="Retour à l'accueil",
