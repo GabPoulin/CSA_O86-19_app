@@ -74,17 +74,21 @@ with st.container(horizontal_alignment="center"):
         )
         MIN_VALUE = 2
         VALUE = 6
+        STEP = 1
         if BRUT:
             MIN_VALUE = 2.00
             VALUE = 6.00
+            STEP = 0.25
         width_input = st.number_input(
-            "Largeur nominale de l'élément (po)",
+            "Largeur nominale de l'élément, $b$ (po)",
             min_value=MIN_VALUE,
+            step=STEP,
         )
         depth_input = st.number_input(
-            "Hauteur nominale de l'élément (po)",
+            "Hauteur nominale de l'élément, $d$ (po)",
             min_value=MIN_VALUE,
             value=VALUE,
+            step=STEP,
         )
         built_up = st.radio(
             "Élément composé (plis)",
@@ -96,15 +100,15 @@ with st.container(horizontal_alignment="center"):
     with col2:
         width = sawn_lumber.sizes(width_input, GREEN, BRUT)
         if built_up == 1:
-            st.metric("Largeur nette de l'élément, b", f"{width} mm")
+            st.metric("Largeur nette de l'élément, $b$", f"{width} mm")
         else:
             st.metric(
-                "Largeur nette de l'élément, b",
+                "Largeur nette de l'élément, $b$",
                 f"{built_up}*{width} = {built_up*width} mm",
             )
 
         depth = sawn_lumber.sizes(depth_input, GREEN, BRUT)
-        st.metric("Hauteur nette de l'élément, d", f"{depth} mm")
+        st.metric("Hauteur nette de l'élément, $d$", f"{depth} mm")
         msr_mel = col2.pills(
             label="Bois classé mécaniquement?",
             options=("MSR", "MEL"),
@@ -126,7 +130,7 @@ with st.container(horizontal_alignment="center"):
         is_mel=MEL,
     )
     if CATEGORY == "Valider la disponibilité du bois chez les fournisseurs.":
-        st.warning(
+        col1.warning(
             "Valider la disponibilité du bois chez les fournisseurs.",
             width=550,
         )
@@ -426,7 +430,6 @@ with flex:
                 "Rive inférieure maintenue",
                 help="Rive en tension maintenue",
             )
-        with col2:
             TIE_ROD = st.toggle(
                 "Pannes ou tirants",
                 help="Alignement maintenu à l'aide de pannes ou de tirants",
@@ -451,15 +454,18 @@ with flex:
             )
             / 1000000
         )
-        mf = col2.number_input(
-            "$Mf: (kN \cdot m)$",
-            min_value=0.00,
-            value=None,
-            width=550,
-        )
-        col2.write(f"$Mr = {round(mr,2)} kN \cdot m$")
-        VERIF = general_design.limit_states_design(mf, mr)
-        col1.warning(VERIF, width=650)
+        with col2:
+            mf = st.number_input(
+                "$Mf: (kN \cdot m)$",
+                min_value=0.00,
+                value=None,
+                width=550,
+                placeholder="Moment pondéré",
+                step=1.00,
+            )
+            VERIF = general_design.limit_states_design(mf, mr)
+            st.write(f"$Mr = {round(mr,2)} kN \cdot m$")
+            st.warning(VERIF, width=650)
 
 with shear:
     kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
@@ -485,54 +491,67 @@ with shear:
     )
     with st.container(horizontal_alignment="center"):
         col1, col2 = st.columns(2, width=550)
-        notch_depth = col1.number_input(
-            "Profondeur de l'entaille $(d_n)$",
-            min_value=0,
-            value=0,
-        )
-        notch_length = col1.number_input(
-            "Longueur de l'entaille $(e)$",
-            min_value=0,
-            value=0,
-        )
-        if notch_depth > 0 and notch_length > 0:
-            kd, ksf, kt, kh, kzf = sawn_lumber.modification_factors(
-                width=width,
-                depth=depth,
-                prop="cis_f",
-                duration=duration[DURATION],
-                category=CATEGORY,
-                wet_service=wet,
-                treated=treated,
-                incised=incised,
-                _2ft_spacing=group,
-                connected_subfloor=subfloor,
-                built_up_beam=PLIS,
+        with col1:
+            notch_depth = st.number_input(
+                "Profondeur de l'entaille, $d_n$ (mm)",
+                min_value=0,
+                max_value=int(0.25 * depth),
+                value=None,
+                placeholder="Optionnel",
+                help=f"Ne doit pas dépasser $ 0,25 \cdot d = {0.25*depth} $ mm",
             )
-            vf = col2.number_input("$Ff: (kN)$", 0.00, value=None, width=550)
-        else:
-            ksf = 1
-            vf = col2.number_input("$Vf: (kN)$", 0.00, value=None, width=550)
+            notch_length = st.number_input(
+                "Longueur de l'entaille, $e$ (mm)",
+                min_value=0,
+                value=None,
+                placeholder="Optionnel",
+            )
+            vf = st.number_input(
+                "$Vf: (kN)$",
+                0.00,
+                value=None,
+                width=550,
+                placeholder="Effort tranchant pondéré",
+                step=1.00,
+            )
 
-        vr, fr = beam_shear.shear(
-            fv=compute_resistance[1],
-            ksv=ksv,
-            ksf=ksf,
-            kzv=kzv,
-            dn=notch_depth,
-            e=notch_length,
-        )
-        vr = vr / 1000
-        fr = fr / 1000
-        col2.write(f"$Vr = {round(vr,2)} kN$")
-        col2.write(f"$Fr = {round(fr,2)} kN$")
-        if fr > 0:
-            vr = min(vr, fr)
-        VERIF = general_design.limit_states_design(vf, vr)
-        col1.image("images/notch_1.png")
-        col1.image("images/notch_2.png")
-        col2.image("images/notch_3.png")
-        col2.warning(VERIF, width=650)
+            ksf = 1
+            if notch_depth and notch_length:
+                kd, ksf, kt, kh, kzf = sawn_lumber.modification_factors(
+                    width=width,
+                    depth=depth,
+                    prop="cis_f",
+                    duration=duration[DURATION],
+                    category=CATEGORY,
+                    wet_service=wet,
+                    treated=treated,
+                    incised=incised,
+                    _2ft_spacing=group,
+                    connected_subfloor=subfloor,
+                    built_up_beam=PLIS,
+                )
+
+            vr, fr = beam_shear.shear(
+                fv=compute_resistance[1],
+                ksv=ksv,
+                ksf=ksf,
+                kzv=kzv,
+                dn=notch_depth,
+                e=notch_length,
+            )
+            vr = vr / 1000
+            fr = fr / 1000
+            if 0 < fr < vr:
+                vr = fr
+                st.write(f"$Fr = {round(vr,2)} kN$")
+            else:
+                st.write(f"$Vr = {round(vr,2)} kN$")
+            VERIF = general_design.limit_states_design(vf, vr)
+            st.warning(VERIF, width=650)
+        with col2:
+            st.image("images/notch_1.png")
+            st.image("images/notch_2.png")
+            st.image("images/notch_3.png")
 
 with comp_para:
     pass

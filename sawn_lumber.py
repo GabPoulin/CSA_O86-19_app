@@ -732,8 +732,8 @@ class Resistances:
         ksv: float = 1,
         ksf: float = 1,
         kzv: float = 1,
-        dn: int = 0,
-        e: int = 0,
+        dn: int | None = None,
+        e: int | None = None,
     ):
         """
         6.5.4 Résistance au cisaillement.
@@ -743,8 +743,8 @@ class Resistances:
             ksv (float, optional): Coefficient de conditions d'utilisation pour le cisaillement.
             ksf (float, optional): Coefficient de conditions d'utilisation pour le cisaillement par fissuration.
             kzv (float, optional): Coefficient de dimensions en cisaillement.
-            dn (int, optional): Profondeur de l'entaille, mm. Default to 0.
-            e (int, optional): Longueur de l'entaille, mm. Default to 0.
+            dn (int | None, optional): Profondeur de l'entaille, mm. Default to None.
+            e (int | None, optional): Longueur de l'entaille, mm. Default to None.
 
         Returns:
             float: Vr = Résistance pondérée au cisaillement, N.
@@ -768,17 +768,19 @@ class Resistances:
         ag = b * d
         an = ag
 
-        if dn > 0 and e > 0:
-            if dn > 0.25 * d:
-                raise ValueError(
-                    f"La profondeur de l'entaille (dn = {dn} mm) ne doit pas dépasser 0,25d = {0.25 * d} mm."
-                )
-            an = b * (d - dn)
-            a = 1 - (dn / d)
-            n = e / d
-            kn = (0.006 * d * (1.6 * ((1 / a) - 1) + n**2 * ((1 / a**3) - 1))) ** (
-                -1 / 2
-            )
+        if dn and e:
+            if dn > 0 and e > 0:
+                if dn > 0.25 * d:
+                    raise ValueError(
+                        f"""La profondeur de l'entaille (dn = {dn} mm) ne doit pas dépasser 0,25d
+                        = {0.25 * d} mm."""
+                    )
+                an = b * (d - dn)
+                a = 1 - (dn / d)
+                n = e / d
+                kn = (
+                    0.006 * d * (1.6 * ((1 / a) - 1) + n**2 * ((1 / a**3) - 1))
+                ) ** (-1 / 2)
         else:
             kn = 0
 
