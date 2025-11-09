@@ -1,8 +1,11 @@
-# Blanc: #F9F5F0
-# Beige: #F2EAD3
-# Orange: #F4991A
-# Vert: #344F1F
-# vert foncé: #1B2A0E
+
+# Blanc = #F9F5F0
+# Beige = #FFEED6
+# Jaune = #E6B035
+# Rouge = #E66437
+# Orange = #CC7700
+# Vert = #324D1E
+# Vert_Foncé = #112600
 
 [client]
 showErrorDetails = "full"
@@ -11,17 +14,28 @@ showSidebarNavigation = true
 
 [theme]
 base = "light"
-primaryColor = "#F4991A"
+primaryColor = "#CC7700"
 backgroundColor = "#F9F5F0"
 secondaryBackgroundColor = "#F9F5F0"
-textColor = "#1B2A0E"
+textColor = "#112600"
+linkColor = "#324D1E"
+redcolor = "#E66437"
+orangeColor = "#CC7700"
+yellowColor = "#E6B035"
+blueColor = "#3778C2"
+greenColor = "#324D1E"
+violetColor = "#7F5AF0"
+grayColor = "#6C757D"
+
 font = "sans-serif"
 baseFontSize = 16
-linkColor = "#F4991A"
-linkUnderline = false
 baseFontWeight = 500
 baseRadius = "medium"
 buttonRadius = "full"
-#borderColor = "#344F1F"
+linkUnderline = false
 showWidgetBorder = true
 
+[theme.sidebar]
+backgroundColor = "#324D1E"
+secondaryBackgroundColor = "#F9F5F0"
+textColor = "#F9F5F0"

@@ -2,7 +2,11 @@
 
 import streamlit as st
 
-TITLE = "Calculatrice | CSA O86"
-st.title(TITLE)
-st.header("Accueil")
-st.page_link("pages/1_Bois de sciage.py")
+TITLE = "Calculatrice | Bois"
+st.title(body=TITLE, anchor=False)
+st.header("Accueil", anchor=False)
+st.page_link(
+    "pages/1_Bois de sciage.py",
+    use_container_width=True,
+    icon=":material/park:",
+)

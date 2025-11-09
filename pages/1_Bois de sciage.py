@@ -36,10 +36,16 @@ class SawnLumberStrengths(orm.declarative_base()):
 
 # CODE
 # ---- en-tête ----
-st.title(Accueil.TITLE)
-st.page_link("Accueil.py", label="Retour à l'accueil")
+st.title(Accueil.TITLE, anchor=False)
+st.page_link(
+    "Accueil.py",
+    label="Retour à l'accueil",
+    icon=":material/home:",
+    use_container_width=True,
+)
 st.header(
     "Bois de Sciage",
+    anchor=False,
     help="""Les méthodes et les données de calcul ne s'appliquent qu'au bois de charpente
     conforme à CSA O141""",
 )
@@ -49,6 +55,7 @@ st.header(
 st.divider()
 st.subheader(
     "Matériaux",
+    anchor=False,
     help=""" Les calculs reposent sur l'utilisation de bois d'œuvre classé suivant les Règles
     de classification pour le bois d'œuvre canadien de la NLGA, et identifié au moyen de 
     l'estampille d'une association ou d'un organisme indépendant de classement, conformément 
@@ -76,19 +83,21 @@ with st.container(horizontal_alignment="center"):
         VALUE = 6
         STEP = 1
         if BRUT:
-            MIN_VALUE = 2.00
-            VALUE = 6.00
+            MIN_VALUE = 1.50
+            VALUE = 5.50
             STEP = 0.25
         width_input = st.number_input(
             "Largeur nominale de l'élément, $b$ (po)",
             min_value=MIN_VALUE,
             step=STEP,
+            icon=":material/fit_page_width:",
         )
         depth_input = st.number_input(
             "Hauteur nominale de l'élément, $d$ (po)",
             min_value=MIN_VALUE,
             value=VALUE,
             step=STEP,
+            icon=":material/fit_page_height:",
         )
         built_up = st.radio(
             "Élément composé (plis)",
@@ -133,6 +142,7 @@ with st.container(horizontal_alignment="center"):
         col1.warning(
             "Valider la disponibilité du bois chez les fournisseurs.",
             width=550,
+            icon=":material/person_alert:",
         )
         CATEGORY = "Beam"
         MSR, MEL = False, False
@@ -222,7 +232,7 @@ with st.container(horizontal_alignment="center"):
 
 # --- section résistances prévues ---
 st.divider()
-st.subheader("Résistances prévues et modules d'élasticité")
+st.subheader("Résistances prévues et modules d'élasticité", anchor=False)
 
 # --- calculer les résultats de résistances prévues ---
 compute_resistance = sawn_lumber.specified_strengths(
@@ -234,7 +244,7 @@ compute_resistance = sawn_lumber.specified_strengths(
 
 with st.container(horizontal_alignment="center"):
     # --- afficher les résultats de résistances prévues ---
-    with st.expander("Résistances", width=650):
+    with st.expander("Résistances", width=650, icon=":material/special_character:"):
         display_resistance = [
             (
                 "Flexion",
@@ -514,7 +524,7 @@ with shear:
                 0.00,
                 value=None,
                 width=550,
-                placeholder="Effort tranchant pondéré",
+                placeholder="Cisaillement pondéré",
                 step=1.00,
             )
 
@@ -550,7 +560,7 @@ with shear:
             else:
                 st.write(f"$Vr = {round(vr,2)} kN$")
             VERIF = general_design.limit_states_design(vf, vr)
-            st.warning(VERIF, width=650)
+            st.success(VERIF, width=650, icon=":material/arrow_right_alt:")
 
 with comp_para:
     with st.container(horizontal_alignment="center"):
