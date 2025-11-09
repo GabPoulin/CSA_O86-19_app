@@ -420,25 +420,25 @@ with flex:
                 latéral et la rotation""",
                 value=True,
             )
+            TIE_ROD = st.toggle(
+                "Pannes ou tirants",
+                help="Alignement maintenu à l'aide de pannes ou de tirants",
+            )
             COMP_EDGE = st.toggle(
                 "Rive supérieure maintenue",
                 help="""Rive comprimée maintenu par fixation directe du platelage ou par des solives
                 dont l'espacement ne dépasse pas 610 mm""",
                 value=subfloor,
             )
-            TEN_EDGE = st.toggle(
-                "Rive inférieure maintenue",
-                help="Rive en tension maintenue",
-            )
-            TIE_ROD = st.toggle(
-                "Pannes ou tirants",
-                help="Alignement maintenu à l'aide de pannes ou de tirants",
-            )
             BLOCK = st.toggle(
                 "Entremises",
                 help=f"""Présence d'entretoises ou d'entremises dont l'espacement ne dépasse pas
                 huit fois la hauteur de la section de l'élément -> $ 8 \cdot d = {8*depth} $
                 mm c/c""",
+            )
+            TEN_EDGE = st.toggle(
+                "Rive inférieure maintenue",
+                help="Rive en tension maintenue",
             )
 
         mr = (
