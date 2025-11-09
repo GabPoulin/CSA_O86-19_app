@@ -1,17 +1,15 @@
 # Couleurs:
-#
 # Blanc = #F9F5F0
-# Beige = #FFEED6
+# Gris = #E5E4DB
 # Jaune = #E6B035
 # Orange = #CC7700
 # Rouge = #E66437
 # Vert = #324D1E
 # Vert_Foncé = #112600
-
 [theme]
 primaryColor = "#CC7700"
 backgroundColor = "#F9F5F0"
-secondaryBackgroundColor = "#F9F5F0"
+secondaryBackgroundColor = "#E5E4DB"
 textColor = "#112600"
 linkColor = "#324D1E"
 redColor = "#E66437"
@@ -21,7 +19,6 @@ blueColor = "#3778C2"
 greenColor = "#324D1E"
 violetColor = "#7F5AF0"
 grayColor = "#6C757D"
-
 # fonts
 font = "sans-serif"
 baseFontSize = 15
@@ -34,5 +31,5 @@ showWidgetBorder = true
 [theme.sidebar]
 primaryColor = "#CC7700"
 backgroundColor = "#324D1E"
-secondaryBackgroundColor = "#F9F5F0"
-textColor = "#F9F5F0"
+secondaryBackgroundColor = "#E5E4DB"
+textColor = "#E5E4DB"

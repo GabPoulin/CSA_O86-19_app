@@ -117,7 +117,7 @@ with st.container(horizontal_alignment="center"):
 
         depth = sawn_lumber.sizes(depth_input, GREEN, BRUT)
         st.metric("Hauteur nette de l'élément, $d$", f"{depth} mm")
-        msr_mel = col2.pills(
+        msr_mel = col2.segmented_control(
             label="Bois classé mécaniquement?",
             options=("MSR", "MEL"),
             width="stretch",
@@ -177,7 +177,7 @@ with st.container(horizontal_alignment="center"):
         st.caption(
             """Le groupe d'essences S-P-F est utilisé par défaut pour caractériser le bois classé 
             mécaniquement""",
-            width=600,
+            width=550,
         )
     specie = {
         "Courant": "courant",
@@ -189,7 +189,7 @@ with st.container(horizontal_alignment="center"):
         "N. Species": "ns",
     }
     if MSR:
-        SPECIE = st.pills(
+        SPECIE = st.segmented_control(
             label="Groupe:",
             options=("Courant", "Normal", "Rare"),
             default="Courant",
@@ -201,7 +201,7 @@ with st.container(horizontal_alignment="center"):
     elif MEL:
         SPECIE = "Normal"
     else:
-        SPECIE = st.pills(
+        SPECIE = st.segmented_control(
             label="Groupe d'essences:",
             options=("D Fir-L (N)", "Hem-Fir (N)", "S-P-F", "N. Species"),
             default="S-P-F",
@@ -218,7 +218,7 @@ with st.container(horizontal_alignment="center"):
         .filter(SawnLumberStrengths.specie == specie[SPECIE])
         .with_entities(SawnLumberStrengths.grade)
     )
-    grade = st.pills(
+    grade = st.segmented_control(
         label="Classe:",
         options=grade_options,
         default=grade_options[1][0],
@@ -243,7 +243,7 @@ compute_resistance = sawn_lumber.specified_strengths(
 
 with st.container(horizontal_alignment="center"):
     # --- afficher les résultats de résistances prévues ---
-    with st.expander("Résistances", width=650, icon=":material/special_character:"):
+    with st.expander("Voir plus:", width=650):
         display_resistance = [
             (
                 "Flexion",
@@ -282,7 +282,7 @@ with st.container(horizontal_alignment="center"):
 
 # --- section coefficients ---
 st.divider()
-st.subheader("Coefficients de correction")
+st.subheader("Coefficients de correction", anchor=False)
 
 with st.container(horizontal_alignment="center"):
     # --- inputs pour déterminer les coefficients ---
@@ -333,8 +333,8 @@ with st.container(horizontal_alignment="center"):
     if built_up == 1:
         PLIS = False
 
-    # --- afficher les résultats des corfficients ---
-    with st.expander("Coefficients", width=650, icon=":material/tune:"):
+    # --- afficher les résultats des coefficients ---
+    with st.expander("Voir plus:", width=650):
         prop_options = {
             "Flexion": "flex",
             "Cisaillement par fissuration": "cis_f",
@@ -345,7 +345,8 @@ with st.container(horizontal_alignment="center"):
             "Module d'élasticité": "moe",
         }
         PROP_KEY = st.segmented_control(
-            "Propriété affichée:",
+            """Pour consultation uniquement, les bons coefficients sont utilisés automatiquement
+            dans les calculs""",
             options=prop_options,
             width="stretch",
             default="Flexion",
@@ -384,7 +385,7 @@ with st.container(horizontal_alignment="center"):
 
 # --- section calcul des résistances ---
 st.divider()
-st.subheader("Calcul des résistances")
+st.subheader("Calcul des résistances", anchor=False)
 flex, shear, comp_para, comp_perp, comp_angle, trac, combi = st.tabs(
     [
         "Moment de flexion",
