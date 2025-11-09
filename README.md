@@ -1,5 +1,5 @@
-# [CSA-O86 : 19](./CSA%20O86-F19.pdf)
-[English version](./CSA%20O86-19.pdf)
+# [CSA-O86 : 19](./pdf/CSA%20O86-F19.pdf)
+[English version](./pdf/CSA%20O86-19.pdf)
 
 ## Règles de calcul des charpentes en bois
 
