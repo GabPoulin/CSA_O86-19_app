@@ -709,14 +709,14 @@ class Resistances:
         criteria = 2.5
         if lateral_support:
             criteria = 4
-            if tie_rods_support:
-                criteria = 5
-            elif compressive_edge_support:
+            if compressive_edge_support:
                 criteria = 6.5
-                if blocking_support:
-                    criteria = 7.5
-                elif tensile_edge_support:
+                if tensile_edge_support:
                     criteria = 9
+                elif blocking_support:
+                    criteria = 7.5
+            elif tie_rods_support:
+                criteria = 5
 
         if rapport_h_l > criteria:
             kl = 0
