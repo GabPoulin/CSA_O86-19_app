@@ -555,16 +555,21 @@ with shear:
             st.warning(VERIF, width=650)
 
 with comp_para:
-    st.warning("Fonctionnalité à venir.", width=650)
+    with st.container(horizontal_alignment="center"):
+        st.warning("Fonctionnalité à venir.", width=200)
 
 with comp_perp:
-    st.warning("Fonctionnalité à venir.", width=650)
+    with st.container(horizontal_alignment="center"):
+        st.warning("Fonctionnalité à venir.", width=200)
 
 with comp_angle:
-    st.warning("Fonctionnalité à venir.", width=650)
+    with st.container(horizontal_alignment="center"):
+        st.warning("Fonctionnalité à venir.", width=200)
 
 with trac:
-    st.warning("Fonctionnalité à venir.", width=650)
+    with st.container(horizontal_alignment="center"):
+        st.warning("Fonctionnalité à venir.", width=200)
 
 with combi:
-    st.warning("Fonctionnalité à venir.", width=650)
+    with st.container(horizontal_alignment="center"):
+        st.warning("Fonctionnalité à venir.", width=200)
