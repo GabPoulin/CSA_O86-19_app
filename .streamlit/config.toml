@@ -9,18 +9,17 @@
 # Vert_Foncé = #112600
 
 [client]
-showErrorDetails = "full"
+showErrorDetails = true
 toolbarMode = "auto"
 showSidebarNavigation = true
 
 [theme]
-base = "dark"
 primaryColor = "#CC7700"
 backgroundColor = "#F9F5F0"
 secondaryBackgroundColor = "#F9F5F0"
 textColor = "#112600"
 linkColor = "#324D1E"
-redcolor = "#E66437"
+redColor = "#E66437"
 orangeColor = "#CC7700"
 yellowColor = "#E6B035"
 blueColor = "#3778C2"
@@ -29,14 +28,15 @@ violetColor = "#7F5AF0"
 grayColor = "#6C757D"
 
 font = "sans-serif"
-baseFontSize = 16
+baseFontSize = 15
 baseFontWeight = 500
 baseRadius = "medium"
-buttonRadius = "full"
+buttonRadius = "large"
 linkUnderline = false
 showWidgetBorder = true
 
 [theme.sidebar]
+primaryColor = "#CC7700"
 backgroundColor = "#324D1E"
 secondaryBackgroundColor = "#F9F5F0"
 textColor = "#F9F5F0"

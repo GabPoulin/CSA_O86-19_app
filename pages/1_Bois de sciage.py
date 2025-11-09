@@ -41,7 +41,6 @@ st.page_link(
     "Accueil.py",
     label="Retour à l'accueil",
     icon=":material/home:",
-    use_container_width=True,
 )
 st.header(
     "Bois de Sciage",
@@ -335,7 +334,7 @@ with st.container(horizontal_alignment="center"):
         PLIS = False
 
     # --- afficher les résultats des corfficients ---
-    with st.expander("Coefficients", width=650):
+    with st.expander("Coefficients", width=650, icon=":material/tune:"):
         prop_options = {
             "Flexion": "flex",
             "Cisaillement par fissuration": "cis_f",
@@ -472,10 +471,11 @@ with flex:
                 width=550,
                 placeholder="Moment pondéré",
                 step=1.00,
+                icon=":material/input:",
             )
             VERIF = general_design.limit_states_design(mf, mr)
             st.write(f"$Mr = {round(mr,2)} kN \cdot m$")
-            st.warning(VERIF, width=650)
+            st.success(VERIF, width=650, icon=":material/all_match:")
 
 with shear:
     kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
@@ -509,12 +509,14 @@ with shear:
                 value=None,
                 placeholder="Optionnel",
                 help=f"Ne doit pas dépasser $ 0,25 \cdot d = {0.25*depth} $ mm",
+                icon=":material/height:",
             )
             notch_length = st.number_input(
                 "Longueur de l'entaille, $e$ (mm)",
                 min_value=0,
                 value=None,
                 placeholder="Optionnel",
+                icon=":material/arrow_range:",
             )
             st.image("images/notch_2_NoBckgrd.png")
 
@@ -526,6 +528,7 @@ with shear:
                 width=550,
                 placeholder="Cisaillement pondéré",
                 step=1.00,
+                icon=":material/input:",
             )
 
             ksf = 1
@@ -560,7 +563,7 @@ with shear:
             else:
                 st.write(f"$Vr = {round(vr,2)} kN$")
             VERIF = general_design.limit_states_design(vf, vr)
-            st.success(VERIF, width=650, icon=":material/arrow_right_alt:")
+            st.success(VERIF, width=650, icon=":material/all_match:")
 
 with comp_para:
     with st.container(horizontal_alignment="center"):
