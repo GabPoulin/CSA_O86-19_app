@@ -1,9 +1,10 @@
-
+# Couleurs:
+#
 # Blanc = #F9F5F0
 # Beige = #FFEED6
 # Jaune = #E6B035
-# Rouge = #E66437
 # Orange = #CC7700
+# Rouge = #E66437
 # Vert = #324D1E
 # Vert_Foncé = #112600
 
@@ -13,7 +14,6 @@ toolbarMode = "auto"
 showSidebarNavigation = true
 
 [theme]
-base = "light"
 primaryColor = "#CC7700"
 backgroundColor = "#F9F5F0"
 secondaryBackgroundColor = "#F9F5F0"
