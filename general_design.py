@@ -76,12 +76,12 @@ def limit_states_design(load: float | None, resistance: float) -> str:
 
     """
     if not load or not resistance:
-        message = "Veuillez spécifier une charge pour compléter la validation."
+        message = "Spécifiez une charge pour vérifier l'état limite"
     else:
         verif = round((load / resistance) * 100)
-        message = f"État limite non-respecté: sollicitation atteinte à {verif}%"
+        message = f"État limite dépassé: {verif}%"
         if verif < 100:
-            message = f"État limite respecté: sollicitation atteinte à {verif}%"
+            message = f"État limite respecté: {verif}%"
 
     return message
 
