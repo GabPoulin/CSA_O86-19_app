@@ -8,11 +8,6 @@
 # Vert = #324D1E
 # Vert_Foncé = #112600
 
-[client]
-showErrorDetails = true
-toolbarMode = "auto"
-showSidebarNavigation = true
-
 [theme]
 primaryColor = "#CC7700"
 backgroundColor = "#F9F5F0"
@@ -27,6 +22,7 @@ greenColor = "#324D1E"
 violetColor = "#7F5AF0"
 grayColor = "#6C757D"
 
+# fonts
 font = "sans-serif"
 baseFontSize = 15
 baseFontWeight = 500
