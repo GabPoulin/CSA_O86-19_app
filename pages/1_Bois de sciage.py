@@ -18,17 +18,17 @@ class SawnLumberStrengths(orm.declarative_base()):
     """
 
     __tablename__ = "sawn_lumber_strengths"
-    index: int = Column("index", INTEGER, primary_key=True)
-    category: str = Column("category", TEXT)
-    specie: str = Column("specie", TEXT)
-    grade: str = Column("grade", TEXT)
-    fb: float = Column("fb", REAL)
-    fv: float = Column("fv", REAL)
-    fc: float = Column("fc", REAL)
-    fcp: float = Column("fcp", REAL)
-    ft: float = Column("ft", REAL)
-    e: int = Column("e", INTEGER)
-    e05: int = Column("e05", INTEGER)
+    index: int = Column("index", INTEGER, primary_key=True)  # type: ignore
+    category: str = Column("category", TEXT)  # type: ignore
+    specie: str = Column("specie", TEXT)  # type: ignore
+    grade: str = Column("grade", TEXT)  # type: ignore
+    fb: float = Column("fb", REAL)  # type: ignore
+    fv: float = Column("fv", REAL)  # type: ignore
+    fc: float = Column("fc", REAL)  # type: ignore
+    fcp: float = Column("fcp", REAL)  # type: ignore
+    ft: float = Column("ft", REAL)  # type: ignore
+    e: int = Column("e", INTEGER)  # type: ignore
+    e05: int = Column("e05", INTEGER)  # type: ignore
     engine = create_engine("sqlite:///csa_o86_19.db")
     Session = orm.sessionmaker(engine)
     session = Session()
@@ -213,10 +213,10 @@ with st.container(horizontal_alignment="center"):
 
     # --- choix du grade ---
     grade_options = (
-        SawnLumberStrengths.session.query(SawnLumberStrengths)
-        .filter(SawnLumberStrengths.category == CATEGORY)
-        .filter(SawnLumberStrengths.specie == specie[SPECIE])
-        .with_entities(SawnLumberStrengths.grade)
+        SawnLumberStrengths.session.query(SawnLumberStrengths)  # type: ignore
+        .filter(SawnLumberStrengths.category == CATEGORY)  # type: ignore
+        .filter(SawnLumberStrengths.specie == specie[SPECIE])  # type: ignore
+        .with_entities(SawnLumberStrengths.grade)  # type: ignore
     )
     grade = st.segmented_control(
         label="Classe:",

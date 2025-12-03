@@ -69,17 +69,17 @@ class SawnLumberStrengths(orm.declarative_base()):
     """
 
     __tablename__ = "sawn_lumber_strengths"
-    index: int = Column("index", INTEGER, primary_key=True)
-    category: str = Column("category", TEXT)
-    specie: str = Column("specie", TEXT)
-    grade: str = Column("grade", TEXT)
-    fb: float = Column("fb", REAL)
-    fv: float = Column("fv", REAL)
-    fc: float = Column("fc", REAL)
-    fcp: float = Column("fcp", REAL)
-    ft: float = Column("ft", REAL)
-    e: int = Column("e", INTEGER)
-    e05: int = Column("e05", INTEGER)
+    index: int = Column("index", INTEGER, primary_key=True)  # type: ignore
+    category: str = Column("category", TEXT)  # type: ignore
+    specie: str = Column("specie", TEXT)  # type: ignore
+    grade: str = Column("grade", TEXT)  # type: ignore
+    fb: float = Column("fb", REAL)  # type: ignore
+    fv: float = Column("fv", REAL)  # type: ignore
+    fc: float = Column("fc", REAL)  # type: ignore
+    fcp: float = Column("fcp", REAL)  # type: ignore
+    ft: float = Column("ft", REAL)  # type: ignore
+    e: int = Column("e", INTEGER)  # type: ignore
+    e05: int = Column("e05", INTEGER)  # type: ignore
     engine = create_engine("sqlite:///csa_o86_19.db")
     Session = orm.sessionmaker(engine)
     session = Session()
@@ -93,11 +93,11 @@ class LumberSizes(orm.declarative_base()):
     """
 
     __tablename__ = "lumber_sizes"
-    nominal: int = Column("nominal", INTEGER, primary_key=True)
-    dry: int = Column("dry", INTEGER)
-    green: int = Column("green", INTEGER)
-    dry_brut: int = Column("dry_brut", INTEGER)
-    green_brut: int = Column("green_brut", INTEGER)
+    nominal: int = Column("nominal", INTEGER, primary_key=True)  # type: ignore
+    dry: int = Column("dry", INTEGER)  # type: ignore
+    green: int = Column("green", INTEGER)  # type: ignore
+    dry_brut: int = Column("dry_brut", INTEGER)  # type: ignore
+    green_brut: int = Column("green_brut", INTEGER)  # type: ignore
     engine = create_engine("sqlite:///csa_o86_19.db")
     Session = orm.sessionmaker(engine)
     session = Session()
@@ -186,18 +186,18 @@ def specified_strengths(
     """
     strengths = (
         SawnLumberStrengths.session.query(SawnLumberStrengths)
-        .filter(SawnLumberStrengths.category == category)
-        .filter(SawnLumberStrengths.specie == specie)
-        .filter(SawnLumberStrengths.grade == grade)
+        .filter(SawnLumberStrengths.category == category)  # type: ignore
+        .filter(SawnLumberStrengths.specie == specie)  # type: ignore
+        .filter(SawnLumberStrengths.grade == grade)  # type: ignore
         .first()
     )
-    fb = strengths.fb
-    fv = strengths.fv
-    fc = strengths.fc
-    fcp = strengths.fcp
-    ft = strengths.ft
-    e = strengths.e
-    e05 = strengths.e05
+    fb = strengths.fb  # type: ignore
+    fv = strengths.fv  # type: ignore
+    fc = strengths.fc  # type: ignore
+    fcp = strengths.fcp  # type: ignore
+    ft = strengths.ft  # type: ignore
+    e = strengths.e  # type: ignore
+    e05 = strengths.e05  # type: ignore
     if side and category == "Beam":
         if grade == "ss":
             fb *= 0.88
@@ -625,7 +625,7 @@ def sizes(
     """
     table = (
         LumberSizes.session.query(LumberSizes)
-        .filter(LumberSizes.nominal == dimension)
+        .filter(LumberSizes.nominal == dimension)  # type: ignore
         .first()
     )
     if not table:
@@ -1101,7 +1101,7 @@ def comp_angle(
         float: Nr = Résistance à la compression oblique par rapport au fil, N.
 
     """
-    theta = math.radians(theta)
+    theta = math.radians(theta)  # type: ignore
     nr = (pr * qr) / (pr * math.sin(theta) ** 2 + qr * math.cos(theta) ** 2)
 
     return nr
