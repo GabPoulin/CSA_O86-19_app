@@ -50,13 +50,13 @@ class SubfloorProperties(orm.declarative_base()):
     """
 
     __tablename__ = "subfloor_properties"
-    panel: str = Column("panel", TEXT, primary_key=True)
-    ts: float = Column("ts", REAL)
-    eis_par: int = Column("EIs_par", INTEGER)
-    eis_perp: int = Column("EIs_perp", INTEGER)
-    eas_par: float = Column("EAs_par", REAL)
-    eas_perp: float = Column("Eas_perp", REAL)
-    rho_s: int = Column("rho_s", INTEGER)
+    panel: str = Column("panel", TEXT, primary_key=True)  # type: ignore
+    ts: float = Column("ts", REAL)  # type: ignore
+    eis_par: int = Column("EIs_par", INTEGER)  # type: ignore
+    eis_perp: int = Column("EIs_perp", INTEGER)  # type: ignore
+    eas_par: float = Column("EAs_par", REAL)  # type: ignore
+    eas_perp: float = Column("Eas_perp", REAL)  # type: ignore
+    rho_s: int = Column("rho_s", INTEGER)  # type: ignore
     engine = create_engine("sqlite:///csa_o86_19.db")
     Session = orm.sessionmaker(engine)
     session = Session()
@@ -349,13 +349,13 @@ class Vibration:
 
         """
         ei_joist = self.joist_bending_stiffness
-        eis_perp = self._table_a1().eis_perp
+        eis_perp = self._table_a1().eis_perp  # type: ignore
         tc, ec, _, eac = self._table_a2()
         eic = (ec * tc**3) / 12
         b1 = self.joist_spacing
         eiu = ei_joist + b1 * (eis_perp + eic)
 
-        eas_perp = self._table_a1().eas_perp
+        eas_perp = self._table_a1().eas_perp  # type: ignore
         ea1 = eas_perp + eac
         s1 = 5e6
         if self.glued and self.topping == "aucun/autre":
@@ -369,7 +369,7 @@ class Vibration:
         a_barre = ea_joist + ea1_barre
 
         d = self.joist_depth
-        ts = self._table_a1().ts / 1000
+        ts = self._table_a1().ts / 1000  # type: ignore
         h1 = (d / 2) + (
             (eas_perp * (ts / 2) + eac * (ts + (tc / 2))) / (eas_perp + eac)
         )
@@ -391,9 +391,9 @@ class Vibration:
 
         """
         mj = self.joist_mass
-        rho_s = self._table_a1().rho_s
+        rho_s = self._table_a1().rho_s  # type: ignore
         tc, _, rho_c, _ = self._table_a2()
-        ts = self._table_a1().ts / 1000
+        ts = self._table_a1().ts / 1000  # type: ignore
         b1 = self.joist_spacing
 
         ml = mj + (rho_s * ts * b1) + (rho_c * tc * b1)
@@ -412,15 +412,15 @@ class Vibration:
 
         """
         span = self.span
-        eis_par = self._table_a1().eis_par
+        eis_par = self._table_a1().eis_par  # type: ignore
         b1 = self.joist_spacing
         if self.topping == "aucun/autre":
             kl = (0.585 * span * eis_par) / b1**3
         else:
-            eas_par = self._table_a1().eas_par
+            eas_par = self._table_a1().eas_par  # type: ignore
             tc, ec, _, eac = self._table_a2()
             eic = (ec * tc**3) / 12
-            ts = self._table_a1().ts / 1000
+            ts = self._table_a1().ts / 1000  # type: ignore
             h3 = (ts + tc) / 2
             kl = (
                 0.585
@@ -443,7 +443,7 @@ class Vibration:
         """
         return (
             SubfloorProperties.session.query(SubfloorProperties)
-            .filter(SubfloorProperties.panel == self.subfloor)
+            .filter(SubfloorProperties.panel == self.subfloor)  # type: ignore
             .first()
         )
 
@@ -474,14 +474,14 @@ class Vibration:
         else:
             table_a1 = (
                 SubfloorProperties.session.query(SubfloorProperties)
-                .filter(SubfloorProperties.panel == self.topping)
+                .filter(SubfloorProperties.panel == self.topping)  # type: ignore
                 .first()
             )
-            eisc_perp = table_a1.eis_perp
-            tc = table_a1.ts / 1000
+            eisc_perp = table_a1.eis_perp  # type: ignore
+            tc = table_a1.ts / 1000  # type: ignore
             ec = (12 * eisc_perp) / tc**3
-            pc = table_a1.rho_s
-            eac = table_a1.eas_perp
+            pc = table_a1.rho_s  # type: ignore
+            eac = table_a1.eas_perp  # type: ignore
 
         return tc, ec, pc, eac
 
