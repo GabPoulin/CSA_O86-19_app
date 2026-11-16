@@ -733,7 +733,7 @@ def _tests():
     """
     # Test limit_states_design
     test_limit_states_design = limit_states_design(load=12.3, resistance=27)
-    expected_result = "État limite respecté: sollicitation atteinte à 46%"
+    expected_result = "État limite respecté: 46%"
     assert (
         test_limit_states_design == expected_result
     ), f"limit_states_design -> FAILED\n {expected_result = }\n {test_limit_states_design = }"
