@@ -14,6 +14,14 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   Ne jamais deviner.**
 - Citer l'article de la norme dans la docstring de chaque fonction (le style actuel est à conserver).
 
+## Conventions de calcul et d'affichage
+
+- **Nombres affichés avec un point décimal** (ex. `45.56%`), pas de virgule.
+- **Calculs de base : valeurs positives seulement** (charges, moments, efforts). Ne pas gérer les valeurs
+  négatives (soulèvement, moments négatifs) pour l'instant ; elles viendront éventuellement dans des
+  fonctions plus avancées.
+- S'en tenir **uniquement aux formules et aux calculs de la norme**.
+
 ## Façon de travailler
 
 - **Faire de petits changements**, un sujet à la fois.
