@@ -22,6 +22,14 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   fonctions plus avancées.
 - S'en tenir **uniquement aux formules et aux calculs de la norme**.
 
+## Architecture du code : fonctions simples d'abord
+
+- Écrire des **fonctions simples** qui font **un seul calcul de la norme** (une équation, un coefficient,
+  un tableau). Par exemple, une fonction pour KZc, une pour Cc, une pour Kc, puis une pour Pr.
+- Chaque fonction simple est **testée seule** avec des valeurs calculées à la main.
+- Les calculs plus complexes sont construits ensuite **en combinant ces fonctions simples**, sans
+  recopier leurs formules.
+
 ## Façon de travailler
 
 - **Faire de petits changements**, un sujet à la fois.
