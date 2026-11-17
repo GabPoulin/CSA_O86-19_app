@@ -877,6 +877,196 @@ def compression_parallel_axis(
     return cc, kzc, kc, pr
 
 
+# 6.5.6 COMPRESSION PERPENDICULAIRE AU FIL - FONCTIONS SIMPLES
+def bearing_strength(
+    fcp: float, kd: float = 1, kscp: float = 1, kt: float = 1
+) -> float:
+    """
+    6.5.6.2 Résistance prévue corrigée en compression perpendiculaire au fil, Fcp.
+
+    Fcp = fcp (KD KScp KT) (pas de KH)
+
+    Args:
+        fcp (float): Résistance prévue en compression perpendiculaire au fil, MPa
+            (tableaux 6.4 à 6.9).
+        kd (float, optional): Coefficient de durée d'application de la charge. Default to 1.
+        kscp (float, optional): Coefficient de conditions d'utilisation (compression
+            perpendiculaire). Default to 1.
+        kt (float, optional): Coefficient de traitement (« autres propriétés »). Default to 1.
+
+    Returns:
+        float: Fcp, MPa.
+
+    """
+    return fcp * (kd * kscp * kt)
+
+
+def bearing_size_factor(width: float, depth: float) -> float:
+    """
+    6.5.6.4 Coefficient de dimensions pour l'appui, KZcp (tableau 6.15).
+
+    Rapport largeur/hauteur <= 1,0 : 1,00 ; >= 2,0 : 1,15 ; interpolation entre les deux.
+
+    Args:
+        width (float): Largeur de l'élément, perpendiculaire au sens de la charge, mm.
+        depth (float): Hauteur de l'élément, parallèle au sens de la charge, mm.
+
+    Returns:
+        float: KZcp.
+
+    Raises:
+        ValueError: Si une dimension n'est pas positive.
+
+    """
+    if width <= 0 or depth <= 0:
+        raise ValueError("La largeur et la hauteur doivent être positives.")
+
+    ratio = width / depth
+    if ratio <= 1:
+        return 1.0
+    if ratio >= 2:
+        return 1.15
+    return 1 + 0.15 * (ratio - 1)
+
+
+def bearing_length_factor(
+    bearing_length: float,
+    far_from_end: bool = False,
+    low_bending_stress: bool = False,
+) -> float:
+    """
+    6.5.6.5 Coefficient de longueur d'appui, KB (tableau 6.16).
+
+    KB = (Lb + 9,525) / Lb lorsque Lb < 150 mm (note du tableau 6.16), plafonné à 1,75 (valeur du
+    tableau pour Lb <= 12,5 mm) ; KB = 1,00 lorsque Lb >= 150 mm.
+    KB ne s'applique que si les deux conditions de 6.5.6.5 sont respectées ; sinon KB = 1,00.
+
+    Args:
+        bearing_length (float): Lb = Longueur d'appui (parallèle au fil) ou diamètre de la
+            rondelle, mm.
+        far_from_end (bool, optional): a) aucune partie de la surface d'appui à moins de 75 mm de
+            l'extrémité de l'élément. Default to False.
+        low_bending_stress (bool, optional): b) surface d'appui non située à un endroit soumis à de
+            fortes contraintes de flexion. Default to False.
+
+    Returns:
+        float: KB.
+
+    Raises:
+        ValueError: Si la longueur d'appui n'est pas positive.
+
+    """
+    if bearing_length <= 0:
+        raise ValueError("La longueur d'appui doit être positive.")
+
+    if not (far_from_end and low_bending_stress) or bearing_length >= 150:
+        return 1.0
+
+    return min((bearing_length + 9.525) / bearing_length, 1.75)
+
+
+def average_bearing_area(width: float, length_1: float, length_2: float) -> float:
+    """
+    6.5.6.3.2 Surface d'appui moyenne, A'b (surfaces d'appui inégales sur les faces opposées).
+
+    A'b = b (Lb1 + Lb2) / 2 <= 1,5 b Lb1, où Lb1 est la plus petite longueur d'appui.
+
+    Args:
+        width (float): b = Largeur d'appui moyenne (perpendiculaire au fil), mm.
+        length_1 (float): Longueur d'appui d'une face, mm.
+        length_2 (float): Longueur d'appui de la face opposée, mm.
+
+    Returns:
+        float: A'b, mm2.
+
+    Raises:
+        ValueError: Si une valeur n'est pas positive.
+
+    """
+    if width <= 0 or length_1 <= 0 or length_2 <= 0:
+        raise ValueError("La largeur et les longueurs d'appui doivent être positives.")
+
+    lb1 = min(length_1, length_2)
+    lb2 = max(length_1, length_2)
+    return min(width * (lb1 + lb2) / 2, 1.5 * width * lb1)
+
+
+def bearing_resistance(
+    fcp_modified: float, area: float, kb: float = 1, kzcp: float = 1
+) -> float:
+    """
+    6.5.6.2 Résistance pondérée à la compression perpendiculaire au fil, Qr (toutes les charges).
+
+    Qr = phi Fcp Ab KB KZcp, phi = 0,8
+
+    Args:
+        fcp_modified (float): Fcp = fcp (KD KScp KT), MPa (voir bearing_strength).
+        area (float): Ab = Surface d'appui, mm2.
+        kb (float, optional): Coefficient de longueur d'appui. Default to 1.
+        kzcp (float, optional): Coefficient de dimensions pour l'appui. Default to 1.
+
+    Returns:
+        float: Qr, N.
+
+    """
+    phi = 0.8
+    return phi * fcp_modified * area * kb * kzcp
+
+
+def bearing_resistance_near_support(
+    fcp_modified: float, average_area: float, kb: float = 1, kzcp: float = 1
+) -> float:
+    """
+    6.5.6.3.1 Résistance pondérée à la compression perpendiculaire au fil, Q'r, sous l'effet des
+    seules charges appliquées à moins d'une distance égale à la hauteur de l'élément du centre de
+    l'appui.
+
+    Q'r = (2/3) phi Fcp A'b KB KZcp, phi = 0,8
+
+    Args:
+        fcp_modified (float): Fcp = fcp (KD KScp KT), MPa (voir bearing_strength).
+        average_area (float): A'b = Surface d'appui moyenne, mm2 (voir average_bearing_area).
+        kb (float, optional): Coefficient de longueur d'appui. Lorsque les deux appuis ont des
+            longueurs différentes, utiliser le plus petit des deux KB (choix conservateur validé
+            avec l'utilisateur). Default to 1.
+        kzcp (float, optional): Coefficient de dimensions pour l'appui. Default to 1.
+
+    Returns:
+        float: Q'r, N.
+
+    """
+    phi = 0.8
+    return (2 / 3) * phi * fcp_modified * average_area * kb * kzcp
+
+
+def bearing_strength_from_density(density: float, tolerance_limit: bool = True) -> float:
+    """
+    A.6.5.6 Résistance prévue en compression perpendiculaire au fil à partir de la densité
+    (annexe A, informative). Option seulement : par défaut, fcp vient des tableaux 6.4 à 6.9.
+
+    fcp = 0,9 L (2243,8 G - 473,8) / M, L = 1,8125, M = 145,038
+    Pour le bois dont la densité est qualifiée et marquée selon les règles du NLGA, l'équation peut
+    être utilisée sans la limite de tolérance de 0,9.
+
+    Args:
+        density (float): G = Densité moyenne du bois anhydre (tableau A.11 ou densité marquée).
+        tolerance_limit (bool, optional): Appliquer la limite de tolérance de 0,9. Default to True.
+
+    Returns:
+        float: fcp, MPa.
+
+    Raises:
+        ValueError: Si la densité ne donne pas une résistance positive.
+
+    """
+    factor = 0.9 if tolerance_limit else 1
+    fcp = factor * 1.8125 * (2243.8 * density - 473.8) / 145.038
+    if fcp <= 0:
+        raise ValueError(f"La densité G = {density} ne donne pas une résistance positive.")
+
+    return fcp
+
+
 @dataclass
 class Resistances:
     """
@@ -1820,6 +2010,78 @@ def _tests():
         raise AssertionError("compression_parallel_axis Cc > 50 aurait dû lever ValueError")
     except ValueError:
         pass
+
+    # Tests 6.5.6 - fonctions simples de compression perpendiculaire au fil (calculs à la main)
+    # Fcp = 5,3 x 1,0 x 0,67 x 0,85 = 3,01835 MPa (milieu humide, traité incisé)
+    assert close(bearing_strength(5.3, kscp=0.67, kt=0.85), 3.01835), "bearing_strength -> FAILED"
+    assert bearing_strength(5.3) == 5.3, "bearing_strength -> FAILED"
+
+    # KZcp (tableau 6.15) : rapport <= 1 -> 1,00 ; >= 2 -> 1,15 ; interpolation entre les deux
+    for width, depth, expected in (
+        (38, 140, 1.0),  # 2x6 sur chant
+        (89, 89, 1.0),  # rapport = 1,0
+        (140, 89, 1.08596),  # 1 + 0,15 x (140/89 - 1) = 1 + 0,15 x 0,57303 = 1,08596
+        (133.5, 89, 1.075),  # rapport = 1,5 -> 1,075
+        (178, 89, 1.15),  # rapport = 2,0
+        (286, 38, 1.15),  # 2x12 à plat
+    ):
+        kzcp = bearing_size_factor(width, depth)
+        assert close(kzcp, expected), f"bearing_size_factor({width}, {depth}) -> FAILED {kzcp = }"
+
+    # KB (tableau 6.16 et sa note) : formule plafonnée à 1,75, conditions a) et b) requises
+    for lb, expected in (
+        (150, 1.0),
+        (200, 1.0),
+        (100, 1.09525),  # 109,525 / 100
+        (89, 1.10702),  # 98,525 / 89
+        (38, 1.25066),  # 47,525 / 38 (tableau : 1,25)
+        (25, 1.381),  # 34,525 / 25 (tableau : 1,38)
+        (12.5, 1.75),  # formule : 1,762 -> plafonné à 1,75 (tableau : 1,75)
+        (5, 1.75),  # formule : 2,905 -> plafonné à 1,75
+    ):
+        kb = bearing_length_factor(lb, far_from_end=True, low_bending_stress=True)
+        assert close(kb, expected), f"bearing_length_factor({lb}) -> FAILED {kb = }"
+    assert bearing_length_factor(38) == 1, "KB sans conditions -> FAILED"
+    assert bearing_length_factor(38, far_from_end=True) == 1, "KB condition b) -> FAILED"
+    assert bearing_length_factor(38, low_bending_stress=True) == 1, "KB condition a) -> FAILED"
+
+    # A'b = b (Lb1 + Lb2) / 2 <= 1,5 b Lb1
+    # b = 38, Lb = 89 et 140 : 38 x 114,5 = 4351 ; 1,5 x 38 x 89 = 5073 -> 4351
+    # b = 38, Lb = 38 et 140 : 38 x 89 = 3382 ; 1,5 x 38 x 38 = 2166 -> 2166
+    assert close(average_bearing_area(38, 89, 140), 4351), "average_bearing_area -> FAILED"
+    assert close(average_bearing_area(38, 140, 89), 4351), "average_bearing_area (ordre) -> FAILED"
+    assert close(average_bearing_area(38, 38, 140), 2166), "average_bearing_area (limite) -> FAILED"
+    assert close(average_bearing_area(38, 89, 89), 3382), "average_bearing_area (égales) -> FAILED"
+
+    # Qr = 0,8 x 5,3 x (38 x 89) x KB x KZcp
+    #    = 0,8 x 5,3 x 3382 = 14 339,7 N ; avec KB = 1,10702 : 15 874,4 N
+    assert close(bearing_resistance(5.3, 38 * 89), 14339.68), "bearing_resistance -> FAILED"
+    assert close(bearing_resistance(5.3, 38 * 89, kb=1.10702), 15874.4), "bearing_resistance KB -> FAILED"
+    # Q'r = (2/3) x 0,8 x 5,3 x 4351 = 12 298,8 N
+    assert close(
+        bearing_resistance_near_support(5.3, 4351), 12298.83
+    ), "bearing_resistance_near_support -> FAILED"
+
+    # A.6.5.6 : fcp à partir de G (tableau A.11)
+    # S-P-F G = 0,42 : 0,9 x 1,8125 x (942,396 - 473,8) / 145,038 = 5,2703 (tableau 6.4 : 5,3)
+    # D. Fir-L G = 0,49 : 0,9 x 1,8125 x 625,662 / 145,038 = 7,0368 (tableau 6.4 : 7,0)
+    # Ess. nordiques G = 0,35 : 0,9 x 1,8125 x 311,53 / 145,038 = 3,5038 (tableau 6.4 : 3,5)
+    # Sans la limite de tolérance (densité marquée NLGA) : 5,2703 / 0,9 = 5,8559
+    assert close(bearing_strength_from_density(0.42), 5.2703), "fcp G S-P-F -> FAILED"
+    assert close(bearing_strength_from_density(0.49), 7.0368), "fcp G D.Fir-L -> FAILED"
+    assert close(bearing_strength_from_density(0.35), 3.5038), "fcp G NS -> FAILED"
+    assert close(bearing_strength_from_density(0.42, tolerance_limit=False), 5.8559), "fcp G NLGA -> FAILED"
+    for bad in (
+        lambda: bearing_strength_from_density(0.2),
+        lambda: bearing_size_factor(0, 89),
+        lambda: bearing_length_factor(0),
+        lambda: average_bearing_area(38, 0, 89),
+    ):
+        try:
+            bad()
+            raise AssertionError("aurait dû lever ValueError")
+        except ValueError:
+            pass
 
     print("All tests passed.")
 
