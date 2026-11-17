@@ -57,7 +57,7 @@ Chaque vérification affiche le ratio effet pondéré / résistance pondérée :
 |---|---|
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Le plan : organisation du code selon la norme, éditions, interface web, feuille de route |
 | [`CLAUDE.md`](./CLAUDE.md) | Les règles de travail et les décisions d'interprétation de la norme |
-| [Pull requests](https://github.com/GabPoulin/CSA_O86-19_app/pulls?q=is%3Apr) | L'historique de chaque changement, avec ses justifications et ses vérifications |
+| [Pull requests](https://github.com/LeRepere-GP/datum/pulls?q=is%3Apr) | L'historique de chaque changement, avec ses justifications et ses vérifications |
 
 ---
 
@@ -66,8 +66,8 @@ Chaque vérification affiche le ratio effet pondéré / résistance pondérée :
 Prérequis : Python 3.10 ou plus récent.
 
 ```bash
-git clone https://github.com/GabPoulin/CSA_O86-19_app.git
-cd CSA_O86-19_app
+git clone https://github.com/LeRepere-GP/datum.git
+cd datum
 pip install -r requirements.txt
 streamlit run Accueil.py
 ```
