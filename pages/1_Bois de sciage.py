@@ -62,26 +62,34 @@ with st.container(horizontal_alignment="center"):
             "Dimensions brutes",
             help="Utilise les dimensions nominales en tant que dimensions réelles",
         )
-        MIN_VALUE = 2
-        VALUE = 6
-        STEP = 1
         if BRUT:
-            MIN_VALUE = 1.50
-            VALUE = 5.50
-            STEP = 0.25
-        width_input = st.number_input(
-            "Largeur nominale de l'élément, $b$ (po)",
-            min_value=MIN_VALUE,
-            step=STEP,
-            icon=":material/fit_page_width:",
-        )
-        depth_input = st.number_input(
-            "Hauteur nominale de l'élément, $d$ (po)",
-            min_value=MIN_VALUE,
-            value=VALUE,
-            step=STEP,
-            icon=":material/fit_page_height:",
-        )
+            width_input = st.number_input(
+                "Largeur réelle de l'élément, $b$ (po)",
+                min_value=1.50,
+                step=0.25,
+                icon=":material/fit_page_width:",
+            )
+            depth_input = st.number_input(
+                "Hauteur réelle de l'élément, $d$ (po)",
+                min_value=1.50,
+                value=5.50,
+                step=0.25,
+                icon=":material/fit_page_height:",
+            )
+        else:
+            NOMINAL_SIZES = sawn_lumber.nominal_sizes()
+            width_input = st.selectbox(
+                "Largeur nominale de l'élément, $b$ (po)",
+                options=NOMINAL_SIZES,
+                index=NOMINAL_SIZES.index(2),
+                help="Dimensions nominales du tableau A.3",
+            )
+            depth_input = st.selectbox(
+                "Hauteur nominale de l'élément, $d$ (po)",
+                options=NOMINAL_SIZES,
+                index=NOMINAL_SIZES.index(6),
+                help="Dimensions nominales du tableau A.3",
+            )
         built_up = st.radio(
             "Élément composé (plis)",
             options=(1, 2, 3, 4, 5),
@@ -90,7 +98,8 @@ with st.container(horizontal_alignment="center"):
         )
 
     with col2:
-        width = sawn_lumber.sizes(width_input, GREEN, BRUT)
+        TIMBER = not BRUT and sawn_lumber.is_timber(width_input, depth_input)
+        width = sawn_lumber.sizes(width_input, GREEN, BRUT, TIMBER)
         if built_up == 1:
             st.metric("Largeur nette de l'élément, $b$", f"{width} mm")
         else:
@@ -99,7 +108,7 @@ with st.container(horizontal_alignment="center"):
                 f"{built_up}*{width} = {built_up*width} mm",
             )
 
-        depth = sawn_lumber.sizes(depth_input, GREEN, BRUT)
+        depth = sawn_lumber.sizes(depth_input, GREEN, BRUT, TIMBER)
         st.metric("Hauteur nette de l'élément, $d$", f"{depth} mm")
         msr_mel = col2.segmented_control(
             label="Bois classé mécaniquement?",
