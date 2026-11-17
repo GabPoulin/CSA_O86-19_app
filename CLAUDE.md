@@ -34,6 +34,16 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 - Les calculs plus complexes sont construits ensuite **en combinant ces fonctions simples**, sans
   recopier leurs formules.
 
+## Interprétations de la norme validées avec l'utilisateur
+
+- **KZc (6.5.5.2.4)** : L = longueur de l'élément, pas la longueur effective ni la longueur entre les
+  appuis latéraux (voir aussi A.6.5.5.2.4 b) : L = L1 + L2). KZc est calculé pour toutes les
+  catégories, y compris la charpente légère (6.4.5.2) et le MSR/MEL (6.4.5.3).
+- **KT dans KC (6.5.5.2.5)** : KT des « autres propriétés » (tableau 6.11), le même que dans Fc. Le KT
+  du module d'élasticité ne sert qu'au calcul du module d'élasticité.
+- **Ke** : une fonction simple reçoit Le (ou Ke) en chiffre. Une fonction séparée déduira Ke des
+  conditions d'appui (annexe A, informative).
+
 ## Façon de travailler
 
 - **Faire de petits changements**, un sujet à la fois.
