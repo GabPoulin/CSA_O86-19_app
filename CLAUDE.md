@@ -12,6 +12,10 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   (charges, combinaisons, critères de tenue en service, etc.).
 - Si un article est ambigu ou si une interprétation est nécessaire, **poser la question à l'utilisateur.
   Ne jamais deviner.**
+- **Justifier chaque choix par la norme** : citer l'article, le texte exact (français et anglais au
+  besoin) et la page du PDF, puis expliquer le raisonnement (ex. conservateur ou non conservateur).
+  Toujours **lire la norme dans `pdf/` pour valider** avant de coder, au lieu de se fier à sa mémoire
+  ou au code existant. Le code existant peut contenir des erreurs.
 - Citer l'article de la norme dans la docstring de chaque fonction (le style actuel est à conserver).
 
 ## Conventions de calcul et d'affichage
