@@ -613,8 +613,7 @@ def nominal_sizes() -> list[int]:
     """
     Tableau A.3 Dimensions nominales disponibles, po.
 
-    Les dimensions 7 et 9 po n'existent pas dans l'industrie et ne sont pas offertes (elles restent
-    dans la base pour le mode « dimensions brutes » seulement).
+    Les dimensions 7 et 9 po ne figurent au tableau A.3 que pour le gros bois vert (165 et 216 mm).
 
     Returns:
         list[int]: Dimensions nominales disponibles, po.
@@ -622,7 +621,9 @@ def nominal_sizes() -> list[int]:
     """
     rows = (
         LumberSizes.session.query(LumberSizes)
-        .filter(LumberSizes.dry.isnot(None))  # type: ignore
+        .filter(
+            LumberSizes.dry.isnot(None) | LumberSizes.green_timber.isnot(None)  # type: ignore
+        )
         .order_by(LumberSizes.nominal)
         .all()
     )
@@ -679,14 +680,19 @@ def sizes(
             return int(round(dimension * 25.4))
         return table.green_brut if green else table.dry_brut
 
-    if not table or table.dry is None:
+    if not table:
         raise ValueError(
             f"La dimension nominale {dimension} po n'est pas offerte (tableau A.3). "
             f"Dimensions disponibles : {nominal_sizes()} po."
         )
-    if green:
-        return table.green_timber if timber else table.green
-    return table.dry
+    if green and timber and table.green_timber is not None:
+        return table.green_timber
+    if table.dry is None:
+        raise ValueError(
+            f"La dimension nominale {dimension} po est offerte seulement pour le gros bois vert "
+            "(tableau A.3) : face étroite de 5 po ou plus et bois vert."
+        )
+    return table.green if green else table.dry
 
 
 # 6.5.5 COMPRESSION PARALLÈLE AU FIL - FONCTIONS SIMPLES
@@ -1459,19 +1465,35 @@ def _tests():
         (7, False, True, False, 178),  # 7 po : mode brut seulement
         (9, True, True, False, 235),  # 9 po : mode brut seulement
         (5.5, False, True, False, 140),  # brut hors table : 5,5 x 25,4 = 139,7 -> 140
+        (7, True, False, True, 165),  # gros bois vert 7 po (tableau A.3)
+        (9, True, False, True, 216),  # gros bois vert 9 po (tableau A.3)
     ]
     for nominal, green, brut, timber, expected_result in sizes_cases:
         test_sizes = sizes(dimension=nominal, green=green, brut=brut, timber=timber)
         assert (
             test_sizes == expected_result
         ), f"sizes{nominal, green, brut, timber} -> FAILED {expected_result = } {test_sizes = }"
-    for nominal in (1, 7, 9, 11, 13, 15, 18, 5.5):
+    # Refusés : hors tableau, et 7 ou 9 po hors gros bois vert (sec, ou bois de dimension)
+    for kwargs in (
+        {"dimension": 1},
+        {"dimension": 11},
+        {"dimension": 13},
+        {"dimension": 15},
+        {"dimension": 18},
+        {"dimension": 5.5},
+        {"dimension": 7},
+        {"dimension": 9},
+        {"dimension": 7, "timber": True},  # gros bois sec : pas de valeur au tableau A.3
+        {"dimension": 9, "timber": True},
+        {"dimension": 7, "green": True},  # vert, mais bois de dimension
+        {"dimension": 9, "green": True},
+    ):
         try:
-            sizes(dimension=nominal)
-            raise AssertionError(f"sizes({nominal}) aurait dû lever ValueError")
+            sizes(**kwargs)
+            raise AssertionError(f"sizes({kwargs}) aurait dû lever ValueError")
         except ValueError:
             pass
-    assert nominal_sizes() == [2, 3, 4, 5, 6, 8, 10, 12, 14, 16], "nominal_sizes -> FAILED"
+    assert nominal_sizes() == [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16], "nominal_sizes -> FAILED"
     assert is_timber(5, 5) and is_timber(6, 8) and is_timber(8, 6), "is_timber -> FAILED"
     assert not is_timber(4, 6) and not is_timber(2, 12), "is_timber -> FAILED"
 

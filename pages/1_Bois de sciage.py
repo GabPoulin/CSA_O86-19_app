@@ -99,7 +99,12 @@ with st.container(horizontal_alignment="center"):
 
     with col2:
         TIMBER = not BRUT and sawn_lumber.is_timber(width_input, depth_input)
-        width = sawn_lumber.sizes(width_input, GREEN, BRUT, TIMBER)
+        try:
+            width = sawn_lumber.sizes(width_input, GREEN, BRUT, TIMBER)
+            depth = sawn_lumber.sizes(depth_input, GREEN, BRUT, TIMBER)
+        except ValueError as error:
+            st.error(str(error), icon=":material/error:")
+            st.stop()
         if built_up == 1:
             st.metric("Largeur nette de l'élément, $b$", f"{width} mm")
         else:
@@ -108,7 +113,6 @@ with st.container(horizontal_alignment="center"):
                 f"{built_up}*{width} = {built_up*width} mm",
             )
 
-        depth = sawn_lumber.sizes(depth_input, GREEN, BRUT, TIMBER)
         st.metric("Hauteur nette de l'élément, $d$", f"{depth} mm")
         msr_mel = col2.segmented_control(
             label="Bois classé mécaniquement?",

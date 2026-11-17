@@ -28,8 +28,9 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 
 ## Décisions sur les données (validées avec l'utilisateur)
 
-- **Dimensions (tableau A.3)** : dimensions nominales offertes : 2, 3, 4, 5, 6, 8, 10, 12, 14 et 16 po.
-  7 et 9 po n'existent pas dans l'industrie ; 11, 13 et 15 po n'existent pas en dimensions nominales.
+- **Dimensions (tableau A.3)** : dimensions nominales offertes : 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14 et 16 po.
+  7 et 9 po : seulement pour le gros bois vert (165 et 216 mm, seules valeurs du tableau A.3) ;
+  11, 13 et 15 po n'existent pas en dimensions nominales.
   Gros bois (face étroite >= 5 po nominal) vert : dimensions du gros bois du tableau A.3.
 - **Mode « dimensions brutes »** : convention de l'utilisateur (hors tableau A.3), à conserver telle quelle.
 - **Traction du MSR de plus de 184 mm (tableau 6.8)** : pour les classes sans valeur dans la colonne
