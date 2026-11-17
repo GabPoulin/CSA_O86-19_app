@@ -42,11 +42,16 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 
 **Lire [`ARCHITECTURE.md`](./ARCHITECTURE.md) avant d'écrire ou de déplacer du code.** En résumé :
 
-- Le code suit la norme : un fichier par article (`ch_6_bois_de_sciage/art_6_5_5_resistance_a_la_...py`),
-  titres complets en français **sans accents**, annexes à la fin (`annexe_A/`, `annexe_B/`).
+- Moteur Python indépendant de l'interface : `moteur/normes/<norme_edition>/` (ex. `csa_o86_19/`),
+  une API (`api/`) et une interface web (`web/`) ; Streamlit reste en place jusqu'au remplacement.
+- Le code suit la norme : `ch_6_bois_de_sciage/art_6_5_calcul_des_resistances/art_6_5_5_...py`.
+  Un article dont des sous-articles sont codés devient un dossier. Titres complets en français
+  **sans accents**. Pas de dossier pour les chapitres sans formule. Annexes à la fin.
 - Fonctions et variables nommées avec **les symboles de 3.2**, majuscules et minuscules respectées
   (`f_c` prévue, `F_c()` corrigée, `K_Zc()`, `P_r()`, `Q_r_prime()`).
-- Fonctions dans l'ordre d'apparition des formules de la norme ; fonctions de vérification à la fin.
+- Fonctions dans l'ordre d'apparition des formules ; fonctions de vérification à la fin, qui retournent
+  un `Resultat` (trace utilisée pour l'affichage, la note de calcul PDF et les tests).
+- Éditions : un dossier par édition ; un article inchangé importe celui de l'édition précédente.
 - Tout en français. Aucune logique de calcul dans l'interface.
 - Une modification de la structure doit d'abord être discutée avec l'utilisateur, puis notée dans
   `ARCHITECTURE.md`.
