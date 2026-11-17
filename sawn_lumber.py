@@ -351,7 +351,10 @@ def modification_factors(
             kh = 1
 
     # 6.4.5 Coefficient de dimensions, Kz (tableau 6.13)
-    if category in ("Light", "MSR", "MEL"):
+    # 6.4.5.2 Charpente légère : KZ = 1,00 (KZc est calculé séparément, 6.5.5.2.4).
+    # 6.4.5.3 MSR et MEL : KZ = 1,00, sauf KZv selon le tableau 6.13 (KZc est calculé
+    # séparément, 6.5.5.2.4 ; KZcp optionnel, 6.5.6.4).
+    if category == "Light" or (category in ("MSR", "MEL") and prop != "cis_v"):
         kz = 1
     else:
         # Grande face 38, 64, 89
@@ -1366,6 +1369,28 @@ def _tests():
     assert (
         test_modification_factors_2 == expected_result
     ), f"modification_factors_2 -> FAILED\n {expected_result = }\n {test_modification_factors_2 = }"
+
+    # Test modification_factors : KZ selon la catégorie (6.4.5.2, 6.4.5.3, tableau 6.13)
+    # 2x6 (38 x 140) : tableau 6.13, grande face 140, face étroite 38 à 64 -> KZb = KZv = 1,4
+    for category, prop, expected_kz in (
+        ("Lumber", "flex", 1.4),
+        ("Lumber", "cis_v", 1.4),
+        ("MSR", "cis_v", 1.4),  # 6.4.5.3 : KZv selon le tableau 6.13
+        ("MEL", "cis_v", 1.4),  # 6.4.5.3 : KZv selon le tableau 6.13
+        ("MSR", "flex", 1),  # 6.4.5.3 : KZ = 1,00
+        ("MEL", "flex", 1),
+        ("MSR", "trac", 1),
+        ("MEL", "cis_f", 1),
+        ("Light", "cis_v", 1),  # 6.4.5.2 : KZ = 1,00
+        ("Light", "flex", 1),
+    ):
+        kz_test = modification_factors(38, 140, prop, "normale", category)[4]
+        assert (
+            kz_test == expected_kz
+        ), f"modification_factors KZ ({category}, {prop}) -> FAILED {kz_test = } {expected_kz = }"
+    # 2x10 (38 x 235) MSR : tableau 6.13, grande face 235 à 241, face étroite 38 à 64 -> KZv = 1,1
+    kz_test = modification_factors(38, 235, "cis_v", "normale", "MSR")[4]
+    assert kz_test == 1.1, f"modification_factors KZv MSR 2x10 -> FAILED {kz_test = }"
 
     # Test sizes
     test_sizes = sizes(dimension=5, green=True, brut=False)
