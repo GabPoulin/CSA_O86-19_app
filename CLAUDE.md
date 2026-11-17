@@ -1,6 +1,7 @@
 # CLAUDE.md : consignes pour travailler sur ce projet
 
-Calculatrice de conception de charpentes en bois selon **CSA O86:19**, en Python et Streamlit.
+**Datum, par Le Repère Ingénierie** : application de calcul de charpentes, en commençant par
+le bois selon **CSA O86:19** (Python ; interface Streamlit, à remplacer par une interface web).
 L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel dans sa pratique.
 **Une erreur de calcul peut être dangereuse.** La fiabilité passe avant tout.
 
@@ -25,6 +26,12 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   négatives (soulèvement, moments négatifs) pour l'instant ; elles viendront éventuellement dans des
   fonctions plus avancées.
 - S'en tenir **uniquement aux formules et aux calculs de la norme**.
+- **Unités** : **tous les calculs se font en métrique**, comme les normes (mm, N, MPa). L'impérial sert
+  **uniquement à l'affichage des entrées et des résultats**, avec une bascule en tout temps pour toutes
+  les grandeurs (dimensions, forces, moments…). La note de calcul indique **les deux unités** pour les
+  données et les résultats (ex. `b = 38 mm (1.50 po)`).
+- **Formules en LaTeX** dans la trace des calculs ; chaque vérification a une **figure schématique**
+  (SVG, pas à l'échelle). Format de la note de calcul : voir `ARCHITECTURE.md`, section 8.
 
 ## Décisions sur les données (validées avec l'utilisateur)
 
