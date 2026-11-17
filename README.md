@@ -4,6 +4,8 @@ Application de calcul des charpentes en bois selon la norme **CSA O86:19, _Règl
 en bois_**. Elle est écrite en [Python](https://www.python.org/) avec une interface
 [Streamlit](https://streamlit.io/).
 
+🌐 **Application en ligne : <https://csa-o86.streamlit.app>**
+
 📘 Norme : [version française](./pdf/CSA%20O86-F19.pdf) · [English version](./pdf/CSA%20O86-19.pdf)
 
 > ⚠️ **Avertissement** : cet outil aide à la conception. Il ne remplace pas le jugement d'un ingénieur.
@@ -82,6 +84,11 @@ Le projet contient aussi une configuration **Dev Container** (`.devcontainer/`).
 le projet dans GitHub Codespaces ou VS Code avec tout déjà installé.
 
 ## Lancer l'application
+
+L'application est en ligne à l'adresse <https://csa-o86.streamlit.app>, sur Streamlit Community Cloud.
+Elle est mise à jour automatiquement à chaque merge dans `main`.
+
+Pour la lancer localement :
 
 ```bash
 streamlit run Accueil.py
