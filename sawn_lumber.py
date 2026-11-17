@@ -900,9 +900,14 @@ class Resistances:
             elif tie_rods_support:
                 criteria = 5
 
+        # 6.5.3.2.1 et 6.5.3.2.3 : KL = 1 si d/b ne dépasse pas la limite selon les supports.
+        # 6.5.3.2.2 : sinon, KL doit être déterminé selon 7.5.6.4 (pas encore offert).
         if rapport_h_l > criteria:
-            kl = 0
-            raise Warning("Valider Kl selon 7.5.6.4 - Fonctionnalité à venir")
+            raise ValueError(
+                f"Rapport hauteur/largeur d/b = {rapport_h_l:.2f} > {criteria} : KL doit être "
+                "déterminé selon l'article 7.5.6.4 (6.5.3.2.2), fonctionnalité à venir. "
+                "Ajoutez des supports latéraux (6.5.3.2.3) ou modifiez la section."
+            )
 
         mr = phi * f_b * s * kzb * kl
 
@@ -1476,6 +1481,24 @@ def _tests():
     assert (
         test_bending_moment == expected_result
     ), f"bending_moment -> FAILED\n {expected_result = }\n {test_bending_moment = }"
+
+    # Test bending_moment : limites de d/b pour KL = 1 (6.5.3.2.1 et 6.5.3.2.3)
+    # (b, d, supports, limite) ; d/b égal à la limite -> accepté ; juste au-dessus -> ValueError
+    kl_cases = [
+        ({}, 2.5),
+        ({"lateral_support": True}, 4),
+        ({"lateral_support": True, "tie_rods_support": True}, 5),
+        ({"lateral_support": True, "compressive_edge_support": True}, 6.5),
+        ({"lateral_support": True, "compressive_edge_support": True, "blocking_support": True}, 7.5),
+        ({"lateral_support": True, "compressive_edge_support": True, "tensile_edge_support": True}, 9),
+    ]
+    for supports, limit in kl_cases:
+        Resistances(b=40, d=int(40 * limit)).bending_moment(fb=10, **supports)  # d/b = limite : OK
+        try:
+            Resistances(b=40, d=int(40 * limit) + 1).bending_moment(fb=10, **supports)
+            raise AssertionError(f"bending_moment {supports} d/b > {limit} aurait dû lever ValueError")
+        except ValueError:
+            pass
 
     # Test shear
     test_shear = Resistances(
