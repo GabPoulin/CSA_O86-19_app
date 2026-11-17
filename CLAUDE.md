@@ -110,7 +110,7 @@ streamlit run Accueil.py   # lancer l'application
 
 ## Structure
 
-Migration en cours vers la structure de `ARCHITECTURE.md` (section 8). Code actuel :
+Migration en cours vers la structure de `ARCHITECTURE.md` (feuille de route : section 14). Code actuel :
 
 - `general_design.py` : chapitre 5, conception générale
 - `sawn_lumber.py` : chapitre 6, bois de sciage
