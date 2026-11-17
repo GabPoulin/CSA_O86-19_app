@@ -1039,6 +1039,39 @@ def bearing_resistance_near_support(
     return (2 / 3) * phi * fcp_modified * average_area * kb * kzcp
 
 
+def density_table_a11(specie: str, e: float = 0) -> float:
+    """
+    Tableau A.11 Valeurs de densité (densité moyenne du bois anhydre, G).
+
+    Bois classé visuellement : selon le groupe d'essences.
+    MSR et MEL (É-P-S) : selon la classe E. Pour les autres essences MSR ou MEL, le tableau renvoie
+    aux valeurs du bois classé visuellement (l'application utilise É-P-S pour le MSR et le MEL).
+
+    Args:
+        specie (str): Groupe d'essences : "df", "hf", "spf", "ns" ; pour le MSR et le MEL :
+            "courant", "normal" ou "rare".
+        e (float, optional): Module d'élasticité E de la classe MSR ou MEL, MPa. Default to 0.
+
+    Returns:
+        float: G.
+
+    Raises:
+        ValueError: Si l'essence ou la classe E n'est pas au tableau A.11.
+
+    """
+    visual = {"df": 0.49, "hf": 0.46, "spf": 0.42, "ns": 0.35}
+    if specie in visual:
+        return visual[specie]
+
+    if 8300 <= e <= 11700:
+        return 0.42
+    if 12400 <= e <= 13100:
+        return 0.47
+    if 13800 <= e <= 16500:
+        return 0.50
+    raise ValueError(f"Pas de densité au tableau A.11 pour {specie} avec E = {e} MPa.")
+
+
 def bearing_strength_from_density(density: float, tolerance_limit: bool = True) -> float:
     """
     A.6.5.6 Résistance prévue en compression perpendiculaire au fil à partir de la densité
@@ -2082,6 +2115,26 @@ def _tests():
             raise AssertionError("aurait dû lever ValueError")
         except ValueError:
             pass
+
+    # Test density_table_a11 (tableau A.11)
+    for args, expected in (
+        (("df",), 0.49), (("hf",), 0.46), (("spf",), 0.42), (("ns",), 0.35),
+        (("courant", 8300), 0.42), (("normal", 11700), 0.42),
+        (("normal", 12400), 0.47), (("rare", 13100), 0.47),
+        (("courant", 13800), 0.50), (("normal", 16500), 0.50),
+    ):
+        assert density_table_a11(*args) == expected, f"density_table_a11{args} -> FAILED"
+    for e in (8000, 12000, 13500, 17000):
+        try:
+            density_table_a11("normal", e)
+            raise AssertionError(f"density_table_a11 E = {e} aurait dû lever ValueError")
+        except ValueError:
+            pass
+    # Toutes les classes MSR et MEL de la base ont une densité au tableau A.11
+    for row in SawnLumberStrengths.session.query(SawnLumberStrengths).filter(
+        SawnLumberStrengths.category.in_(("MSR", "MEL"))  # type: ignore
+    ):
+        density_table_a11(row.specie, row.e)
 
     print("All tests passed.")
 

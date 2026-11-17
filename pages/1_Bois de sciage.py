@@ -708,7 +708,217 @@ with comp_para:
 
 with comp_perp:
     with st.container(horizontal_alignment="center"):
-        st.warning("Fonctionnalité à venir.", width=200)
+        kd, kscp, kt, _, _ = sawn_lumber.modification_factors(
+            width=width,
+            depth=depth,
+            prop="comp_perp",
+            duration=duration[DURATION],
+            category=CATEGORY,
+            wet_service=wet,
+            treated=treated,
+            incised=incised,
+            _2ft_spacing=group,
+            connected_subfloor=subfloor,
+            built_up_beam=PLIS,
+        )
+        member_width = built_up * width
+        kzcp = sawn_lumber.bearing_size_factor(member_width, depth)
+
+        # --- résistance prévue fcp : tableaux 6.4 à 6.9, ou densité G en option (A.6.5.6) ---
+        fcp = compute_resistance[3]
+        col1, col2 = st.columns(2, width=550)
+        with col1:
+            use_density = st.checkbox(
+                "$f_{cp}$ à partir de la densité $G$",
+                key="cp_use_density",
+                help="""Option (annexe A.6.5.6, informative). Par défaut, $f_{cp}$ vient des
+                tableaux 6.4 à 6.9""",
+            )
+        if use_density:
+            with col1:
+                density = st.number_input(
+                    "Densité moyenne du bois anhydre, $G$",
+                    min_value=0.30,
+                    max_value=0.80,
+                    value=sawn_lumber.density_table_a11(
+                        specie[SPECIE], compute_resistance[5]
+                    ),
+                    step=0.01,
+                    key="cp_density",
+                    help="Valeur proposée selon le tableau A.11",
+                )
+            with col2:
+                nlga = st.checkbox(
+                    "Densité marquée NLGA (sans la limite de tolérance de 0,9)",
+                    key="cp_nlga",
+                )
+            fcp_table = fcp
+            fcp = sawn_lumber.bearing_strength_from_density(
+                density, tolerance_limit=not nlga
+            )
+            if fcp > fcp_table:
+                st.warning(
+                    f"""$f_{{cp}}$ calculé à partir de $G$ ({fcp:.2f} MPa) est plus élevé que la
+                    valeur des tableaux 6.4 à 6.9 ({fcp_table} MPa) : non conservateur.""",
+                    width=550,
+                    icon=":material/warning:",
+                )
+        fcp_modified = sawn_lumber.bearing_strength(fcp, kd=kd, kscp=kscp, kt=kt)
+
+        col1, col2 = st.columns(2, width=550)
+        with col1:
+            bearing_width_input = st.number_input(
+                "Largeur d'appui, $b$ (mm)",
+                min_value=1.0,
+                value=None,
+                step=1.0,
+                placeholder=f"Largeur de l'élément = {member_width} mm",
+                key="cp_bearing_width",
+                help="Optionnel : si vide, la largeur de l'élément est utilisée",
+                icon=":material/fit_page_width:",
+            )
+            bearing_width = member_width
+            if bearing_width_input is not None:
+                bearing_width = min(bearing_width_input, member_width)
+                if bearing_width_input > member_width:
+                    st.warning(
+                        f"La largeur d'appui est limitée à la largeur de l'élément ({member_width} mm).",
+                        icon=":material/warning:",
+                    )
+            support_length = st.number_input(
+                "Longueur d'appui, $L_b$ (mm)",
+                min_value=1.0,
+                value=None,
+                step=1.0,
+                placeholder="Requis",
+                key="cp_support_length",
+                help="Longueur d'appui parallèle au fil (6.5.6.2)",
+                icon=":material/arrow_range:",
+            )
+            support_far = st.checkbox(
+                "Appui à au moins 75 mm de l'extrémité",
+                key="cp_support_far",
+                help="Condition a) de 6.5.6.5 pour $K_B$",
+            )
+            support_low_bending = st.checkbox(
+                "Appui hors des fortes contraintes de flexion",
+                key="cp_support_low_bending",
+                help="Condition b) de 6.5.6.5 pour $K_B$",
+            )
+            near_load = st.checkbox(
+                "Charge à moins de $d$ du centre de l'appui",
+                key="cp_near_load",
+                help=f"""Charge appliquée à une distance du centre de l'appui inférieure ou égale
+                à la hauteur de l'élément, $d = {depth}$ mm (6.5.6.3)""",
+            )
+            if near_load:
+                load_length = st.number_input(
+                    "Longueur d'appui de la charge (mm)",
+                    min_value=1.0,
+                    value=None,
+                    step=1.0,
+                    placeholder="Requis",
+                    key="cp_load_length",
+                    help="Longueur d'appui de la charge, parallèle au fil (6.5.6.3.2)",
+                    icon=":material/arrow_range:",
+                )
+                load_far = st.checkbox(
+                    "Charge à au moins 75 mm de l'extrémité",
+                    key="cp_load_far",
+                    help="Condition a) de 6.5.6.5 pour $K_B$",
+                )
+                load_low_bending = st.checkbox(
+                    "Charge hors des fortes contraintes de flexion",
+                    key="cp_load_low_bending",
+                    help="Condition b) de 6.5.6.5 pour $K_B$",
+                )
+
+        details = []
+        with col2:
+            rf = st.number_input(
+                "$Rf: (kN)$",
+                min_value=0.00,
+                value=None,
+                width=550,
+                placeholder="Réaction pondérée à l'appui",
+                step=1.00,
+                key="cp_rf",
+                icon=":material/input:",
+            )
+            if support_length is None:
+                st.info(
+                    "Spécifiez la longueur d'appui pour calculer $Qr$",
+                    width=650,
+                    icon=":material/info:",
+                )
+            else:
+                kb_support = sawn_lumber.bearing_length_factor(
+                    support_length, support_far, support_low_bending
+                )
+                area = bearing_width * support_length
+                qr = (
+                    sawn_lumber.bearing_resistance(fcp_modified, area, kb_support, kzcp)
+                    / 1000
+                )
+                st.write(f"$Qr = {qr:.2f} kN$")
+                show_verification(general_design.limit_states_design(rf, qr))
+                details.append(
+                    f"Appui : $A_b = {bearing_width:g} \\cdot {support_length:g} = {area:.0f}$ mm², "
+                    f"$K_B = {kb_support:.4f}$, "
+                    f"$Qr = {qr:.2f} kN$"
+                )
+
+            if near_load:
+                pf_near = st.number_input(
+                    "$Pf: (kN)$ près de l'appui",
+                    min_value=0.00,
+                    value=None,
+                    width=550,
+                    placeholder="Charge pondérée près de l'appui",
+                    step=1.00,
+                    key="cp_pf",
+                    icon=":material/input:",
+                )
+                if support_length is None or load_length is None:
+                    st.info(
+                        "Spécifiez les deux longueurs d'appui pour calculer $Q'r$",
+                        width=650,
+                        icon=":material/info:",
+                    )
+                else:
+                    kb_load = sawn_lumber.bearing_length_factor(
+                        load_length, load_far, load_low_bending
+                    )
+                    kb_near = min(kb_support, kb_load)
+                    average_area = sawn_lumber.average_bearing_area(
+                        bearing_width, load_length, support_length
+                    )
+                    qr_near = (
+                        sawn_lumber.bearing_resistance_near_support(
+                            fcp_modified, average_area, kb_near, kzcp
+                        )
+                        / 1000
+                    )
+                    st.write(f"$Q'r = {qr_near:.2f} kN$")
+                    show_verification(general_design.limit_states_design(pf_near, qr_near))
+                    details.append(
+                        f"Charge près de l'appui : $A'_b = {average_area:.0f}$ mm², "
+                        f"$K_B = \\min({kb_support:.4f}, {kb_load:.4f}) = {kb_near:.4f}$, "
+                        f"$Q'r = {qr_near:.2f} kN$"
+                    )
+
+        if details:
+            with st.expander("Voir plus:", width=650):
+                st.markdown(
+                    f"$F_{{cp}} = f_{{cp}} (K_D K_{{Scp}} K_T) = {fcp:.2f} \\cdot "
+                    f"({kd} \\cdot {kscp} \\cdot {kt}) = {fcp_modified:.3f}$ MPa"
+                )
+                st.markdown(
+                    f"$K_{{Zcp}} = {kzcp:.4f}$ (largeur/hauteur = "
+                    f"{member_width}/{depth} = {member_width / depth:.2f})"
+                )
+                for line in details:
+                    st.markdown(line)
 
 with comp_angle:
     with st.container(horizontal_alignment="center"):
