@@ -20,6 +20,13 @@ Ce dossier contient l'image de marque utilisée par l'application (logos, couleu
 Nomme les fichiers simplement, sans accents ni espaces, par exemple :
 `le-repere-ingenierie-couleur.svg`, `le-repere-ingenierie-blanc.svg`, `le-repere-symbole.svg`.
 
+## Ce qui est déjà déposé
+
+- `logos/le-repere-logo-apercu.png` : aperçu des 3 versions du logo Le Repère (couleur sur fond clair,
+  blanc sur vert forêt, horizontale). **Image d'aperçu seulement** : il manque encore les fichiers
+  séparés, idéalement en SVG.
+- `palette.png` et `couleurs.md` : la palette de couleurs.
+
 ## Comment les déposer
 
 - **Le plus simple** : les joindre dans la conversation avec Claude, qui les placera ici dans une PR.
