@@ -1,2 +1,2 @@
-sqlalchemy
-streamlit
+sqlalchemy>=2.0
+streamlit>=1.50

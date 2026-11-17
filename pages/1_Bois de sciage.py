@@ -1,42 +1,26 @@
-"""_summary_"""
+"""Page Streamlit : calcul des éléments en bois de sciage (CSA O86:19, chapitre 6)."""
 
 # IMPORTS
-from dataclasses import dataclass
-from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 import streamlit as st
-import Accueil
+import config
 import sawn_lumber
 import general_design
-
-
-# DB CONNECTIONS
-@dataclass
-class SawnLumberStrengths(orm.declarative_base()):
-    """
-    Se connecte à la table sawn_lumber_strengths de csa_o86_19.db.
-
-    """
-
-    __tablename__ = "sawn_lumber_strengths"
-    index: int = Column("index", INTEGER, primary_key=True)  # type: ignore
-    category: str = Column("category", TEXT)  # type: ignore
-    specie: str = Column("specie", TEXT)  # type: ignore
-    grade: str = Column("grade", TEXT)  # type: ignore
-    fb: float = Column("fb", REAL)  # type: ignore
-    fv: float = Column("fv", REAL)  # type: ignore
-    fc: float = Column("fc", REAL)  # type: ignore
-    fcp: float = Column("fcp", REAL)  # type: ignore
-    ft: float = Column("ft", REAL)  # type: ignore
-    e: int = Column("e", INTEGER)  # type: ignore
-    e05: int = Column("e05", INTEGER)  # type: ignore
-    engine = create_engine("sqlite:///csa_o86_19.db")
-    Session = orm.sessionmaker(engine)
-    session = Session()
+from sawn_lumber import SawnLumberStrengths
 
 
 # CODE
+def show_verification(message: str) -> None:
+    """Affiche le résultat de la vérification à l'état limite avec la bonne couleur."""
+    if message.startswith("État limite respecté"):
+        st.success(message, width=650, icon=":material/check_circle:")
+    elif message.startswith("État limite dépassé"):
+        st.error(message, width=650, icon=":material/error:")
+    else:
+        st.info(message, width=650, icon=":material/info:")
+
+
 # ---- en-tête ----
-st.title(Accueil.TITLE, anchor=False)
+st.title(config.TITLE, anchor=False)
 st.page_link(
     "Accueil.py",
     label="Retour à l'accueil",
@@ -443,7 +427,7 @@ with flex:
             BLOCK = st.toggle(
                 "Entremises",
                 help=f"""Présence d'entretoises ou d'entremises dont l'espacement ne dépasse pas
-                huit fois la hauteur de la section de l'élément -> $ 8 \cdot d = {8*depth} $
+                huit fois la hauteur de la section de l'élément -> $ 8 \\cdot d = {8*depth} $
                 mm c/c""",
             )
             TEN_EDGE = st.toggle(
@@ -466,7 +450,7 @@ with flex:
         )
         with col2:
             mf = st.number_input(
-                "$Mf: (kN \cdot m)$",
+                "$Mf: (kN \\cdot m)$",
                 min_value=0.00,
                 value=None,
                 width=550,
@@ -475,8 +459,8 @@ with flex:
                 icon=":material/input:",
             )
             VERIF = general_design.limit_states_design(mf, mr)
-            st.write(f"$Mr = {round(mr,2)} kN \cdot m$")
-            st.success(VERIF, width=650, icon=":material/all_match:")
+            st.write(f"$Mr = {round(mr,2)} kN \\cdot m$")
+            show_verification(VERIF)
 
 with shear:
     kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
@@ -509,7 +493,7 @@ with shear:
                 max_value=int(0.25 * depth),
                 value=None,
                 placeholder="Optionnel",
-                help=f"Ne doit pas dépasser $ 0,25 \cdot d = {0.25*depth} $ mm",
+                help=f"Ne doit pas dépasser $ 0,25 \\cdot d = {0.25*depth} $ mm",
                 icon=":material/height:",
             )
             notch_length = st.number_input(
@@ -564,7 +548,7 @@ with shear:
             else:
                 st.write(f"$Vr = {round(vr,2)} kN$")
             VERIF = general_design.limit_states_design(vf, vr)
-            st.success(VERIF, width=650, icon=":material/all_match:")
+            show_verification(VERIF)
 
 with comp_para:
     with st.container(horizontal_alignment="center"):
