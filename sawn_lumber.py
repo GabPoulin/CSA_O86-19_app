@@ -1329,6 +1329,13 @@ def _tests():
         test_specified_strengths == expected_result
     ), f"specified_strengths -> FAILED\n {expected_result = }\n {test_specified_strengths = }"
 
+    # Test specified_strengths MSR 1500Fb-1,4E (tableau 6.8) : E = 9700 MPa, E05 = 0,82E = 7954 MPa
+    test_msr_1500 = specified_strengths("MSR", "normal", "1500-1.4")
+    expected_result = (21.7, 1.5, 17.5, 5.3, 10.1, 9700, 7954)
+    assert (
+        test_msr_1500 == expected_result
+    ), f"specified_strengths MSR 1500 -> FAILED\n {expected_result = }\n {test_msr_1500 = }"
+
     # Test modification_factors
     test_modification_factors = modification_factors(
         width=38,
