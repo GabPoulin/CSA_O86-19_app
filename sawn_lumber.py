@@ -641,6 +641,137 @@ def sizes(
     return dim
 
 
+# 6.5.5 COMPRESSION PARALLÈLE AU FIL - FONCTIONS SIMPLES
+def compression_strength(
+    fc: float, kd: float = 1, kh: float = 1, ksc: float = 1, kt: float = 1
+) -> float:
+    """
+    6.5.5.2.4 Résistance prévue corrigée en compression parallèle au fil, Fc.
+
+    Fc = fc (KD KH KSc KT)
+
+    Args:
+        fc (float): Résistance prévue en compression parallèle au fil, MPa (tableaux 6.4 à 6.9).
+        kd (float, optional): Coefficient de durée d'application de la charge. Default to 1.
+        kh (float, optional): Coefficient de système. Default to 1.
+        ksc (float, optional): Coefficient de conditions d'utilisation (compression parallèle).
+            Default to 1.
+        kt (float, optional): Coefficient de traitement. Default to 1.
+
+    Returns:
+        float: Fc, MPa.
+
+    """
+    return fc * (kd * kh * ksc * kt)
+
+
+def slenderness_ratio(effective_length: float, dimension: float) -> float:
+    """
+    6.5.5.2.2 Élancement, Cc.
+
+    Cc = longueur effective associée à la dimension / dimension (largeur ou hauteur).
+    L'élancement ne doit pas dépasser 50 et doit être calculé selon les deux axes.
+
+    Args:
+        effective_length (float): Longueur effective associée à la dimension, Le = Ke * L, mm.
+        dimension (float): Largeur ou hauteur de l'élément (dans la direction du flambage), mm.
+
+    Returns:
+        float: Cc = Élancement.
+
+    Raises:
+        ValueError: Si une valeur n'est pas positive ou si Cc > 50.
+
+    """
+    if effective_length <= 0 or dimension <= 0:
+        raise ValueError("La longueur effective et la dimension doivent être positives.")
+
+    cc = effective_length / dimension
+    if cc > 50:
+        raise ValueError(f"L'élancement (Cc = {cc:.2f}) ne doit pas dépasser 50 (6.5.5.2.2).")
+
+    return cc
+
+
+def compression_size_factor(dimension: float, length: float) -> float:
+    """
+    6.5.5.2.4 Coefficient de dimensions en compression parallèle au fil, KZc.
+
+    KZc = 6,3 (dL)^-0,13 <= 1,3
+
+    Note: L est la longueur de l'élément (« length of member »), pas la longueur effective ni la
+    longueur entre les appuis latéraux. Voir aussi A.6.5.5.2.4 b) : L = L1 + L2.
+
+    Args:
+        dimension (float): d = Dimension dans la direction du flambage (grande face ou face
+            étroite), mm.
+        length (float): L = Longueur de l'élément, mm.
+
+    Returns:
+        float: KZc.
+
+    Raises:
+        ValueError: Si une valeur n'est pas positive.
+
+    """
+    if dimension <= 0 or length <= 0:
+        raise ValueError("La dimension et la longueur doivent être positives.")
+
+    return min(6.3 * (dimension * length) ** -0.13, 1.3)
+
+
+def slenderness_factor(
+    fc_modified: float,
+    kzc: float,
+    cc: float,
+    e05: float,
+    kse: float = 1,
+    kt: float = 1,
+) -> float:
+    """
+    6.5.5.2.5 Coefficient d'élancement, KC.
+
+    KC = [1,0 + (Fc KZc Cc^3) / (35 E05 KSE KT)]^-1
+
+    Args:
+        fc_modified (float): Fc = fc (KD KH KSc KT), MPa (voir compression_strength).
+        kzc (float): Coefficient de dimensions en compression parallèle au fil.
+        cc (float): Élancement selon l'axe considéré.
+        e05 (float): Module d'élasticité pour les calculs des éléments en compression, MPa
+            (0,82E pour MSR, 0,75E pour MEL, tableaux 6.4 à 6.7 pour le bois classé visuellement).
+        kse (float, optional): Coefficient de conditions d'utilisation relatif au module
+            d'élasticité. Default to 1.
+        kt (float, optional): Coefficient de traitement. Default to 1.
+
+    Returns:
+        float: KC.
+
+    """
+    return (1 + (fc_modified * kzc * cc**3) / (35 * e05 * kse * kt)) ** -1
+
+
+def compression_resistance(
+    fc_modified: float, area: float, kzc: float, kc: float
+) -> float:
+    """
+    6.5.5.2.4 Résistance pondérée à la compression parallèle au fil, Pr.
+
+    Pr = phi Fc A KZc KC, phi = 0,8
+
+    Args:
+        fc_modified (float): Fc = fc (KD KH KSc KT), MPa (voir compression_strength).
+        area (float): A = Aire de la section transversale, mm2.
+        kzc (float): Coefficient de dimensions en compression parallèle au fil.
+        kc (float): Coefficient d'élancement selon l'axe considéré.
+
+    Returns:
+        float: Pr, N.
+
+    """
+    phi = 0.8
+    return phi * fc_modified * area * kzc * kc
+
+
 @dataclass
 class Resistances:
     """
@@ -1384,6 +1515,67 @@ def _tests():
     assert (
         test_combined_bending_axial_2 == expected_result
     ), f"combined_bending_axial_2 -> FAILED\n {expected_result = }\n {test_combined_bending_axial_2 = }"
+    # Tests 6.5.5 - fonctions simples de compression parallèle au fil
+    # Cas calculé à la main : 2x6 S-P-F n° 1/n° 2 sec (tableau 6.4 : fc = 11,5, E05 = 6500 MPa),
+    # b = 38 mm, d = 140 mm, L = 3000 mm, KD = KH = KSc = KT = KSE = 1.
+    # Axe fort : Le = 3000 mm. Axe faible : retenu à mi-hauteur, Le = 1500 mm.
+    def close(value, expected, rel=1e-4):
+        return math.isclose(value, expected, rel_tol=rel)
+
+    fc_mod = compression_strength(fc=11.5)
+    assert fc_mod == 11.5, f"compression_strength -> FAILED {fc_mod = }"
+    # Fc = 11,5 x 1,15 x 0,9 x 1,0 x 1,0 = 11,9025
+    fc_mod_2 = compression_strength(fc=11.5, kd=1.15, kh=0.9)
+    assert close(fc_mod_2, 11.9025), f"compression_strength_2 -> FAILED {fc_mod_2 = }"
+
+    # Cc = 3000 / 140 = 21,4286 ; 1500 / 38 = 39,4737 ; 1900 / 38 = 50 (limite, accepté)
+    assert close(slenderness_ratio(3000, 140), 21.4286), "slenderness_ratio_d -> FAILED"
+    assert close(slenderness_ratio(1500, 38), 39.4737), "slenderness_ratio_b -> FAILED"
+    assert slenderness_ratio(1900, 38) == 50, "slenderness_ratio = 50 -> FAILED"
+    for bad in ((1901, 38), (0, 38), (3000, 0), (-100, 38)):
+        try:
+            slenderness_ratio(*bad)
+            raise AssertionError(f"slenderness_ratio{bad} aurait dû lever ValueError")
+        except ValueError:
+            pass
+
+    # KZc axe fort = 6,3 x (140 x 3000)^-0,13 = 6,3 x 0,18577 = 1,1704
+    # KZc axe faible = 6,3 x (38 x 3000)^-0,13 = 6,3 x 0,22013 = 1,3868 -> plafonné à 1,3
+    kzc_d = compression_size_factor(140, 3000)
+    kzc_b = compression_size_factor(38, 3000)
+    assert close(kzc_d, 1.1704), f"compression_size_factor_d -> FAILED {kzc_d = }"
+    assert kzc_b == 1.3, f"compression_size_factor_b (plafond 1,3) -> FAILED {kzc_b = }"
+    for bad in ((0, 3000), (140, 0)):
+        try:
+            compression_size_factor(*bad)
+            raise AssertionError(f"compression_size_factor{bad} aurait dû lever ValueError")
+        except ValueError:
+            pass
+
+    # KC axe fort = [1 + 11,5 x 1,1704 x 21,4286^3 / (35 x 6500)]^-1
+    #             = [1 + 11,5 x 1,1704 x 9839,7 / 227500]^-1 = [1 + 0,58212]^-1 = 0,63206
+    # KC axe faible = [1 + 11,5 x 1,3 x 39,4737^3 / 227500]^-1
+    #               = [1 + 14,95 x 61506,8 / 227500]^-1 = [1 + 4,04187]^-1 = 0,19834
+    kc_d = slenderness_factor(11.5, kzc_d, 3000 / 140, 6500)
+    kc_b = slenderness_factor(11.5, kzc_b, 1500 / 38, 6500)
+    assert close(kc_d, 0.63206), f"slenderness_factor_d -> FAILED {kc_d = }"
+    assert close(kc_b, 0.19834), f"slenderness_factor_b -> FAILED {kc_b = }"
+    # Cc = 0 -> KC = 1
+    assert slenderness_factor(11.5, 1.3, 0, 6500) == 1, "slenderness_factor Cc=0 -> FAILED"
+    # KSE et KT au dénominateur : KSE = 0,94, KT = 0,9 -> 35 x 6500 x 0,94 x 0,9 = 192465
+    # KC = [1 + 11,5 x 1,3 x 39,4737^3 / 192465]^-1 = [1 + 4,77753]^-1 = 0,17309
+    kc_b_2 = slenderness_factor(11.5, 1.3, 1500 / 38, 6500, kse=0.94, kt=0.9)
+    assert close(kc_b_2, 0.17309), f"slenderness_factor_kse_kt -> FAILED {kc_b_2 = }"
+
+    # Pr axe fort = 0,8 x 11,5 x 5320 x 1,1704 x 0,63206 = 36 206 N
+    # Pr axe faible = 0,8 x 11,5 x 5320 x 1,3 x 0,19834 = 12 620 N -> gouverne
+    pr_d = compression_resistance(11.5, 38 * 140, kzc_d, kc_d)
+    pr_b = compression_resistance(11.5, 38 * 140, kzc_b, kc_b)
+    assert close(pr_d, 36206, rel=1e-3), f"compression_resistance_d -> FAILED {pr_d = }"
+    assert close(pr_b, 12620, rel=1e-3), f"compression_resistance_b -> FAILED {pr_b = }"
+    # Sans élancement (KC = 1, KZc = 1) : Pr = 0,8 x 11,5 x 5320 = 48 944 N
+    assert close(compression_resistance(11.5, 5320, 1, 1), 48944), "compression_resistance -> FAILED"
+
     print("All tests passed.")
 
 
