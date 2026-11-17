@@ -38,7 +38,20 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 - **Traction du MSR de plus de 184 mm (tableau 6.8)** : pour les classes sans valeur dans la colonne
   « > 184 mm », bloquer la traction avec un message (à faire lors de l'ajout de l'onglet de traction).
 
-## Architecture du code : fonctions simples d'abord
+## Architecture du code : suivre la norme
+
+**Lire [`ARCHITECTURE.md`](./ARCHITECTURE.md) avant d'écrire ou de déplacer du code.** En résumé :
+
+- Le code suit la norme : un fichier par article (`ch_6_bois_de_sciage/art_6_5_5_resistance_a_la_...py`),
+  titres complets en français **sans accents**, annexes à la fin (`annexe_A/`, `annexe_B/`).
+- Fonctions et variables nommées avec **les symboles de 3.2**, majuscules et minuscules respectées
+  (`f_c` prévue, `F_c()` corrigée, `K_Zc()`, `P_r()`, `Q_r_prime()`).
+- Fonctions dans l'ordre d'apparition des formules de la norme ; fonctions de vérification à la fin.
+- Tout en français. Aucune logique de calcul dans l'interface.
+- Une modification de la structure doit d'abord être discutée avec l'utilisateur, puis notée dans
+  `ARCHITECTURE.md`.
+
+## Fonctions simples d'abord
 
 - Écrire des **fonctions simples** qui font **un seul calcul de la norme** (une équation, un coefficient,
   un tableau). Par exemple, une fonction pour KZc, une pour Cc, une pour Kc, puis une pour Pr.
@@ -91,6 +104,8 @@ streamlit run Accueil.py   # lancer l'application
 ```
 
 ## Structure
+
+Migration en cours vers la structure de `ARCHITECTURE.md` (section 8). Code actuel :
 
 - `general_design.py` : chapitre 5, conception générale
 - `sawn_lumber.py` : chapitre 6, bois de sciage
