@@ -444,19 +444,23 @@ with flex:
                 help="Rive en tension maintenue",
             )
 
-        mr = (
-            beam_flex.bending_moment(
-                fb=compute_resistance[0],
-                ksb=ksb,
-                kzb=kzb,
-                lateral_support=LATERAL,
-                compressive_edge_support=COMP_EDGE,
-                tensile_edge_support=TEN_EDGE,
-                blocking_support=BLOCK,
-                tie_rods_support=TIE_ROD,
+        try:
+            mr = (
+                beam_flex.bending_moment(
+                    fb=compute_resistance[0],
+                    ksb=ksb,
+                    kzb=kzb,
+                    lateral_support=LATERAL,
+                    compressive_edge_support=COMP_EDGE,
+                    tensile_edge_support=TEN_EDGE,
+                    blocking_support=BLOCK,
+                    tie_rods_support=TIE_ROD,
+                )
+                / 1000000
             )
-            / 1000000
-        )
+        except ValueError as error:
+            mr = None
+            kl_message = str(error)
         with col2:
             mf = st.number_input(
                 "$Mf: (kN \\cdot m)$",
@@ -467,9 +471,12 @@ with flex:
                 step=1.00,
                 icon=":material/input:",
             )
-            VERIF = general_design.limit_states_design(mf, mr)
-            st.write(f"$Mr = {round(mr,2)} kN \\cdot m$")
-            show_verification(VERIF)
+            if mr is None:
+                st.error(kl_message, width=650, icon=":material/error:")
+            else:
+                VERIF = general_design.limit_states_design(mf, mr)
+                st.write(f"$Mr = {round(mr,2)} kN \\cdot m$")
+                show_verification(VERIF)
 
 with shear:
     kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
@@ -561,7 +568,139 @@ with shear:
 
 with comp_para:
     with st.container(horizontal_alignment="center"):
-        st.warning("Fonctionnalité à venir.", width=200)
+        if built_up > 1:
+            st.warning(
+                """Éléments composés de plusieurs plis en compression (6.5.5.3) :
+                fonctionnalité à venir.""",
+                width=550,
+            )
+        else:
+            kd, ksc, kt, kh, _ = sawn_lumber.modification_factors(
+                width=width,
+                depth=depth,
+                prop="comp_para",
+                duration=duration[DURATION],
+                category=CATEGORY,
+                wet_service=wet,
+                treated=treated,
+                incised=incised,
+                _2ft_spacing=group,
+                connected_subfloor=subfloor,
+                built_up_beam=PLIS,
+            )
+            _, kse, _, _, _ = sawn_lumber.modification_factors(
+                width=width,
+                depth=depth,
+                prop="moe",
+                duration=duration[DURATION],
+                category=CATEGORY,
+                wet_service=wet,
+                treated=treated,
+                incised=incised,
+                _2ft_spacing=group,
+                connected_subfloor=subfloor,
+                built_up_beam=PLIS,
+            )
+            fc_modified = sawn_lumber.compression_strength(
+                fc=compute_resistance[2], kd=kd, kh=kh, ksc=ksc, kt=kt
+            )
+            e05 = compute_resistance[6]
+            axes = None
+
+            col1, col2 = st.columns(2, width=550)
+            with col1:
+                length = st.number_input(
+                    "Longueur de l'élément, $L$ (mm)",
+                    min_value=1,
+                    value=None,
+                    step=100,
+                    placeholder="Requis",
+                    help="Longueur réelle de l'élément, utilisée pour $K_{Zc}$ (6.5.5.2.4)",
+                    icon=":material/straighten:",
+                )
+                le_b = st.number_input(
+                    "Longueur effective selon $b$, $L_{e,b}$ (mm)",
+                    min_value=1,
+                    value=None,
+                    step=100,
+                    placeholder="Requis",
+                    help="""Longueur effective associée à la largeur $b$,
+                    $L_e = K_e \\cdot L$ entre les appuis latéraux (6.5.5.2.2)""",
+                    icon=":material/fit_page_width:",
+                )
+                le_d = st.number_input(
+                    "Longueur effective selon $d$, $L_{e,d}$ (mm)",
+                    min_value=1,
+                    value=None,
+                    step=100,
+                    placeholder="Requis",
+                    help="""Longueur effective associée à la hauteur $d$,
+                    $L_e = K_e \\cdot L$ entre les appuis latéraux (6.5.5.2.2)""",
+                    icon=":material/fit_page_height:",
+                )
+
+            with col2:
+                pf = st.number_input(
+                    "$Pf: (kN)$",
+                    min_value=0.00,
+                    value=None,
+                    width=550,
+                    placeholder="Charge axiale pondérée",
+                    step=1.00,
+                    icon=":material/input:",
+                )
+                if length is None or le_b is None or le_d is None:
+                    st.info(
+                        "Spécifiez $L$, $L_{e,b}$ et $L_{e,d}$ pour calculer $Pr$",
+                        width=650,
+                        icon=":material/info:",
+                    )
+                else:
+                    try:
+                        axis_b = sawn_lumber.compression_parallel_axis(
+                            dimension=width,
+                            length=length,
+                            effective_length=le_b,
+                            fc_modified=fc_modified,
+                            area=width * depth,
+                            e05=e05,
+                            kse=kse,
+                            kt=kt,
+                        )
+                        axis_d = sawn_lumber.compression_parallel_axis(
+                            dimension=depth,
+                            length=length,
+                            effective_length=le_d,
+                            fc_modified=fc_modified,
+                            area=width * depth,
+                            e05=e05,
+                            kse=kse,
+                            kt=kt,
+                        )
+                    except ValueError as error:
+                        st.error(str(error), width=650, icon=":material/error:")
+                    else:
+                        axes = (axis_b, axis_d)
+                        pr = min(axis_b[3], axis_d[3]) / 1000
+                        st.write(f"$Pr = {pr:.2f} kN$")
+                        VERIF = general_design.limit_states_design(pf, pr)
+                        show_verification(VERIF)
+
+            if axes:
+                with st.expander("Voir plus:", width=650):
+                    st.markdown(
+                        f"$F_c = f_c (K_D K_H K_{{Sc}} K_T) = {compute_resistance[2]} \\cdot "
+                        f"({kd} \\cdot {kh} \\cdot {ksc} \\cdot {kt}) = {fc_modified:.3f}$ MPa"
+                    )
+                    st.markdown(f"$E_{{05}} = {e05}$ MPa, $K_{{SE}} = {kse}$")
+                    for label, axis in zip(
+                        ("Selon $b$", "Selon $d$"), axes
+                    ):
+                        cc, kzc, kc, pr_axis = axis
+                        st.markdown(
+                            f"**{label}** : $C_c = {cc:.2f}$, $K_{{Zc}} = {kzc:.4f}$, "
+                            f"$K_C = {kc:.4f}$, $Pr = {pr_axis / 1000:.2f} kN$"
+                        )
 
 with comp_perp:
     with st.container(horizontal_alignment="center"):

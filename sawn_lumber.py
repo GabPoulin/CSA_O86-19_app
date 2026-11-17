@@ -792,7 +792,9 @@ def slenderness_factor(
             (0,82E pour MSR, 0,75E pour MEL, tableaux 6.4 à 6.7 pour le bois classé visuellement).
         kse (float, optional): Coefficient de conditions d'utilisation relatif au module
             d'élasticité. Default to 1.
-        kt (float, optional): Coefficient de traitement. Default to 1.
+        kt (float, optional): Coefficient de traitement des « autres propriétés »
+            (tableau 6.11), le même que dans Fc. Le KT du module d'élasticité ne sert qu'au calcul
+            du module d'élasticité (5.4.1). Default to 1.
 
     Returns:
         float: KC.
@@ -821,6 +823,52 @@ def compression_resistance(
     """
     phi = 0.8
     return phi * fc_modified * area * kzc * kc
+
+
+def compression_parallel_axis(
+    dimension: float,
+    length: float,
+    effective_length: float,
+    fc_modified: float,
+    area: float,
+    e05: float,
+    kse: float = 1,
+    kt: float = 1,
+) -> tuple[float, float, float, float]:
+    """
+    6.5.5.2 Résistance pondérée à la compression parallèle au fil selon un axe.
+
+    Combine les fonctions simples : Cc (6.5.5.2.2), KZc (6.5.5.2.4), KC (6.5.5.2.5) et Pr
+    (6.5.5.2.4). Selon 6.5.5.2.1, Pr doit être vérifiée pour les deux axes : appeler cette
+    fonction pour chaque axe et retenir la plus petite valeur.
+
+    Args:
+        dimension (float): Dimension dans la direction du flambage (b ou d), mm.
+        length (float): L = Longueur de l'élément, mm (pour KZc).
+        effective_length (float): Le = Longueur effective associée à la dimension, mm (pour Cc).
+        fc_modified (float): Fc = fc (KD KH KSc KT), MPa.
+        area (float): A = Aire de la section transversale, mm2.
+        e05 (float): Module d'élasticité pour les calculs des éléments en compression, MPa.
+        kse (float, optional): Coefficient de conditions d'utilisation relatif au module
+            d'élasticité. Default to 1.
+        kt (float, optional): Coefficient de traitement des « autres propriétés ». Default to 1.
+
+    Returns:
+        float: Cc = Élancement.
+        float: KZc = Coefficient de dimensions.
+        float: KC = Coefficient d'élancement.
+        float: Pr = Résistance pondérée à la compression parallèle au fil, N.
+
+    Raises:
+        ValueError: Si une valeur n'est pas positive ou si Cc > 50.
+
+    """
+    cc = slenderness_ratio(effective_length, dimension)
+    kzc = compression_size_factor(dimension, length)
+    kc = slenderness_factor(fc_modified, kzc, cc, e05, kse, kt)
+    pr = compression_resistance(fc_modified, area, kzc, kc)
+
+    return cc, kzc, kc, pr
 
 
 @dataclass
@@ -900,9 +948,14 @@ class Resistances:
             elif tie_rods_support:
                 criteria = 5
 
+        # 6.5.3.2.1 et 6.5.3.2.3 : KL = 1 si d/b ne dépasse pas la limite selon les supports.
+        # 6.5.3.2.2 : sinon, KL doit être déterminé selon 7.5.6.4 (pas encore offert).
         if rapport_h_l > criteria:
-            kl = 0
-            raise Warning("Valider Kl selon 7.5.6.4 - Fonctionnalité à venir")
+            raise ValueError(
+                f"Rapport hauteur/largeur d/b = {rapport_h_l:.2f} > {criteria} : KL doit être "
+                "déterminé selon l'article 7.5.6.4 (6.5.3.2.2), fonctionnalité à venir. "
+                "Ajoutez des supports latéraux (6.5.3.2.3) ou modifiez la section."
+            )
 
         mr = phi * f_b * s * kzb * kl
 
@@ -1523,6 +1576,24 @@ def _tests():
         test_bending_moment == expected_result
     ), f"bending_moment -> FAILED\n {expected_result = }\n {test_bending_moment = }"
 
+    # Test bending_moment : limites de d/b pour KL = 1 (6.5.3.2.1 et 6.5.3.2.3)
+    # (b, d, supports, limite) ; d/b égal à la limite -> accepté ; juste au-dessus -> ValueError
+    kl_cases = [
+        ({}, 2.5),
+        ({"lateral_support": True}, 4),
+        ({"lateral_support": True, "tie_rods_support": True}, 5),
+        ({"lateral_support": True, "compressive_edge_support": True}, 6.5),
+        ({"lateral_support": True, "compressive_edge_support": True, "blocking_support": True}, 7.5),
+        ({"lateral_support": True, "compressive_edge_support": True, "tensile_edge_support": True}, 9),
+    ]
+    for supports, limit in kl_cases:
+        Resistances(b=40, d=int(40 * limit)).bending_moment(fb=10, **supports)  # d/b = limite : OK
+        try:
+            Resistances(b=40, d=int(40 * limit) + 1).bending_moment(fb=10, **supports)
+            raise AssertionError(f"bending_moment {supports} d/b > {limit} aurait dû lever ValueError")
+        except ValueError:
+            pass
+
     # Test shear
     test_shear = Resistances(
         b=38,
@@ -1701,6 +1772,32 @@ def _tests():
     assert close(pr_b, 12620, rel=1e-3), f"compression_resistance_b -> FAILED {pr_b = }"
     # Sans élancement (KC = 1, KZc = 1) : Pr = 0,8 x 11,5 x 5320 = 48 944 N
     assert close(compression_resistance(11.5, 5320, 1, 1), 48944), "compression_resistance -> FAILED"
+
+    # Test compression_parallel_axis : mêmes valeurs que les fonctions simples ci-dessus
+    cc_d2, kzc_d2, kc_d2, pr_d2 = compression_parallel_axis(140, 3000, 3000, 11.5, 5320, 6500)
+    assert close(cc_d2, 21.4286) and close(kzc_d2, 1.1704), "compression_parallel_axis_d -> FAILED"
+    assert close(kc_d2, 0.63206) and close(pr_d2, 36206, rel=1e-3), "compression_parallel_axis_d -> FAILED"
+    cc_b2, kzc_b2, kc_b2, pr_b2 = compression_parallel_axis(38, 3000, 1500, 11.5, 5320, 6500)
+    assert close(cc_b2, 39.4737) and kzc_b2 == 1.3, "compression_parallel_axis_b -> FAILED"
+    assert close(kc_b2, 0.19834) and close(pr_b2, 12620, rel=1e-3), "compression_parallel_axis_b -> FAILED"
+    # Bois traité incisé, milieu humide, 2x6, cas 1 (KH = 1,1) - calcul à la main :
+    # KD = 1, KH = 1,10, KSc = 0,69, KT = 0,85 (autres propriétés), KSE = 0,94
+    # Fc = 11,5 x 1,10 x 0,69 x 0,85 = 7,41923 MPa
+    # Axe faible : Cc = 39,4737 ; KZc = 1,3
+    # KC = [1 + 7,41923 x 1,3 x 61506,8 / (35 x 6500 x 0,94 x 0,85)]^-1
+    #    = [1 + 593 236 / 181 772,5]^-1 = [1 + 3,26359]^-1 = 0,23454
+    # Pr = 0,8 x 7,41923 x 5320 x 1,3 x 0,23454 = 9 627 N
+    fc_wet = compression_strength(11.5, kh=1.1, ksc=0.69, kt=0.85)
+    assert close(fc_wet, 7.41923), f"compression_strength_wet -> FAILED {fc_wet = }"
+    _, _, kc_wet, pr_wet = compression_parallel_axis(38, 3000, 1500, fc_wet, 5320, 6500, kse=0.94, kt=0.85)
+    assert close(kc_wet, 0.23454), f"compression_parallel_axis_wet KC -> FAILED {kc_wet = }"
+    assert close(pr_wet, 9627, rel=1e-3), f"compression_parallel_axis_wet Pr -> FAILED {pr_wet = }"
+    # Cc > 50 refusé : 2x4 (38 mm) avec Le = 2000 mm -> Cc = 52,6
+    try:
+        compression_parallel_axis(38, 2000, 2000, 11.5, 38 * 89, 6500)
+        raise AssertionError("compression_parallel_axis Cc > 50 aurait dû lever ValueError")
+    except ValueError:
+        pass
 
     print("All tests passed.")
 
