@@ -3,7 +3,7 @@
 Application de calcul de charpentes. Elle commence par le bois, selon la norme **CSA O86:19, _Règles de
 calcul des charpentes en bois_**.
 
-🌐 **Application en ligne : <https://csa-o86.streamlit.app>**
+🌐 **Application en ligne : <https://datumcalc.streamlit.app>**
 
 📘 Norme : [version française](./pdf/CSA%20O86-F19.pdf) · [English version](./pdf/CSA%20O86-19.pdf)
 
@@ -83,4 +83,4 @@ python sawn_lumber.py      # chapitre 6
 
 ## Contact
 
-Pour toute question (for any questions) : poulin33@me.com
+Pour toute question (for any questions) : contact@lerepere.info
