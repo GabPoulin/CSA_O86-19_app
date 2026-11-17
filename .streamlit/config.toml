@@ -1,24 +1,23 @@
-# Couleurs:
-# Blanc = #F9F5F0
-# Gris = #E5E4DB
-# Jaune = #E6B035
-# Orange = #CC7700
-# Rouge = #E66437
-# Vert = #324D1E
-# Vert_Foncé = #112600
+# Couleurs de Le Repère (voir marque/couleurs.md) :
+# Vert forêt   = #233614 (principale)
+# Orange brûlé = #9E5A00 (accent)
+# Charbon      = #333333 (texte)
+# Gris         = #8F8F8F (bordures)
+# Gris pâle    = #EEEEEE (fond secondaire)
+# Sable        = #F4F1EA (fond)
 [theme]
-primaryColor = "#CC7700"
-backgroundColor = "#F9F5F0"
-secondaryBackgroundColor = "#E5E4DB"
-textColor = "#112600"
-linkColor = "#324D1E"
+primaryColor = "#9E5A00"
+backgroundColor = "#F4F1EA"
+secondaryBackgroundColor = "#EEEEEE"
+textColor = "#333333"
+linkColor = "#9E5A00"
 redColor = "#E66437"
-orangeColor = "#CC7700"
+orangeColor = "#9E5A00"
 yellowColor = "#E6B035"
 blueColor = "#3778C2"
-greenColor = "#324D1E"
+greenColor = "#233614"
 violetColor = "#7F5AF0"
-grayColor = "#6C757D"
+grayColor = "#8F8F8F"
 # fonts
 font = "sans-serif"
 baseFontSize = 15
@@ -29,7 +28,7 @@ linkUnderline = false
 showWidgetBorder = true
 
 [theme.sidebar]
-primaryColor = "#CC7700"
-backgroundColor = "#324D1E"
-secondaryBackgroundColor = "#E5E4DB"
-textColor = "#E5E4DB"
+primaryColor = "#F4F1EA"
+backgroundColor = "#233614"
+secondaryBackgroundColor = "#EEEEEE"
+textColor = "#F4F1EA"
