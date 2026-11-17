@@ -1,4 +1,6 @@
-# Architecture de l'application
+# Architecture de Datum
+
+**Datum, par Le Repère Ingénierie** : application web de calcul de charpentes.
 
 Ce document fixe la structure de l'application **avant** d'écrire de nouvelles fonctions. Une modification
 de cette structure doit d'abord être discutée avec l'utilisateur, puis notée ici.
@@ -7,7 +9,7 @@ de cette structure doit d'abord être discutée avec l'utilisateur, puis notée 
 
 ## 1. Vision et objectifs
 
-- Une **application web** de calcul de charpentes, accessible en tout temps sur **ordinateur** et sur
+- **Datum, par Le Repère Ingénierie** : une **application web** de calcul de charpentes, accessible en tout temps sur **ordinateur** et sur
   **mobile (iPhone)**.
 - **CSA O86** (bois) d'abord, puis **CSA S16** (acier), **CSA A23.3** (béton) et le **CNB** (charges et
   combinaisons).
@@ -259,22 +261,71 @@ selon ce dont les articles ont réellement besoin. Les fonctions simples gardent
 
 ## 8. Trace des calculs et notes de calcul PDF
 
+### La trace : `Resultat`
+
 Chaque fonction de vérification retourne un `Resultat` (`moteur/commun/resultat.py`) :
 
 - les **entrées** (avec symboles et unités) ;
-- une liste d'**étapes** : article, description, formule, formule avec les valeurs remplacées, résultat
-  et unité ;
+- une liste d'**étapes**. Chaque étape contient : l'article, une description, la **formule en LaTeX**
+  (symboles), la **formule avec les valeurs remplacées** (en LaTeX), le **résultat** et son unité ;
 - la **vérification** finale : effet pondéré, résistance, ratio, respecté ou dépassé ;
+- la **figure** de l'élément (voir plus bas) ;
 - l'**édition de la norme** utilisée.
 
 Cette trace est la **source unique** pour :
 
 1. le détail affiché dans l'interface (« Voir plus ») ;
-2. la **note de calcul PDF**, générée par l'API à partir d'un gabarit HTML : en-tête (projet, date,
-   norme et édition), entrées, étapes avec renvois aux articles, résultat. Simple et lisible ;
+2. la **note de calcul PDF** ;
 3. les tests.
 
----
+### La note de calcul PDF (format validé avec l'utilisateur)
+
+**En-tête, sur chaque page** :
+
+| Champ | |
+|---|---|
+| Datum, par Le Repère Ingénierie (logo) | |
+| Nom du client | |
+| Nom du projet | |
+| Adresse du projet | |
+| Numéro de dossier (ou de projet) | |
+| Date | |
+| Norme et édition (ex. CSA O86:19) | |
+| Nom de l'ingénieur et numéro de membre OIQ | |
+| **Zone pour les initiales et le sceau** | sur chaque page |
+| Numéro de page | |
+
+**Contenu de chaque vérification** :
+
+1. le titre (ex. « Compression parallèle au fil — Poteau P-1 ») ;
+2. une **figure schématique** de l'élément (pas à l'échelle) ;
+3. un tableau des **données** (section, dimensions, résistances prévues, coefficients, charges) ;
+4. **toutes les étapes de calcul**, chacune avec : l'article, la description, **la formule**, **la formule
+   avec les valeurs**, puis **le résultat** ;
+5. la vérification finale (ratio en %, respecté ou dépassé).
+
+Les **formules sont écrites en LaTeX** dans la trace. Elles sont affichées avec KaTeX dans l'interface,
+et rendues proprement dans le PDF. La façon de produire le PDF (gabarit HTML ou moteur LaTeX) sera
+choisie à la phase 3.
+
+### Figures schématiques
+
+Chaque vérification a une **figure schématique**, pas à l'échelle, qui montre l'élément et la charge.
+Exemple : pour la compression parallèle au fil, une colonne de bois comprimée dans le sens du fil, avec
+la charge P_f, la longueur L et la section b × d.
+
+- Les figures sont des **SVG**, dessinées à partir des données de l'élément (dimensions, charge…).
+- La même figure sert dans l'interface et dans la note de calcul PDF.
+
+### Unités : pouces et millimètres
+
+- Le **moteur calcule toujours dans les unités de la norme** (mm, N, MPa). Aucune conversion à
+  l'intérieur des formules.
+- Les **dimensions** sont **toujours offertes en pouces et en millimètres** dans l'interface, avec un
+  **bouton pour passer de l'un à l'autre en tout temps**. La conversion se fait seulement à l'entrée et
+  à l'affichage.
+- La **note de calcul indique les deux unités** pour chaque dimension, par exemple
+  `b = 38 mm (1.50 po)`.
 
 ## 9. Éditions de la norme
 

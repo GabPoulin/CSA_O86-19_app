@@ -1,7 +1,7 @@
-# Calculatrice | Bois : CSA O86:19
+# Datum, par Le Repère Ingénierie
 
-Application de calcul des charpentes en bois selon la norme **CSA O86:19, _Règles de calcul des charpentes
-en bois_**.
+Application de calcul de charpentes. Elle commence par le bois, selon la norme **CSA O86:19, _Règles de
+calcul des charpentes en bois_**.
 
 🌐 **Application en ligne : <https://csa-o86.streamlit.app>**
 
