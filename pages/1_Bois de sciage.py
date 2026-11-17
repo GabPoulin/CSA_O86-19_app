@@ -435,19 +435,23 @@ with flex:
                 help="Rive en tension maintenue",
             )
 
-        mr = (
-            beam_flex.bending_moment(
-                fb=compute_resistance[0],
-                ksb=ksb,
-                kzb=kzb,
-                lateral_support=LATERAL,
-                compressive_edge_support=COMP_EDGE,
-                tensile_edge_support=TEN_EDGE,
-                blocking_support=BLOCK,
-                tie_rods_support=TIE_ROD,
+        try:
+            mr = (
+                beam_flex.bending_moment(
+                    fb=compute_resistance[0],
+                    ksb=ksb,
+                    kzb=kzb,
+                    lateral_support=LATERAL,
+                    compressive_edge_support=COMP_EDGE,
+                    tensile_edge_support=TEN_EDGE,
+                    blocking_support=BLOCK,
+                    tie_rods_support=TIE_ROD,
+                )
+                / 1000000
             )
-            / 1000000
-        )
+        except ValueError as error:
+            mr = None
+            kl_message = str(error)
         with col2:
             mf = st.number_input(
                 "$Mf: (kN \\cdot m)$",
@@ -458,9 +462,12 @@ with flex:
                 step=1.00,
                 icon=":material/input:",
             )
-            VERIF = general_design.limit_states_design(mf, mr)
-            st.write(f"$Mr = {round(mr,2)} kN \\cdot m$")
-            show_verification(VERIF)
+            if mr is None:
+                st.error(kl_message, width=650, icon=":material/error:")
+            else:
+                VERIF = general_design.limit_states_design(mf, mr)
+                st.write(f"$Mr = {round(mr,2)} kN \\cdot m$")
+                show_verification(VERIF)
 
 with shear:
     kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
