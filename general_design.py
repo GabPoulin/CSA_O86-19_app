@@ -65,25 +65,31 @@ class SubfloorProperties(orm.declarative_base()):
 # CODE
 def limit_states_design(load: float | None, resistance: float) -> str:
     """
-    5.1 Calculs aux états limites.
+    5.1.2 États limites ultimes.
+
+    L'effet de charge pondéré ne doit pas dépasser la résistance pondérée correspondante
+    (5.1.2 b)). Le ratio charge/résistance est comparé à 1,00 avant d'être arrondi : un ratio
+    exactement égal à 1,00 respecte l'état limite.
 
     Args:
-        load (float|None): Charge pondérée ou charge spécifiée.
-        resistance (float|None): Résistance correspondante.
+        load (float|None): Effet de charge pondéré. None si aucune charge n'est spécifiée.
+        resistance (float): Résistance pondérée correspondante.
 
     Returns:
-        str: Message de validation de la résistance.
+        str: Message de validation de la résistance (ratio en %, 2 décimales).
 
     """
-    if load and resistance:
-        verif = round((load / resistance) * 100)
-        message = f"État limite dépassé: {verif}%"
-        if verif < 100:
-            message = f"État limite respecté: {verif}%"
-    else:
-        message = "Spécifiez une charge pour vérifier l'état limite"
+    if load is None:
+        return "Spécifiez une charge pour vérifier l'état limite"
 
-    return message
+    if resistance <= 0:
+        return "État limite dépassé: résistance pondérée nulle ou négative"
+
+    ratio = load / resistance
+    if ratio <= 1:
+        return f"État limite respecté: {ratio * 100:.2f}%"
+
+    return f"État limite dépassé: {ratio * 100:.2f}%"
 
 
 def load_duration(
@@ -732,11 +738,23 @@ def _tests():
 
     """
     # Test limit_states_design
-    test_limit_states_design = limit_states_design(load=12.3, resistance=27)
-    expected_result = "État limite respecté: 46%"
-    assert (
-        test_limit_states_design == expected_result
-    ), f"limit_states_design -> FAILED\n {expected_result = }\n {test_limit_states_design = }"
+    # (charge, résistance, résultat attendu) - ratios calculés à la main
+    limit_states_cases = [
+        (12.3, 27, "État limite respecté: 45.56%"),  # 12,3 / 27 = 0,45556
+        (26.9, 27, "État limite respecté: 99.63%"),  # 0,99630 : < 1, respecté
+        (27, 27, "État limite respecté: 100.00%"),  # ratio = 1,00 : ne dépasse pas (5.1.2 b))
+        (27.0001, 27, "État limite dépassé: 100.00%"),  # 1,0000037 > 1 : dépassé
+        (30, 27, "État limite dépassé: 111.11%"),  # 30 / 27 = 1,11111
+        (0, 27, "État limite respecté: 0.00%"),  # charge nulle
+        (None, 27, "Spécifiez une charge pour vérifier l'état limite"),
+        (5, 0, "État limite dépassé: résistance pondérée nulle ou négative"),
+        (0, 0, "État limite dépassé: résistance pondérée nulle ou négative"),
+    ]
+    for load, resistance, expected_result in limit_states_cases:
+        test_limit_states_design = limit_states_design(load=load, resistance=resistance)
+        assert (
+            test_limit_states_design == expected_result
+        ), f"limit_states_design({load}, {resistance}) -> FAILED\n {expected_result = }\n {test_limit_states_design = }"
 
     # Test load_duration
     test_load_duration = load_duration(duration="continue", dead=1, live=0.5, snow=0.1)
