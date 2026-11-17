@@ -20,6 +20,25 @@ Ce dossier contient l'image de marque utilisée par l'application (logos, couleu
 Nomme les fichiers simplement, sans accents ni espaces, par exemple :
 `le-repere-ingenierie-couleur.svg`, `le-repere-ingenierie-blanc.svg`, `le-repere-symbole.svg`.
 
+## Ce qui est déjà déposé
+
+Logos **vectoriels** (PDF), fournis par l'utilisateur. Les versions **SVG** suivront.
+
+| Fichier | Version |
+|---|---|
+| `logos/LeRepere_logo-vertical_gris.pdf` | symbole au-dessus du nom, pour fond clair |
+| `logos/LeRepere_logo-vertical_blanc.pdf` | symbole au-dessus du nom, pour fond foncé (vert forêt) |
+| `logos/LeRepere_logo-horizontal_gris.pdf` | symbole à gauche du nom, pour fond clair |
+| `logos/LeRepere_logo-horizontal_blanc.pdf` | symbole à gauche du nom, pour fond foncé |
+| `logos/LeRepere_symbole_gris.pdf` | symbole seul, pour fond clair (icône de l'application, onglet) |
+| `logos/LeRepere_symbole_blanc.pdf` | symbole seul, pour fond foncé |
+| `logos/LeRepere_symbole_blanc-onde-verte.pdf` | symbole seul blanc, avec l'onde verte |
+| `logos/LeRepere_nom_gris.pdf` | nom seul, pour fond clair |
+| `logos/LeRepere_nom_blanc.pdf` | nom seul, pour fond foncé |
+| `logos/le-repere-logo-apercu.png` | aperçu des versions |
+
+Couleurs : `palette.png` et `couleurs.md`.
+
 ## Comment les déposer
 
 - **Le plus simple** : les joindre dans la conversation avec Claude, qui les placera ici dans une PR.
