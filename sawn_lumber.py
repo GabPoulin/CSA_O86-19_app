@@ -96,6 +96,7 @@ class LumberSizes(orm.declarative_base()):
     nominal: int = Column("nominal", INTEGER, primary_key=True)  # type: ignore
     dry: int = Column("dry", INTEGER)  # type: ignore
     green: int = Column("green", INTEGER)  # type: ignore
+    green_timber: int = Column("green_timber", INTEGER)  # type: ignore
     dry_brut: int = Column("dry_brut", INTEGER)  # type: ignore
     green_brut: int = Column("green_brut", INTEGER)  # type: ignore
     engine = create_engine("sqlite:///csa_o86_19.db")
@@ -135,7 +136,9 @@ def lumber_category(
     if small < 89 and large < 89:
         category = "Light"
     elif small >= 114:
-        if large - small >= 51:
+        # Tableau 6.6, note 1 : poutres et longerons, grande face de plus de 51 mm de plus.
+        # Tableau 6.7, note 1 : poteaux et bois carrés, grande face d'au plus 51 mm de plus.
+        if large - small > 51:
             category = "Beam"
         else:
             category = "Post"
@@ -606,21 +609,63 @@ def modification_factors(
     return kd, ks, kt, kh, kz
 
 
+def nominal_sizes() -> list[int]:
+    """
+    Tableau A.3 Dimensions nominales disponibles, po.
+
+    Les dimensions 7 et 9 po n'existent pas dans l'industrie et ne sont pas offertes (elles restent
+    dans la base pour le mode « dimensions brutes » seulement).
+
+    Returns:
+        list[int]: Dimensions nominales disponibles, po.
+
+    """
+    rows = (
+        LumberSizes.session.query(LumberSizes)
+        .filter(LumberSizes.dry.isnot(None))  # type: ignore
+        .order_by(LumberSizes.nominal)
+        .all()
+    )
+    return [row.nominal for row in rows]
+
+
+def is_timber(width: float, depth: float) -> bool:
+    """
+    Tableau A.3 Gros bois : face étroite de 114 mm (5 po nominal) ou plus.
+
+    Args:
+        width (float): Largeur nominale, po.
+        depth (float): Hauteur nominale, po.
+
+    Returns:
+        bool: True si l'élément est du gros bois.
+
+    """
+    return min(width, depth) >= 5
+
+
 def sizes(
     dimension: float,
     green: bool = False,
     brut: bool = False,
-):
+    timber: bool = False,
+) -> int:
     """
-    6.5.2 Dimensions.
+    6.5.2 Dimensions (tableau A.3 Dimensions minimales après rabotage du bois d'œuvre).
 
     Args:
-        dimension (int): Dimension nominale, po.
+        dimension (float): Dimension nominale, po (dimension réelle, po, en mode brut).
         green (bool, optional): Bois vert (teneur en humidité > 19%). Default to False.
-        brut (bool, optional): Dimensions brutes. Default to False.
+        brut (bool, optional): Dimensions brutes (convention de l'utilisateur, hors tableau A.3).
+            Default to False.
+        timber (bool, optional): Gros bois (voir is_timber). En vert, les dimensions du gros bois
+            du tableau A.3 sont utilisées. Default to False.
 
     Returns:
         int: Dimension nette, mm.
+
+    Raises:
+        ValueError: Si la dimension nominale n'existe pas au tableau A.3 (hors mode brut).
 
     """
     table = (
@@ -628,17 +673,20 @@ def sizes(
         .filter(LumberSizes.nominal == dimension)  # type: ignore
         .first()
     )
-    if not table:
-        dim = int(round(dimension * 25.4))
-    elif green and brut:
-        dim = table.green_brut
-    elif brut:
-        dim = table.dry_brut
-    elif green:
-        dim = table.green
-    else:
-        dim = table.dry
-    return dim
+
+    if brut:
+        if not table:
+            return int(round(dimension * 25.4))
+        return table.green_brut if green else table.dry_brut
+
+    if not table or table.dry is None:
+        raise ValueError(
+            f"La dimension nominale {dimension} po n'est pas offerte (tableau A.3). "
+            f"Dimensions disponibles : {nominal_sizes()} po."
+        )
+    if green:
+        return table.green_timber if timber else table.green
+    return table.dry
 
 
 # 6.5.5 COMPRESSION PARALLÈLE AU FIL - FONCTIONS SIMPLES
@@ -1374,12 +1422,58 @@ def _tests():
         test_modification_factors_2 == expected_result
     ), f"modification_factors_2 -> FAILED\n {expected_result = }\n {test_modification_factors_2 = }"
 
-    # Test sizes
-    test_sizes = sizes(dimension=5, green=True, brut=False)
-    expected_result = 117
-    assert (
-        test_sizes == expected_result
-    ), f"sizes -> FAILED\n {expected_result = }\n {test_sizes = }"
+    # Test lumber_category : frontière poteaux / poutres (tableaux 6.6 et 6.7, note 1)
+    for width, depth, expected_result in (
+        (140, 191, "Post"),  # 6x8 vert gros bois : écart = 51 mm -> au plus 51 -> poteau
+        (140, 192, "Beam"),  # écart = 52 mm -> plus de 51 -> poutre
+        (140, 184, "Post"),  # 6x8 sec : écart = 44 mm
+        (140, 241, "Beam"),  # 6x10
+        (114, 114, "Post"),
+        (89, 140, "Lumber"),
+        (38, 64, "Light"),
+    ):
+        test_category = lumber_category(width=width, depth=depth)
+        assert (
+            test_category == expected_result
+        ), f"lumber_category({width}, {depth}) -> FAILED {expected_result = } {test_category = }"
+
+    # Test sizes (tableau A.3)
+    # (nominal, vert, brut, gros bois, attendu)
+    sizes_cases = [
+        (2, False, False, False, 38),
+        (2, True, False, False, 40),
+        (6, False, False, False, 140),
+        (6, True, False, False, 143),  # bois de dimension vert (ex. 2x6)
+        (5, True, False, False, 117),  # grande face 114 vert, bois de dimension (ex. 2x5)
+        (5, True, False, True, 114),  # gros bois vert (ex. 5x5) : 114
+        (6, True, False, True, 140),  # gros bois vert (ex. 6x6) : 140 (et non 143)
+        (8, True, False, True, 191),  # gros bois vert (ex. 8x8) : 191 (et non 190)
+        (10, True, False, True, 241),
+        (12, True, False, True, 292),
+        (14, True, False, True, 343),
+        (16, True, False, True, 394),  # gros bois vert : 394 (et non 393)
+        (16, False, False, True, 387),  # gros bois sec : dimension sèche du bois de dimension
+        (8, False, False, False, 184),
+        (2, False, True, False, 51),  # brut : convention de l'utilisateur
+        (2, True, True, False, 53),
+        (7, False, True, False, 178),  # 7 po : mode brut seulement
+        (9, True, True, False, 235),  # 9 po : mode brut seulement
+        (5.5, False, True, False, 140),  # brut hors table : 5,5 x 25,4 = 139,7 -> 140
+    ]
+    for nominal, green, brut, timber, expected_result in sizes_cases:
+        test_sizes = sizes(dimension=nominal, green=green, brut=brut, timber=timber)
+        assert (
+            test_sizes == expected_result
+        ), f"sizes{nominal, green, brut, timber} -> FAILED {expected_result = } {test_sizes = }"
+    for nominal in (1, 7, 9, 11, 13, 15, 18, 5.5):
+        try:
+            sizes(dimension=nominal)
+            raise AssertionError(f"sizes({nominal}) aurait dû lever ValueError")
+        except ValueError:
+            pass
+    assert nominal_sizes() == [2, 3, 4, 5, 6, 8, 10, 12, 14, 16], "nominal_sizes -> FAILED"
+    assert is_timber(5, 5) and is_timber(6, 8) and is_timber(8, 6), "is_timber -> FAILED"
+    assert not is_timber(4, 6) and not is_timber(2, 12), "is_timber -> FAILED"
 
     # Test bending_moment
     test_bending_moment = Resistances(
