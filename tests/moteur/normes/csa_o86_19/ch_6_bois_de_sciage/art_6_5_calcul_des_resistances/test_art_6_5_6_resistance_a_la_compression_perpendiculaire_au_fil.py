@@ -96,4 +96,6 @@ def test_verification_pres_d_un_appui():
 
 
 def test_registre():
-    assert [c.identifiant for c in registre.calculs("csa_o86_19")][:3] == ["6.5.5", "6.5.6.2", "6.5.6.3"]
+    # Ordre de la norme (les autres articles peuvent s'intercaler selon les modules importés)
+    identifiants = [c.identifiant for c in registre.calculs("csa_o86_19")]
+    assert identifiants.index("6.5.5") < identifiants.index("6.5.6.2") < identifiants.index("6.5.6.3")

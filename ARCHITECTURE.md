@@ -413,8 +413,8 @@ la charge P_f, la longueur L et la section b × d.
 | `sawn_lumber.specified_strengths` | `ch_6/art_6_3` | `resistances_prevues()` → `ResistancesPrevues` (`f_b`, `f_v`, `f_c`, `f_cp`, `f_t`, `E`, `E_05`), `classes()` |
 | `sawn_lumber.modification_factors` | `ch_6/art_6_4` | découpé : `K_S()`, `K_T()`, `cas_de_systeme()`, `K_H()`, `K_Z()` (tableaux 6.10 à 6.13) ; `K_D()` viendra avec 5.3.2 (étape 6) |
 | `sawn_lumber.sizes`, `nominal_sizes`, `is_timber` | `annexe_A/tableaux/tableau_A_3` | `dimension_nette()`, `dimensions_nominales()`, `est_gros_bois()` |
-| `Resistances.bending_moment` | `art_6_5/art_6_5_3` | découpé et validé : `M_r()`, K_L (6.5.3.2) |
-| `Resistances.shear` | `art_6_5/art_6_5_4` | découpé et validé : `V_r()`, `F_r()`, `K_N()` |
+| `Resistances.bending_moment` | `art_6_5/art_6_5_3` | découpé et validé : `F_b()`, `S()`, `rapport_hauteur_largeur_maximal()`, `K_L()`, `M_r()`, `verifier_flexion()` |
+| `Resistances.shear` | `art_6_5/art_6_5_4` | découpé et validé : `F_v()`, `V_r()`, `F_f()`, `F_r()`, `alpha()`, `eta()`, `K_N()`, `verifier_cisaillement()`, `verifier_cisaillement_par_fissuration()` |
 | `compression_strength`, `slenderness_ratio`, `compression_size_factor`, `slenderness_factor`, `compression_resistance`, `compression_parallel_axis` | `art_6_5/art_6_5_5` | `F_c()`, `C_C()`, `K_Zc()`, `K_C()`, `P_r()`, vérification |
 | `bearing_strength`, `bearing_size_factor`, `bearing_length_factor`, `average_bearing_area`, `bearing_resistance`, `bearing_resistance_near_support` | `art_6_5/art_6_5_6` | `F_cp()`, `K_Zcp()`, `K_B()`, `A_b_prime()`, `Q_r()`, `Q_r_prime()` |
 | `bearing_strength_from_density` | `annexe_A/art_A_6_…/art_A_6_5_6` | `f_cp()` à partir de G |
