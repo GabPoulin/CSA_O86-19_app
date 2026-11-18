@@ -2,7 +2,8 @@
 Tests de 6.5.5 Résistance à la compression parallèle au fil.
 
 Cas calculé à la main : 2x6 S-P-F n° 1/n° 2 sec (tableau 6.4 : f_c = 11,5 MPa, E_05 = 6500 MPa),
-b = 38 mm, d = 140 mm, L = 3000 mm. Axe fort : L_e = 3000 mm. Axe faible : L_e = 1500 mm.
+b = 38 mm, d = 140 mm, L = 3000 mm. Axe fort : appuis à 3000 mm. Axe faible : retenu à mi-hauteur,
+appuis à 1500 mm. K_e = 1 sauf indication contraire.
 """
 
 import pytest
@@ -11,6 +12,15 @@ from moteur.commun import registre
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (
     art_6_5_5_resistance_a_la_compression_parallele_au_fil as art,
 )
+
+
+def test_L_e():
+    assert art.L_e(1, 3000) == 3000  # 1 x 3000 mm = 3000 mm
+    assert art.L_e(0.65, 1500) == pytest.approx(975)  # 0,65 x 1500 mm = 975 mm
+    assert art.L_e(2.0, 2400) == 4800  # 2,0 x 2400 mm = 4800 mm
+    for K_e, L in ((0, 3000), (1, 0), (-1, 3000)):
+        with pytest.raises(ValueError):
+            art.L_e(K_e, L)
 
 
 def test_F_c():
@@ -63,7 +73,7 @@ def test_P_r():
 
 
 def _verifier(**kwargs):
-    valeurs = dict(b=38, d=140, L=3000, L_e_b=1500, L_e_d=3000, f_c=11.5, E_05=6500)
+    valeurs = dict(b=38, d=140, L=3000, L_b=1500, L_d=3000, f_c=11.5, E_05=6500)  # mm, MPa
     valeurs.update(kwargs)
     return art.verifier_compression_parallele_au_fil(**valeurs)
 
@@ -89,16 +99,26 @@ def test_verification_duree_courte():
     assert _verifier(K_D=1.15).etape("P_r").valeur == pytest.approx(12955, rel=1e-3)
 
 
+def test_verification_K_e():
+    # K_e = 0,65 selon b : L_e = 0,65 x 1500 mm = 975 mm ; C_C = 975 mm / 38 mm = 25,658 ;
+    # K_C = [1 + 11,5 MPa x 1,3 x 25,658^3 / 227 500 MPa]^-1 = 0,47393 ;
+    # P_r,b = 0,8 x 11,5 MPa x 5320 mm² x 1,3 x 0,47393 = 30 155 N (< P_r,d = 36 206 N)
+    r = _verifier(K_e_b=0.65)
+    assert r.etape("L_{e,b}").valeur == pytest.approx(975)
+    assert r.etape("K_{C,b}").valeur == pytest.approx(0.47393, rel=1e-4)
+    assert r.etape("P_r").valeur == pytest.approx(30155, rel=1e-4)
+
+
 def test_verification_trace():
     r = _verifier()
     assert r.norme == "CSA O86:19" and r.article == "6.5.5" and r.figure == "colonne"
-    assert [e.article for e in r.etapes[:2]] == ["6.5.5.2.4", "6.5.5.2.2"]
+    assert [e.article for e in r.etapes[:3]] == ["6.5.5.2.4", "6.5.5.1", "6.5.5.2.2"]
     assert all(e.formule and e.substitution for e in r.etapes)
 
 
 def test_verification_elancement_trop_grand():
     with pytest.raises(ValueError):
-        _verifier(L_e_b=3000)  # 3000 mm / 38 mm = 78,9 > 50
+        _verifier(L_b=3000)  # 3000 mm / 38 mm = 78,9 > 50
 
 
 def test_registre():

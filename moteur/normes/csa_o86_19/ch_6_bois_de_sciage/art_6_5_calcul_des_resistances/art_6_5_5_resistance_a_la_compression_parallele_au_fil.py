@@ -1,6 +1,7 @@
 """
 CSA O86:19 - 6.5.5 Résistance à la compression parallèle au fil (p. 74-75).
 
+    6.5.5.1 Longueur effective, L_e
     6.5.5.2.1 Généralités : P_r vérifiée pour les deux axes
     6.5.5.2.2 Élancement, C_C
     6.5.5.2.4 Résistance pondérée à la compression sous charge axiale (P_r, F_c, K_Zc)
@@ -9,7 +10,9 @@ CSA O86:19 - 6.5.5 Résistance à la compression parallèle au fil (p. 74-75).
 Interprétations validées avec l'utilisateur (CLAUDE.md) :
     - K_Zc : L = longueur de l'élément (pas L_e ni la longueur entre appuis latéraux).
     - K_T dans K_C : K_T des « autres propriétés » (tableau 6.11), le même que dans F_c.
-    - L_e est entrée en chiffre (K_e : annexe A, fonction séparée).
+    - L_e = K_e L (6.5.5.1), avec L = entraxe des appuis latéraux dans le plan de flambage (note du
+      tableau A.4). K_e est entré en chiffre ; le tableau A.4 (annexe A, informative) le donne selon
+      les conditions d'appui (art_A_6_5_5_1_coefficient_de_longueur_effective.py).
 """
 
 from moteur.commun.registre import enregistrer
@@ -23,6 +26,29 @@ EDITION = "csa_o86_19"
 
 
 # FONCTIONS SIMPLES (dans l'ordre de la norme)
+def L_e(K_e: float, L: float) -> float:
+    """
+    6.5.5.1 Longueur effective, L_e.
+
+    L_e = K_e L
+
+    Args:
+        K_e (float): Coefficient de longueur effective (valeurs recommandées : tableau A.4).
+        L (float): Entraxe des appuis latéraux de l'élément dans le plan de flambage considéré, mm
+            (note du tableau A.4).
+
+    Returns:
+        float: L_e, mm.
+
+    Raises:
+        ValueError: Si une valeur n'est pas positive.
+    """
+    if K_e <= 0 or L <= 0:
+        raise ValueError("K_e et la longueur entre les appuis latéraux doivent être positifs (6.5.5.1).")
+
+    return K_e * L
+
+
 def C_C(L_e: float, dimension: float) -> float:
     """
     6.5.5.2.2 Élancement, C_C.
@@ -142,10 +168,12 @@ def verifier_compression_parallele_au_fil(
     b: float,
     d: float,
     L: float,
-    L_e_b: float,
-    L_e_d: float,
+    L_b: float,
+    L_d: float,
     f_c: float,
     E_05: float,
+    K_e_b: float = 1,
+    K_e_d: float = 1,
     K_D: float = 1,
     K_H: float = 1,
     K_Sc: float = 1,
@@ -161,10 +189,12 @@ def verifier_compression_parallele_au_fil(
         b (float): Largeur de l'élément, mm.
         d (float): Hauteur de l'élément, mm.
         L (float): Longueur de l'élément, mm (pour K_Zc).
-        L_e_b (float): Longueur effective associée à la largeur b, mm.
-        L_e_d (float): Longueur effective associée à la hauteur d, mm.
+        L_b (float): Entraxe des appuis latéraux pour le flambage selon b, mm (pour L_e).
+        L_d (float): Entraxe des appuis latéraux pour le flambage selon d, mm (pour L_e).
         f_c (float): Résistance prévue en compression parallèle au fil, MPa.
         E_05 (float): Module d'élasticité pour les éléments en compression, MPa.
+        K_e_b, K_e_d (float, optional): Coefficients de longueur effective selon b et selon d
+            (tableau A.4). Default to 1.
         K_D, K_H, K_Sc, K_T, K_SE (float, optional): Coefficients de correction. Default to 1.
         P_f (float | None, optional): Charge de compression axiale pondérée, kN. Default to None.
 
@@ -179,8 +209,10 @@ def verifier_compression_parallele_au_fil(
         Donnee("b", "Largeur de l'élément", b, "mm", "dimension"),
         Donnee("d", "Hauteur de l'élément", d, "mm", "dimension"),
         Donnee("L", "Longueur de l'élément", L, "mm", "longueur"),
-        Donnee("L_{e,b}", "Longueur effective associée à b", L_e_b, "mm", "longueur"),
-        Donnee("L_{e,d}", "Longueur effective associée à d", L_e_d, "mm", "longueur"),
+        Donnee("L_b", "Entraxe des appuis latéraux (flambage selon b)", L_b, "mm", "longueur"),
+        Donnee("L_d", "Entraxe des appuis latéraux (flambage selon d)", L_d, "mm", "longueur"),
+        Donnee("K_{e,b}", "Coefficient de longueur effective selon b", K_e_b, source="Tableau A.4"),
+        Donnee("K_{e,d}", "Coefficient de longueur effective selon d", K_e_d, source="Tableau A.4"),
         Donnee("f_c", "Résistance prévue en compression parallèle au fil", f_c, "MPa", "contrainte"),
         Donnee("E_{05}", "Module d'élasticité pour les éléments en compression", E_05, "MPa",
                "contrainte"),
@@ -201,11 +233,16 @@ def verifier_compression_parallele_au_fil(
     A = b * d
 
     resistances = []
-    for axe, dimension, L_e in (("b", b, L_e_b), ("d", d, L_e_d)):
+    for axe, dimension, K_e, L_appuis in (("b", b, K_e_b, L_b), ("d", d, K_e_d, L_d)):
+        l_e = r.ajouter_etape(Etape(
+            "6.5.5.1", f"Longueur effective selon {axe}", f"L_{{e,{axe}}}",
+            rf"L_{{e,{axe}}} = K_{{e,{axe}}} \, L_{axe}", rf"{K_e:g} \times {L_appuis:g}",
+            L_e(K_e, L_appuis), "mm", "longueur",
+        ))
         c_c = r.ajouter_etape(Etape(
             "6.5.5.2.2", f"Élancement selon {axe}", f"C_{{C,{axe}}}",
-            rf"C_C = L_{{e,{axe}}} / {axe} \leq 50", rf"{L_e:g} / {dimension:g}",
-            C_C(L_e, dimension),
+            rf"C_C = L_{{e,{axe}}} / {axe} \leq 50", rf"{l_e:g} / {dimension:g}",
+            C_C(l_e, dimension),
         ))
         k_zc = r.ajouter_etape(Etape(
             "6.5.5.2.4", f"Coefficient de dimensions selon {axe}", f"K_{{Zc,{axe}}}",
