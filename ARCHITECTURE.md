@@ -43,7 +43,6 @@ moteur/                     ← moteur de calcul Python (aucune dépendance à l
   commun/                   ← outils partagés par toutes les normes
     resultat.py             ← trace d'une vérification (section 8)
     registre.py             ← catalogue des calculs offerts par édition (section 9)
-    verification.py         ← ratio effet / résistance <= 1,00
   normes/
     csa_o86_19/             ← bois, édition 2019 (section 5)
     csa_o86_24/             ← bois, édition suivante (plus tard)
@@ -268,7 +267,7 @@ Chaque fonction de vérification retourne un `Resultat` (`moteur/commun/resultat
 - les **entrées** (avec symboles et unités) ;
 - une liste d'**étapes**. Chaque étape contient : l'article, une description, la **formule en LaTeX**
   (symboles), la **formule avec les valeurs remplacées** (en LaTeX), le **résultat** et son unité ;
-- la **vérification** finale : effet pondéré, résistance, ratio, respecté ou dépassé ;
+- la **vérification** finale : charge pondérée, résistance pondérée, ratio, respecté ou dépassé ;
 - la **figure** de l'élément (voir plus bas) ;
 - l'**édition de la norme** utilisée.
 
@@ -325,7 +324,7 @@ la charge P_f, la longueur L et la section b × d.
   **résultats**. La conversion se fait à l'entrée (impérial → métrique) et à l'affichage
   (métrique → impérial), jamais ailleurs.
 - **Bascule métrique / impérial en tout temps** pour toutes les grandeurs : dimensions (mm / po),
-  longueurs (mm ou m / pi), forces (kN / lb), moments (kN·m / lb·pi), contraintes (MPa / psi), etc.
+  longueurs (mm ou m / pi), forces (kN / lb), moments (kN·m / lb·po), contraintes (MPa / psi), etc.
 - La **note de calcul indique les deux unités** pour les données et les résultats, par exemple
   `b = 38 mm (1.50 po)` et `P_r = 12.62 kN (2837 lb)`. Les étapes intermédiaires restent en métrique,
   comme dans la norme.
@@ -382,7 +381,8 @@ la charge P_f, la longueur L et la section b × d.
 - **comptes et sauvegarde des projets** : base de données et authentification (ex. Supabase) ;
 - **abonnements mensuels ou annuels** : paiement en ligne (ex. Stripe) ;
 - **version gratuite de démonstration** : le registre indique, pour chaque calcul, s'il est offert en
-  démonstration ou réservé aux abonnés ;
+  démonstration ou réservé aux abonnés. **Par défaut, un calcul est réservé aux abonnés** (validé avec
+  l'utilisateur) ; les calculs offerts en démonstration sont marqués un par un ;
 - un hébergement payant de quelques dollars par mois évite la mise en veille de l'API.
 
 ---
@@ -402,7 +402,7 @@ la charge P_f, la longueur L et la section b × d.
 
 | Code actuel | Nouvel emplacement (dans `moteur/normes/csa_o86_19/`) | Nouveau nom |
 |---|---|---|
-| `general_design.limit_states_design` | `moteur/commun/verification.py` + `art_5_1` | vérification 5.1.2 |
+| `general_design.limit_states_design` | `ch_5/art_5_1` (règle de 5.1.2) + `Verification` dans `commun/resultat.py` | `verifier_etat_limite_ultime()` |
 | `general_design.load_duration` | `ch_5/art_5_3` | `K_D()` (5.3.2) |
 | `general_design.cross_section` | `ch_5/art_5_3` | 5.3.8 |
 | `general_design.elasticity`, `elastic_deflection`, `permanent_deformation`, `ponding`, `moisture` | `ch_5/art_5_4_…/` | `E_S()`, 5.4.2, 5.4.3, 5.4.4, 5.4.6 |
@@ -433,7 +433,7 @@ Chaque étape est une ou plusieurs petites PR. **Aucun résultat ne doit changer
 les tests le prouvent. L'application en ligne doit fonctionner après chaque PR.
 
 **Phase 1 : moteur dans la nouvelle structure**
-1. Squelette : `moteur/`, `commun/` (`resultat.py`, `registre.py`, `verification.py`), pytest,
+1. Squelette : `moteur/`, `commun/` (`resultat.py`, `registre.py`, `unites.py`), 5.1.2, pytest,
    `requirements-dev.txt`, `art_3_2_symboles.py`.
 2. Déplacer 6.5.5 et 6.5.6 (déjà en fonctions simples), avec les symboles et la trace.
 3. Tableau A.3, 6.2 et 6.3.

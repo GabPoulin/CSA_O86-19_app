@@ -11,14 +11,21 @@ def _fonction():
     return None
 
 
-registre.enregistrer(EDITION, "6.5.10", "6.5.10", "Platelage")(_fonction)
-registre.enregistrer(EDITION, "6.5.9", "6.5.9", "Flexion et charge axiale")(_fonction)
-registre.enregistrer(EDITION, "A.6.5.6", "A.6.5.6", "Densité")(_fonction)
-registre.enregistrer(EDITION, "6.5.5", "6.5.5", "Compression", acces="demonstration")(_fonction)
+registre.enregistrer(EDITION, "6.5.10", "Platelage")(_fonction)
+registre.enregistrer(EDITION, "6.5.9", "Flexion et charge axiale")(_fonction)
+registre.enregistrer(EDITION, "A.6.5.6", "Densité")(_fonction)
+registre.enregistrer(EDITION, "6.5.5", "Compression", acces="demonstration")(_fonction)
+# Deux calculs du même article : un identifiant est alors donné au deuxième
+registre.enregistrer(EDITION, "6.5.4", "Cisaillement")(_fonction)
+registre.enregistrer(EDITION, "6.5.4", "Cisaillement à l'entaille", identifiant="6.5.4-entaille")(
+    _fonction
+)
 
 
 def test_ordre_de_la_norme():
-    assert [c.article for c in registre.calculs(EDITION)] == ["6.5.5", "6.5.9", "6.5.10", "A.6.5.6"]
+    assert [c.article for c in registre.calculs(EDITION)] == [
+        "6.5.4", "6.5.4", "6.5.5", "6.5.9", "6.5.10", "A.6.5.6"
+    ]
 
 
 def test_calcul_et_acces():
@@ -26,16 +33,17 @@ def test_calcul_et_acces():
     assert c.acces == "demonstration" and c.titre == "Compression" and c.fonction is _fonction
     assert registre.calcul(EDITION, "6.5.9").acces == "abonne"
     assert EDITION in registre.editions()
+    assert registre.calcul(EDITION, "6.5.4-entaille").article == "6.5.4"
 
 
 def test_doublon_refuse():
     with pytest.raises(ValueError):
-        registre.enregistrer(EDITION, "6.5.5", "6.5.5", "Doublon")(_fonction)
+        registre.enregistrer(EDITION, "6.5.5", "Doublon")(_fonction)
 
 
 def test_acces_invalide():
     with pytest.raises(ValueError):
-        registre.enregistrer(EDITION, "x", "6.5.3", "x", acces="gratuit")
+        registre.enregistrer(EDITION, "6.5.3", "x", acces="gratuit")
 
 
 def test_calcul_absent():

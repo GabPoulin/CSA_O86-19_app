@@ -3,15 +3,17 @@
 import pytest
 
 from moteur.commun.resultat import Donnee, Etape, Resultat
-from moteur.commun.verification import verifier
+from moteur.normes.csa_o86_19.ch_5_conception_generale.art_5_1_calculs_aux_etats_limites import (
+    verifier_etat_limite_ultime,
+)
 
 
 def _resultat():
     r = Resultat("CSA O86:19", "6.5.5", "Compression parallèle au fil", figure="colonne")
-    r.ajouter_donnee(Donnee("f_c", "Résistance prévue", 11.5, "MPa", "contrainte", "Tableau 6.4"))
+    r.ajouter_donnee(Donnee("f_c", "Résistance prévue", 11.5, "MPa", "contrainte", "Tableau 6.4"))  # MPa
     r.ajouter_etape(Etape("6.5.5.2.2", "Élancement", "C_C", "C_C = L_e / b", "1500 / 38", 39.47))
     r.ajouter_etape(Etape("6.5.5.2.2", "Élancement", "C_C", "C_C = L_e / d", "3000 / 140", 21.43))
-    r.verification = verifier(10, 12.62, "P_f", "P_r", "kN", "force")
+    r.verification = verifier_etat_limite_ultime(10, 12.62, "P_f", "P_r", "kN", "force")  # kN
     return r
 
 

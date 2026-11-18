@@ -30,6 +30,10 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   **uniquement à l'affichage des entrées et des résultats**, avec une bascule en tout temps pour toutes
   les grandeurs (dimensions, forces, moments…). La note de calcul indique **les deux unités** pour les
   données et les résultats (ex. `b = 38 mm (1.50 po)`).
+- **Toujours écrire les unités avec les chiffres** : dans le code, les commentaires, les tests, les
+  messages et la documentation (ex. `# 12 620 N / 4,448 N/lb = 2837 lb`).
+- **Vocabulaire** : on compare une **charge pondérée** (P_f, T_f, V_f, M_f…) à une **résistance
+  pondérée**. Ne pas utiliser « effet ».
 - **Formules en LaTeX** dans la trace des calculs ; chaque vérification a une **figure schématique**
   (SVG, pas à l'échelle). Format de la note de calcul : voir `ARCHITECTURE.md`, section 8.
 
@@ -114,6 +118,10 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
   (`ARCHITECTURE.md`, section 14), et **proposer les avancées de temps en temps** à l'utilisateur.
 - **Quand une PR est mergée, continuer comme au début d'une séance planifiée** : lire les nouveaux
   commentaires des issues et des PR, vérifier les PR ouvertes, puis faire avancer la feuille de route.
+- **Avant de commencer un nouveau travail sur la feuille de route, s'assurer qu'aucune PR n'attend
+  d'être mergée.** S'il reste des PR ouvertes, ne pas créer de nouvelle branche de travail : seulement
+  répondre aux commentaires, appliquer les corrections demandées sur ces PR, et rappeler à
+  l'utilisateur les PR à merger. Ça évite de travailler sur une branche pendant un merge.
 - Les décisions d'interprétation de la norme et les changements de structure restent **toujours
   soumis à l'utilisateur** avant d'être appliqués.
 
