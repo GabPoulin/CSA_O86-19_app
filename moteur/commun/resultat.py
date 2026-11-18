@@ -9,7 +9,44 @@ Toutes les valeurs sont en unités métriques, comme dans les normes. Les formul
 
 from dataclasses import dataclass, field
 
-from moteur.commun.verification import Verification
+
+@dataclass(frozen=True)
+class Verification:
+    """
+    Vérification finale : charge pondérée comparée à la résistance pondérée.
+
+    La règle de comparaison vient de la norme (ex. CSA O86:19, 5.1.2 : voir
+    ch_5_conception_generale/art_5_1_calculs_aux_etats_limites.py). Cette structure ne fait que
+    conserver le résultat dans la trace.
+
+    Args:
+        article (str): Article qui exige la vérification (ex. "5.1.2").
+        symbole_charge (str): Symbole de la charge pondérée en LaTeX (ex. "P_f").
+        charge (float): Charge pondérée, en unités métriques.
+        symbole_resistance (str): Symbole de la résistance pondérée en LaTeX (ex. "P_r").
+        resistance (float): Résistance pondérée, dans la même unité que la charge.
+        ratio (float): Ratio charge / résistance (infini si la résistance est nulle ou négative).
+        respecte (bool): True si l'état limite est respecté.
+        unite (str): Unité métrique de la charge et de la résistance (ex. "kN").
+        grandeur (str | None): Grandeur pour l'affichage en impérial (voir unites.GRANDEURS).
+    """
+
+    article: str
+    symbole_charge: str
+    charge: float
+    symbole_resistance: str
+    resistance: float
+    ratio: float
+    respecte: bool
+    unite: str = ""
+    grandeur: str | None = None
+
+    def message(self) -> str:
+        """Message affiché à l'utilisateur, avec le ratio en % (2 décimales)."""
+        if self.resistance <= 0:
+            return "État limite dépassé: résistance pondérée nulle ou négative"
+        etat = "respecté" if self.respecte else "dépassé"
+        return f"État limite {etat}: {self.ratio * 100:.2f}%"
 
 
 @dataclass(frozen=True)
@@ -73,7 +110,7 @@ class Resultat:
         figure (str | None): Identifiant de la figure schématique (ex. "colonne_compression").
         donnees (list[Donnee]): Données d'entrée.
         etapes (list[Etape]): Étapes de calcul, dans l'ordre.
-        verification (Verification | None): Vérification finale (effet / résistance).
+        verification (Verification | None): Vérification finale (charge / résistance).
     """
 
     norme: str

@@ -19,7 +19,7 @@ class Calcul:
 
     Args:
         edition (str): Dossier de l'édition (ex. "csa_o86_19").
-        identifiant (str): Identifiant unique dans l'édition (ex. "6.5.5").
+        identifiant (str): Identifiant unique dans l'édition. Par défaut, le numéro d'article.
         article (str): Article de la norme (ex. "6.5.5").
         titre (str): Titre (ex. "Résistance à la compression parallèle au fil").
         fonction (Callable): Fonction de vérification, qui retourne un Resultat.
@@ -46,16 +46,30 @@ def _cle_article(article: str) -> tuple:
 
 
 def enregistrer(
-    edition: str, identifiant: str, article: str, titre: str, acces: str = "abonne"
+    edition: str,
+    article: str,
+    titre: str,
+    acces: str = "abonne",
+    identifiant: str | None = None,
 ) -> Callable:
     """
     Décorateur qui inscrit une fonction de vérification au registre.
+
+    Args:
+        edition (str): Dossier de l'édition (ex. "csa_o86_19").
+        article (str): Article de la norme (ex. "6.5.5").
+        titre (str): Titre du calcul.
+        acces (str, optional): "demonstration" ou "abonne". Par défaut, réservé aux abonnés.
+        identifiant (str | None, optional): Seulement si deux calculs viennent du même article
+            (ex. "12.4.4-a"). Par défaut, le numéro d'article.
 
     Raises:
         ValueError: Si l'accès est invalide ou si l'identifiant existe déjà dans l'édition.
     """
     if acces not in ACCES:
         raise ValueError(f"Accès invalide : {acces!r}. Choix : {ACCES}.")
+
+    identifiant = article if identifiant is None else identifiant
 
     def decorateur(fonction: Callable) -> Callable:
         calculs_edition = _REGISTRE.setdefault(edition, {})

@@ -30,6 +30,10 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   **uniquement à l'affichage des entrées et des résultats**, avec une bascule en tout temps pour toutes
   les grandeurs (dimensions, forces, moments…). La note de calcul indique **les deux unités** pour les
   données et les résultats (ex. `b = 38 mm (1.50 po)`).
+- **Toujours écrire les unités avec les chiffres** : dans le code, les commentaires, les tests, les
+  messages et la documentation (ex. `# 12 620 N / 4,448 N/lb = 2837 lb`).
+- **Vocabulaire** : on compare une **charge pondérée** (P_f, T_f, V_f, M_f…) à une **résistance
+  pondérée**. Ne pas utiliser « effet ».
 - **Formules en LaTeX** dans la trace des calculs ; chaque vérification a une **figure schématique**
   (SVG, pas à l'échelle). Format de la note de calcul : voir `ARCHITECTURE.md`, section 8.
 
