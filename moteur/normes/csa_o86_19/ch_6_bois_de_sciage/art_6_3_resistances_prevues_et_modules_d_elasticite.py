@@ -1,5 +1,5 @@
 """
-CSA O86:19 - 6.3 Résistances prévues et modules d'élasticité (p. 49-60).
+CSA O86:19 - 6.3 Résistances prévues et modules d'élasticité (p. 55-65).
 
     6.3.1 Bois de charpente classé visuellement (tableaux 6.4 à 6.7)
     6.3.2 Bois MSR et MEL (tableaux 6.8 et 6.9)
@@ -58,7 +58,7 @@ def classes(categorie: str, essence: str) -> list[str]:
 
 def coefficients_charges_sur_grande_face(classe: str) -> tuple[float, float]:
     """
-    Tableau 6.6 (fin, p. 54) : coefficients des poutres et longerons chargés sur leur grande face.
+    Tableau 6.6 (fin, p. 60) : coefficients des poutres et longerons chargés sur leur grande face.
 
     « Structure choisie » : f_b x 0,88 ; E et E_05 x 1,00.
     « n° 1 ou n° 2 » : f_b x 0,77 ; E et E_05 x 0,90.

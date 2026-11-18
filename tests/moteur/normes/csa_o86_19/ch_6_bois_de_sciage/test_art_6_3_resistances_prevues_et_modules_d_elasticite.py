@@ -1,4 +1,4 @@
-"""Tests de 6.3 Résistances prévues (CSA O86:19, tableaux 6.4 à 6.8, p. 51-57). Valeurs des tableaux."""
+"""Tests de 6.3 Résistances prévues (CSA O86:19, tableaux 6.4 à 6.8, p. 57-63). Valeurs des tableaux."""
 
 import pytest
 

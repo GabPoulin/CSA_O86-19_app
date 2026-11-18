@@ -1,5 +1,5 @@
 """
-CSA O86:19 - Tableau A.3 Dimensions minimales après rabotage du bois d'œuvre (annexe A, p. 302-303).
+CSA O86:19 - Tableau A.3 Dimensions minimales après rabotage du bois d'œuvre (annexe A, p. 308-309).
 
 Voir 6.5.2 : dimensions nettes du bois sec (6.5.2.1) ou vert (6.5.2.2), arrondies au millimètre près.
 
