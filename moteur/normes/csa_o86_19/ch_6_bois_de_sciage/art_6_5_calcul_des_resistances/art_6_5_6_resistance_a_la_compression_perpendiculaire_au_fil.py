@@ -16,7 +16,9 @@ Décisions validées avec l'utilisateur :
 
 from moteur.commun.registre import enregistrer
 from moteur.commun.resultat import Donnee, Etape, Resultat
-from moteur.commun.verification import verifier
+from moteur.normes.csa_o86_19.ch_5_conception_generale.art_5_1_calculs_aux_etats_limites import (
+    verifier_etat_limite_ultime,
+)
 from moteur.normes.csa_o86_19 import NORME
 
 EDITION = "csa_o86_19"
@@ -199,9 +201,7 @@ def _donnees_communes(
     return f_cp_corrige, k_zcp
 
 
-@enregistrer(
-    EDITION, "6.5.6.2", "6.5.6.2", "Compression perpendiculaire au fil : effet de toutes les charges"
-)
+@enregistrer(EDITION, "6.5.6.2", "Compression perpendiculaire au fil : effet de toutes les charges")
 def verifier_compression_perpendiculaire_au_fil(
     b: float,
     d: float,
@@ -254,13 +254,11 @@ def verifier_compression_perpendiculaire_au_fil(
         Q_r(f_cp_corrige, A_b, k_b, k_zcp), "N",
     ))
     if R_f is not None:
-        r.verification = verifier(R_f, q_r / 1000, "R_f", "Q_r", "kN", "force")
+        r.verification = verifier_etat_limite_ultime(R_f, q_r / 1000, "R_f", "Q_r", "kN", "force")
     return r
 
 
-@enregistrer(
-    EDITION, "6.5.6.3", "6.5.6.3", "Compression perpendiculaire au fil : charges près d'un appui"
-)
+@enregistrer(EDITION, "6.5.6.3", "Compression perpendiculaire au fil : charges près d'un appui")
 def verifier_compression_perpendiculaire_pres_d_un_appui(
     b: float,
     d: float,
@@ -325,5 +323,5 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
         Q_r_prime(f_cp_corrige, a_b_prime, k_b, k_zcp), "N",
     ))
     if P_f is not None:
-        r.verification = verifier(P_f, q_r_prime / 1000, "P_f", "Q'_r", "kN", "force")
+        r.verification = verifier_etat_limite_ultime(P_f, q_r_prime / 1000, "P_f", "Q'_r", "kN", "force")
     return r

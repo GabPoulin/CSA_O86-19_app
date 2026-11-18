@@ -14,19 +14,22 @@ from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances
 
 
 def test_F_c():
-    assert art.F_c(11.5) == 11.5
-    assert art.F_c(11.5, K_D=1.15, K_H=0.9) == pytest.approx(11.9025)  # 11,5 x 1,15 x 0,9
+    assert art.F_c(11.5) == 11.5  # MPa
+    assert art.F_c(11.5, K_D=1.15, K_H=0.9) == pytest.approx(11.9025)  # 11,5 MPa x 1,15 x 0,9 = 11,9025 MPa
     assert art.F_c(11.5, K_H=1.1, K_Sc=0.69, K_T=0.85) == pytest.approx(7.41923, rel=1e-5)
 
 
 @pytest.mark.parametrize(
     "L_e, dimension, attendu",
-    [(3000, 140, 21.4286), (1500, 38, 39.4737), (1900, 38, 50)],  # 50 exactement : accepté
+    # L_e (mm), dimension (mm) : 3000 mm / 140 mm = 21,43 ; 1500 mm / 38 mm = 39,47 ;
+    # 1900 mm / 38 mm = 50 exactement : accepté
+    [(3000, 140, 21.4286), (1500, 38, 39.4737), (1900, 38, 50)],
 )
 def test_C_C(L_e, dimension, attendu):
     assert art.C_C(L_e, dimension) == pytest.approx(attendu, rel=1e-5)
 
 
+# L_e (mm), dimension (mm) : C_C > 50, ou valeurs nulles ou négatives
 @pytest.mark.parametrize("L_e, dimension", [(1901, 38), (0, 38), (3000, 0), (-100, 38)])
 def test_C_C_invalide(L_e, dimension):
     with pytest.raises(ValueError):
@@ -34,18 +37,18 @@ def test_C_C_invalide(L_e, dimension):
 
 
 def test_K_Zc():
-    # 6,3 x (140 x 3000)^-0,13 = 6,3 x 0,18577 = 1,1704
+    # 6,3 x (140 mm x 3000 mm)^-0,13 = 6,3 x 0,18577 = 1,1704
     assert art.K_Zc(140, 3000) == pytest.approx(1.1704, rel=1e-4)
-    # 6,3 x (38 x 3000)^-0,13 = 1,3868 -> plafonné à 1,3
+    # 6,3 x (38 mm x 3000 mm)^-0,13 = 1,3868 -> plafonné à 1,3
     assert art.K_Zc(38, 3000) == 1.3
     with pytest.raises(ValueError):
         art.K_Zc(0, 3000)
 
 
 def test_K_C():
-    # [1 + 11,5 x 1,1704 x 21,4286^3 / (35 x 6500)]^-1 = [1 + 0,58212]^-1 = 0,63206
+    # [1 + 11,5 MPa x 1,1704 x 21,4286^3 / (35 x 6500 MPa)]^-1 = [1 + 0,58212]^-1 = 0,63206
     assert art.K_C(11.5, 1.1704, 3000 / 140, 6500) == pytest.approx(0.63206, rel=1e-4)
-    # [1 + 11,5 x 1,3 x 39,4737^3 / 227 500]^-1 = [1 + 4,04187]^-1 = 0,19834
+    # [1 + 11,5 MPa x 1,3 x 39,4737^3 / 227 500 MPa]^-1 = [1 + 4,04187]^-1 = 0,19834
     assert art.K_C(11.5, 1.3, 1500 / 38, 6500) == pytest.approx(0.19834, rel=1e-4)
     # K_SE = 0,94 et K_T = 0,9 au dénominateur : [1 + 4,77753]^-1 = 0,17309
     assert art.K_C(11.5, 1.3, 1500 / 38, 6500, K_SE=0.94, K_T=0.9) == pytest.approx(0.17309, rel=1e-4)
@@ -53,9 +56,9 @@ def test_K_C():
 
 
 def test_P_r():
-    # 0,8 x 11,5 x 5320 = 48 944 N
+    # 0,8 x 11,5 MPa x 5320 mm² = 48 944 N
     assert art.P_r(11.5, 5320, 1, 1) == pytest.approx(48944)
-    # 0,8 x 11,5 x 5320 x 1,3 x 0,19834 = 12 620 N
+    # 0,8 x 11,5 MPa x 5320 mm² x 1,3 x 0,19834 = 12 620 N
     assert art.P_r(11.5, 5320, 1.3, 0.19834) == pytest.approx(12620, rel=1e-3)
 
 
@@ -70,7 +73,7 @@ def test_verification_2x6():
     assert r.etape("P_{r,b}").valeur == pytest.approx(12620, rel=1e-3)  # axe faible gouverne
     assert r.etape("P_{r,d}").valeur == pytest.approx(36206, rel=1e-3)
     assert r.etape("P_r").valeur == pytest.approx(12620, rel=1e-3)
-    assert r.verification.ratio == pytest.approx(10 / 12.620, rel=1e-3)  # 79.24 %
+    assert r.verification.ratio == pytest.approx(10 / 12.620, rel=1e-3)  # 10 kN / 12,62 kN = 79.24 %
     assert r.verification.respecte and r.verification.unite == "kN"
 
 
@@ -82,7 +85,7 @@ def test_verification_milieu_humide_traite_incise():
 
 
 def test_verification_duree_courte():
-    # K_D = 1,15 : F_c = 13,225 ; K_C = 0,17705 ; P_r = 12 955 N
+    # K_D = 1,15 : F_c = 13,225 MPa ; K_C = 0,17705 ; P_r = 12 955 N
     assert _verifier(K_D=1.15).etape("P_r").valeur == pytest.approx(12955, rel=1e-3)
 
 
@@ -95,7 +98,7 @@ def test_verification_trace():
 
 def test_verification_elancement_trop_grand():
     with pytest.raises(ValueError):
-        _verifier(L_e_b=3000)  # 3000 / 38 = 78,9 > 50
+        _verifier(L_e_b=3000)  # 3000 mm / 38 mm = 78,9 > 50
 
 
 def test_registre():

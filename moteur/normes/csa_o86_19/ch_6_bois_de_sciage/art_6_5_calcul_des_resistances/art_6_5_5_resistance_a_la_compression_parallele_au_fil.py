@@ -14,7 +14,9 @@ Interprétations validées avec l'utilisateur (CLAUDE.md) :
 
 from moteur.commun.registre import enregistrer
 from moteur.commun.resultat import Donnee, Etape, Resultat
-from moteur.commun.verification import verifier
+from moteur.normes.csa_o86_19.ch_5_conception_generale.art_5_1_calculs_aux_etats_limites import (
+    verifier_etat_limite_ultime,
+)
 from moteur.normes.csa_o86_19 import NORME
 
 EDITION = "csa_o86_19"
@@ -135,9 +137,7 @@ def K_C(
 
 
 # VÉRIFICATION
-@enregistrer(
-    EDITION, "6.5.5", "6.5.5", "Résistance à la compression parallèle au fil", acces="abonne"
-)
+@enregistrer(EDITION, "6.5.5", "Résistance à la compression parallèle au fil")
 def verifier_compression_parallele_au_fil(
     b: float,
     d: float,
@@ -235,6 +235,6 @@ def verifier_compression_parallele_au_fil(
     ))
 
     if P_f is not None:
-        r.verification = verifier(P_f, p_r / 1000, "P_f", "P_r", "kN", "force")
+        r.verification = verifier_etat_limite_ultime(P_f, p_r / 1000, "P_f", "P_r", "kN", "force")
 
     return r
