@@ -114,6 +114,10 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
   (`ARCHITECTURE.md`, section 14), et **proposer les avancées de temps en temps** à l'utilisateur.
 - **Quand une PR est mergée, continuer comme au début d'une séance planifiée** : lire les nouveaux
   commentaires des issues et des PR, vérifier les PR ouvertes, puis faire avancer la feuille de route.
+- **Avant de commencer un nouveau travail sur la feuille de route, s'assurer qu'aucune PR n'attend
+  d'être mergée.** S'il reste des PR ouvertes, ne pas créer de nouvelle branche de travail : seulement
+  répondre aux commentaires, appliquer les corrections demandées sur ces PR, et rappeler à
+  l'utilisateur les PR à merger. Ça évite de travailler sur une branche pendant un merge.
 - Les décisions d'interprétation de la norme et les changements de structure restent **toujours
   soumis à l'utilisateur** avant d'être appliqués.
 
