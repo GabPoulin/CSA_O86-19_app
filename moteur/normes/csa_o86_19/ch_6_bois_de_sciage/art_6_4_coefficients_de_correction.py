@@ -78,11 +78,13 @@ AUTRE_PROPRIETE_K_H = (1.00, 1.00, 1.00, 1.00)
 # 6.4.5 Tableau 6.13 Coefficient de dimensions, K_Z, bois classé visuellement (p. 63)
 # (borne supérieure exclue de la grande face en mm, ligne du tableau,
 #  K_Zb et K_Zv selon la face étroite (38 à 64, 89 à 102, 114 ou plus), K_Zt)
-# Les lignes 38, 64 et 89 ont les mêmes valeurs (1,7 en flexion et cisaillement, 1,5 en traction).
-# Bornes du code existant conservées pendant la migration (voir l'issue sur les dimensions vertes
-# et brutes absentes du tableau).
-TABLEAU_6_13: tuple[tuple[float, str, tuple[float, float, float], float], ...] = (
-    (114, "38, 64 et 89", (1.7, 1.7, 1.7), 1.5),
+# None = « — » au tableau : combinaison impossible (la face étroite ne dépasse pas la grande face).
+# Bornes du code existant conservées pendant la migration (issue #45 : dimensions vertes et
+# brutes absentes du tableau).
+TABLEAU_6_13: tuple[tuple[float, str, tuple[float | None, float | None, float | None], float], ...] = (
+    (64, "38", (1.7, None, None), 1.5),
+    (89, "64", (1.7, None, None), 1.5),
+    (114, "89", (1.7, 1.7, None), 1.5),
     (140, "114", (1.5, 1.6, 1.3), 1.4),
     (159, "140", (1.4, 1.5, 1.3), 1.3),
     (210, "184 à 191", (1.2, 1.3, 1.3), 1.2),
@@ -251,9 +253,9 @@ def K_Z(propriete: str, b: float, d: float, categorie: str) -> float:
         if grande_face < borne:
             if propriete == TRACTION_PARALLELE:
                 return traction
-            if face_etroite < 89:
-                return flexion_cisaillement[0]
-            if face_etroite < 114:
-                return flexion_cisaillement[1]
-            return flexion_cisaillement[2]
+            colonne = 0 if face_etroite < 89 else 1 if face_etroite < 114 else 2
+            valeur = flexion_cisaillement[colonne]
+            if valeur is None:  # « — » : face étroite plus grande que la grande face
+                raise AssertionError("Combinaison absente du tableau 6.13 (« — »).")
+            return valeur
     raise AssertionError("TABLEAU_6_13 se termine par une borne infinie.")

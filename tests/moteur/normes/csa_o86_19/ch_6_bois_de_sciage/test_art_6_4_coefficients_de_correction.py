@@ -107,6 +107,7 @@ def test_K_H_cas_inconnu():
         (38, 64, 1.7, 1.5),  # 38 x 64 mm
         (38, 89, 1.7, 1.5),  # 2 x 4 : 38 x 89 mm
         (89, 89, 1.7, 1.5),  # 4 x 4 : 89 x 89 mm, face étroite 89 à 102
+        (64, 64, 1.7, 1.5),  # 64 x 64 mm : ligne 64, face étroite 38 à 64
         (38, 114, 1.5, 1.4),  # grande face 114 mm, face étroite 38 à 64
         (89, 114, 1.6, 1.4),  # face étroite 89 à 102
         (114, 114, 1.3, 1.4),  # face étroite 114 ou plus
@@ -174,7 +175,19 @@ def test_propriete_inconnue():
 
 
 def test_lignes_du_tableau_6_13():
-    assert m.ligne_du_tableau_6_13(89) == "38, 64 et 89"
+    assert m.ligne_du_tableau_6_13(38) == "38"
+    assert m.ligne_du_tableau_6_13(64) == "64"
+    assert m.ligne_du_tableau_6_13(89) == "89"
     assert m.ligne_du_tableau_6_13(114) == "114"
     assert m.ligne_du_tableau_6_13(191) == "184 à 191"
     assert m.ligne_du_tableau_6_13(394) == "387 ou plus"
+
+
+def test_tableau_6_13_tirets():
+    # « — » au tableau 6.13 : colonnes 89 à 102 et 114 ou plus des lignes 38 et 64, colonne 114 ou
+    # plus de la ligne 89 (la face étroite ne peut pas dépasser la grande face)
+    lignes = {ligne: valeurs for _, ligne, valeurs, _ in m.TABLEAU_6_13}
+    assert lignes["38"] == (1.7, None, None)
+    assert lignes["64"] == (1.7, None, None)
+    assert lignes["89"] == (1.7, 1.7, None)
+    assert lignes["114"] == (1.5, 1.6, 1.3)
