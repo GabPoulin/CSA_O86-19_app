@@ -1,0 +1,3 @@
+# Outils de développement (l'application en ligne n'en a pas besoin)
+-r requirements.txt
+pytest>=8.0

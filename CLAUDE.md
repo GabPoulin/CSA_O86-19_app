@@ -112,6 +112,8 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
 
 - Travailler de façon autonome dans des **branches à part**, en suivant la feuille de route
   (`ARCHITECTURE.md`, section 14), et **proposer les avancées de temps en temps** à l'utilisateur.
+- **Quand une PR est mergée, continuer comme au début d'une séance planifiée** : lire les nouveaux
+  commentaires des issues et des PR, vérifier les PR ouvertes, puis faire avancer la feuille de route.
 - Les décisions d'interprétation de la norme et les changements de structure restent **toujours
   soumis à l'utilisateur** avant d'être appliqués.
 
@@ -125,17 +127,21 @@ Chaque changement de calcul doit être vérifié dans **plusieurs scénarios** a
 - la page Streamlit est testée (pas d'exception, bon affichage) avec `streamlit.testing.v1.AppTest`
   en partant d'`Accueil.py`, puis `switch_page(...)`.
 
-Commandes actuelles :
+Commandes :
 
 ```bash
-python general_design.py   # tests du chapitre 5
-python sawn_lumber.py      # tests du chapitre 6
-streamlit run Accueil.py   # lancer l'application
+pip install -r requirements-dev.txt   # outils de développement (pytest)
+pytest                                # tous les tests (nouveau moteur et anciens modules)
+streamlit run Accueil.py              # lancer l'application
 ```
+
+Les tests roulent aussi automatiquement sur GitHub à chaque PR (`.github/workflows/tests.yml`).
 
 ## Structure
 
-Migration en cours vers la structure de `ARCHITECTURE.md` (feuille de route : section 14). Code actuel :
+Migration en cours vers la structure de `ARCHITECTURE.md` (feuille de route : section 14, suivi dans
+l'issue #30). Nouveau moteur : `moteur/` (tests dans `tests/`). Anciens modules, encore utilisés par
+l'interface :
 
 - `general_design.py` : chapitre 5, conception générale
 - `sawn_lumber.py` : chapitre 6, bois de sciage
