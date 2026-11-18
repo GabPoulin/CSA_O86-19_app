@@ -702,406 +702,99 @@ def sizes(
     return table.green if green else table.dry
 
 
-# 6.5.5 COMPRESSION PARALLÈLE AU FIL - FONCTIONS SIMPLES
-def compression_strength(
-    fc: float, kd: float = 1, kh: float = 1, ksc: float = 1, kt: float = 1
-) -> float:
-    """
-    6.5.5.2.4 Résistance prévue corrigée en compression parallèle au fil, Fc.
-
-    Fc = fc (KD KH KSc KT)
-
-    Args:
-        fc (float): Résistance prévue en compression parallèle au fil, MPa (tableaux 6.4 à 6.9).
-        kd (float, optional): Coefficient de durée d'application de la charge. Default to 1.
-        kh (float, optional): Coefficient de système. Default to 1.
-        ksc (float, optional): Coefficient de conditions d'utilisation (compression parallèle).
-            Default to 1.
-        kt (float, optional): Coefficient de traitement. Default to 1.
-
-    Returns:
-        float: Fc, MPa.
-
-    """
-    return fc * (kd * kh * ksc * kt)
+# 6.5.5 ET 6.5.6 : DÉPLACÉS DANS LE NOUVEAU MOTEUR (moteur/normes/csa_o86_19/)
+# Ces fonctions gardent leur ancien nom pour l'interface Streamlit et appellent le nouveau moteur.
+# Les formules ne sont plus ici. Voir ARCHITECTURE.md, section 14 (migration).
+from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (  # noqa: E402
+    art_6_5_5_resistance_a_la_compression_parallele_au_fil as _art_6_5_5,
+    art_6_5_6_resistance_a_la_compression_perpendiculaire_au_fil as _art_6_5_6,
+)
+from moteur.normes.csa_o86_19.annexe_A_renseignements_supplementaires_et_autres_methodes.art_A_6_bois_de_sciage import (  # noqa: E402,E501
+    art_A_6_5_6_compression_perpendiculaire_au_fil as _art_A_6_5_6,
+)
+from moteur.normes.csa_o86_19.annexe_A_renseignements_supplementaires_et_autres_methodes.tableaux import (  # noqa: E402,E501
+    tableau_A_11_valeurs_de_densite as _tableau_A_11,
+)
 
 
-def slenderness_ratio(effective_length: float, dimension: float) -> float:
-    """
-    6.5.5.2.2 Élancement, Cc.
-
-    Cc = longueur effective associée à la dimension / dimension (largeur ou hauteur).
-    L'élancement ne doit pas dépasser 50 et doit être calculé selon les deux axes.
-
-    Args:
-        effective_length (float): Longueur effective associée à la dimension, Le = Ke * L, mm.
-        dimension (float): Largeur ou hauteur de l'élément (dans la direction du flambage), mm.
-
-    Returns:
-        float: Cc = Élancement.
-
-    Raises:
-        ValueError: Si une valeur n'est pas positive ou si Cc > 50.
-
-    """
-    if effective_length <= 0 or dimension <= 0:
-        raise ValueError("La longueur effective et la dimension doivent être positives.")
-
-    cc = effective_length / dimension
-    if cc > 50:
-        raise ValueError(f"L'élancement (Cc = {cc:.2f}) ne doit pas dépasser 50 (6.5.5.2.2).")
-
-    return cc
+def compression_strength(fc, kd=1, kh=1, ksc=1, kt=1):
+    """Déplacé : 6.5.5.2.4, F_c (art_6_5_5.F_c)."""
+    return _art_6_5_5.F_c(fc, kd, kh, ksc, kt)
 
 
-def compression_size_factor(dimension: float, length: float) -> float:
-    """
-    6.5.5.2.4 Coefficient de dimensions en compression parallèle au fil, KZc.
-
-    KZc = 6,3 (dL)^-0,13 <= 1,3
-
-    Note: L est la longueur de l'élément (« length of member »), pas la longueur effective ni la
-    longueur entre les appuis latéraux. Voir aussi A.6.5.5.2.4 b) : L = L1 + L2.
-
-    Args:
-        dimension (float): d = Dimension dans la direction du flambage (grande face ou face
-            étroite), mm.
-        length (float): L = Longueur de l'élément, mm.
-
-    Returns:
-        float: KZc.
-
-    Raises:
-        ValueError: Si une valeur n'est pas positive.
-
-    """
-    if dimension <= 0 or length <= 0:
-        raise ValueError("La dimension et la longueur doivent être positives.")
-
-    return min(6.3 * (dimension * length) ** -0.13, 1.3)
+def slenderness_ratio(effective_length, dimension):
+    """Déplacé : 6.5.5.2.2, C_C (art_6_5_5.C_C)."""
+    return _art_6_5_5.C_C(effective_length, dimension)
 
 
-def slenderness_factor(
-    fc_modified: float,
-    kzc: float,
-    cc: float,
-    e05: float,
-    kse: float = 1,
-    kt: float = 1,
-) -> float:
-    """
-    6.5.5.2.5 Coefficient d'élancement, KC.
-
-    KC = [1,0 + (Fc KZc Cc^3) / (35 E05 KSE KT)]^-1
-
-    Args:
-        fc_modified (float): Fc = fc (KD KH KSc KT), MPa (voir compression_strength).
-        kzc (float): Coefficient de dimensions en compression parallèle au fil.
-        cc (float): Élancement selon l'axe considéré.
-        e05 (float): Module d'élasticité pour les calculs des éléments en compression, MPa
-            (0,82E pour MSR, 0,75E pour MEL, tableaux 6.4 à 6.7 pour le bois classé visuellement).
-        kse (float, optional): Coefficient de conditions d'utilisation relatif au module
-            d'élasticité. Default to 1.
-        kt (float, optional): Coefficient de traitement des « autres propriétés »
-            (tableau 6.11), le même que dans Fc. Le KT du module d'élasticité ne sert qu'au calcul
-            du module d'élasticité (5.4.1). Default to 1.
-
-    Returns:
-        float: KC.
-
-    """
-    return (1 + (fc_modified * kzc * cc**3) / (35 * e05 * kse * kt)) ** -1
+def compression_size_factor(dimension, length):
+    """Déplacé : 6.5.5.2.4, K_Zc (art_6_5_5.K_Zc)."""
+    return _art_6_5_5.K_Zc(dimension, length)
 
 
-def compression_resistance(
-    fc_modified: float, area: float, kzc: float, kc: float
-) -> float:
-    """
-    6.5.5.2.4 Résistance pondérée à la compression parallèle au fil, Pr.
+def slenderness_factor(fc_modified, kzc, cc, e05, kse=1, kt=1):
+    """Déplacé : 6.5.5.2.5, K_C (art_6_5_5.K_C)."""
+    return _art_6_5_5.K_C(fc_modified, kzc, cc, e05, kse, kt)
 
-    Pr = phi Fc A KZc KC, phi = 0,8
 
-    Args:
-        fc_modified (float): Fc = fc (KD KH KSc KT), MPa (voir compression_strength).
-        area (float): A = Aire de la section transversale, mm2.
-        kzc (float): Coefficient de dimensions en compression parallèle au fil.
-        kc (float): Coefficient d'élancement selon l'axe considéré.
-
-    Returns:
-        float: Pr, N.
-
-    """
-    phi = 0.8
-    return phi * fc_modified * area * kzc * kc
+def compression_resistance(fc_modified, area, kzc, kc):
+    """Déplacé : 6.5.5.2.4, P_r (art_6_5_5.P_r)."""
+    return _art_6_5_5.P_r(fc_modified, area, kzc, kc)
 
 
 def compression_parallel_axis(
-    dimension: float,
-    length: float,
-    effective_length: float,
-    fc_modified: float,
-    area: float,
-    e05: float,
-    kse: float = 1,
-    kt: float = 1,
-) -> tuple[float, float, float, float]:
+    dimension, length, effective_length, fc_modified, area, e05, kse=1, kt=1
+):
     """
-    6.5.5.2 Résistance pondérée à la compression parallèle au fil selon un axe.
-
-    Combine les fonctions simples : Cc (6.5.5.2.2), KZc (6.5.5.2.4), KC (6.5.5.2.5) et Pr
-    (6.5.5.2.4). Selon 6.5.5.2.1, Pr doit être vérifiée pour les deux axes : appeler cette
-    fonction pour chaque axe et retenir la plus petite valeur.
-
-    Args:
-        dimension (float): Dimension dans la direction du flambage (b ou d), mm.
-        length (float): L = Longueur de l'élément, mm (pour KZc).
-        effective_length (float): Le = Longueur effective associée à la dimension, mm (pour Cc).
-        fc_modified (float): Fc = fc (KD KH KSc KT), MPa.
-        area (float): A = Aire de la section transversale, mm2.
-        e05 (float): Module d'élasticité pour les calculs des éléments en compression, MPa.
-        kse (float, optional): Coefficient de conditions d'utilisation relatif au module
-            d'élasticité. Default to 1.
-        kt (float, optional): Coefficient de traitement des « autres propriétés ». Default to 1.
+    6.5.5.2 P_r selon un axe, à partir des fonctions de art_6_5_5.
 
     Returns:
-        float: Cc = Élancement.
-        float: KZc = Coefficient de dimensions.
-        float: KC = Coefficient d'élancement.
-        float: Pr = Résistance pondérée à la compression parallèle au fil, N.
-
-    Raises:
-        ValueError: Si une valeur n'est pas positive ou si Cc > 50.
-
+        tuple: C_C, K_Zc, K_C, P_r (N).
     """
-    cc = slenderness_ratio(effective_length, dimension)
-    kzc = compression_size_factor(dimension, length)
-    kc = slenderness_factor(fc_modified, kzc, cc, e05, kse, kt)
-    pr = compression_resistance(fc_modified, area, kzc, kc)
-
-    return cc, kzc, kc, pr
+    cc = _art_6_5_5.C_C(effective_length, dimension)
+    kzc = _art_6_5_5.K_Zc(dimension, length)
+    kc = _art_6_5_5.K_C(fc_modified, kzc, cc, e05, kse, kt)
+    return cc, kzc, kc, _art_6_5_5.P_r(fc_modified, area, kzc, kc)
 
 
-# 6.5.6 COMPRESSION PERPENDICULAIRE AU FIL - FONCTIONS SIMPLES
-def bearing_strength(
-    fcp: float, kd: float = 1, kscp: float = 1, kt: float = 1
-) -> float:
-    """
-    6.5.6.2 Résistance prévue corrigée en compression perpendiculaire au fil, Fcp.
-
-    Fcp = fcp (KD KScp KT) (pas de KH)
-
-    Args:
-        fcp (float): Résistance prévue en compression perpendiculaire au fil, MPa
-            (tableaux 6.4 à 6.9).
-        kd (float, optional): Coefficient de durée d'application de la charge. Default to 1.
-        kscp (float, optional): Coefficient de conditions d'utilisation (compression
-            perpendiculaire). Default to 1.
-        kt (float, optional): Coefficient de traitement (« autres propriétés »). Default to 1.
-
-    Returns:
-        float: Fcp, MPa.
-
-    """
-    return fcp * (kd * kscp * kt)
+def bearing_strength(fcp, kd=1, kscp=1, kt=1):
+    """Déplacé : 6.5.6.2, F_cp (art_6_5_6.F_cp)."""
+    return _art_6_5_6.F_cp(fcp, kd, kscp, kt)
 
 
-def bearing_size_factor(width: float, depth: float) -> float:
-    """
-    6.5.6.4 Coefficient de dimensions pour l'appui, KZcp (tableau 6.15).
-
-    Rapport largeur/hauteur <= 1,0 : 1,00 ; >= 2,0 : 1,15 ; interpolation entre les deux.
-
-    Args:
-        width (float): Largeur de l'élément, perpendiculaire au sens de la charge, mm.
-        depth (float): Hauteur de l'élément, parallèle au sens de la charge, mm.
-
-    Returns:
-        float: KZcp.
-
-    Raises:
-        ValueError: Si une dimension n'est pas positive.
-
-    """
-    if width <= 0 or depth <= 0:
-        raise ValueError("La largeur et la hauteur doivent être positives.")
-
-    ratio = width / depth
-    if ratio <= 1:
-        return 1.0
-    if ratio >= 2:
-        return 1.15
-    return 1 + 0.15 * (ratio - 1)
+def bearing_size_factor(width, depth):
+    """Déplacé : 6.5.6.4, K_Zcp (art_6_5_6.K_Zcp)."""
+    return _art_6_5_6.K_Zcp(width, depth)
 
 
-def bearing_length_factor(
-    bearing_length: float,
-    far_from_end: bool = False,
-    low_bending_stress: bool = False,
-) -> float:
-    """
-    6.5.6.5 Coefficient de longueur d'appui, KB (tableau 6.16).
-
-    KB = (Lb + 9,525) / Lb lorsque Lb < 150 mm (note du tableau 6.16), plafonné à 1,75 (valeur du
-    tableau pour Lb <= 12,5 mm) ; KB = 1,00 lorsque Lb >= 150 mm.
-    KB ne s'applique que si les deux conditions de 6.5.6.5 sont respectées ; sinon KB = 1,00.
-
-    Args:
-        bearing_length (float): Lb = Longueur d'appui (parallèle au fil) ou diamètre de la
-            rondelle, mm.
-        far_from_end (bool, optional): a) aucune partie de la surface d'appui à moins de 75 mm de
-            l'extrémité de l'élément. Default to False.
-        low_bending_stress (bool, optional): b) surface d'appui non située à un endroit soumis à de
-            fortes contraintes de flexion. Default to False.
-
-    Returns:
-        float: KB.
-
-    Raises:
-        ValueError: Si la longueur d'appui n'est pas positive.
-
-    """
-    if bearing_length <= 0:
-        raise ValueError("La longueur d'appui doit être positive.")
-
-    if not (far_from_end and low_bending_stress) or bearing_length >= 150:
-        return 1.0
-
-    return min((bearing_length + 9.525) / bearing_length, 1.75)
+def bearing_length_factor(bearing_length, far_from_end=False, low_bending_stress=False):
+    """Déplacé : 6.5.6.5, K_B (art_6_5_6.K_B)."""
+    return _art_6_5_6.K_B(bearing_length, far_from_end, low_bending_stress)
 
 
-def average_bearing_area(width: float, length_1: float, length_2: float) -> float:
-    """
-    6.5.6.3.2 Surface d'appui moyenne, A'b (surfaces d'appui inégales sur les faces opposées).
-
-    A'b = b (Lb1 + Lb2) / 2 <= 1,5 b Lb1, où Lb1 est la plus petite longueur d'appui.
-
-    Args:
-        width (float): b = Largeur d'appui moyenne (perpendiculaire au fil), mm.
-        length_1 (float): Longueur d'appui d'une face, mm.
-        length_2 (float): Longueur d'appui de la face opposée, mm.
-
-    Returns:
-        float: A'b, mm2.
-
-    Raises:
-        ValueError: Si une valeur n'est pas positive.
-
-    """
-    if width <= 0 or length_1 <= 0 or length_2 <= 0:
-        raise ValueError("La largeur et les longueurs d'appui doivent être positives.")
-
-    lb1 = min(length_1, length_2)
-    lb2 = max(length_1, length_2)
-    return min(width * (lb1 + lb2) / 2, 1.5 * width * lb1)
+def average_bearing_area(width, length_1, length_2):
+    """Déplacé : 6.5.6.3.2, A'_b (art_6_5_6.A_b_prime)."""
+    return _art_6_5_6.A_b_prime(width, length_1, length_2)
 
 
-def bearing_resistance(
-    fcp_modified: float, area: float, kb: float = 1, kzcp: float = 1
-) -> float:
-    """
-    6.5.6.2 Résistance pondérée à la compression perpendiculaire au fil, Qr (toutes les charges).
-
-    Qr = phi Fcp Ab KB KZcp, phi = 0,8
-
-    Args:
-        fcp_modified (float): Fcp = fcp (KD KScp KT), MPa (voir bearing_strength).
-        area (float): Ab = Surface d'appui, mm2.
-        kb (float, optional): Coefficient de longueur d'appui. Default to 1.
-        kzcp (float, optional): Coefficient de dimensions pour l'appui. Default to 1.
-
-    Returns:
-        float: Qr, N.
-
-    """
-    phi = 0.8
-    return phi * fcp_modified * area * kb * kzcp
+def bearing_resistance(fcp_modified, area, kb=1, kzcp=1):
+    """Déplacé : 6.5.6.2, Q_r (art_6_5_6.Q_r)."""
+    return _art_6_5_6.Q_r(fcp_modified, area, kb, kzcp)
 
 
-def bearing_resistance_near_support(
-    fcp_modified: float, average_area: float, kb: float = 1, kzcp: float = 1
-) -> float:
-    """
-    6.5.6.3.1 Résistance pondérée à la compression perpendiculaire au fil, Q'r, sous l'effet des
-    seules charges appliquées à moins d'une distance égale à la hauteur de l'élément du centre de
-    l'appui.
-
-    Q'r = (2/3) phi Fcp A'b KB KZcp, phi = 0,8
-
-    Args:
-        fcp_modified (float): Fcp = fcp (KD KScp KT), MPa (voir bearing_strength).
-        average_area (float): A'b = Surface d'appui moyenne, mm2 (voir average_bearing_area).
-        kb (float, optional): Coefficient de longueur d'appui. Lorsque les deux appuis ont des
-            longueurs différentes, utiliser le plus petit des deux KB (choix conservateur validé
-            avec l'utilisateur). Default to 1.
-        kzcp (float, optional): Coefficient de dimensions pour l'appui. Default to 1.
-
-    Returns:
-        float: Q'r, N.
-
-    """
-    phi = 0.8
-    return (2 / 3) * phi * fcp_modified * average_area * kb * kzcp
+def bearing_resistance_near_support(fcp_modified, average_area, kb=1, kzcp=1):
+    """Déplacé : 6.5.6.3.1, Q'_r (art_6_5_6.Q_r_prime)."""
+    return _art_6_5_6.Q_r_prime(fcp_modified, average_area, kb, kzcp)
 
 
-def density_table_a11(specie: str, e: float = 0) -> float:
-    """
-    Tableau A.11 Valeurs de densité (densité moyenne du bois anhydre, G).
-
-    Bois classé visuellement : selon le groupe d'essences.
-    MSR et MEL (É-P-S) : selon la classe E. Pour les autres essences MSR ou MEL, le tableau renvoie
-    aux valeurs du bois classé visuellement (l'application utilise É-P-S pour le MSR et le MEL).
-
-    Args:
-        specie (str): Groupe d'essences : "df", "hf", "spf", "ns" ; pour le MSR et le MEL :
-            "courant", "normal" ou "rare".
-        e (float, optional): Module d'élasticité E de la classe MSR ou MEL, MPa. Default to 0.
-
-    Returns:
-        float: G.
-
-    Raises:
-        ValueError: Si l'essence ou la classe E n'est pas au tableau A.11.
-
-    """
-    visual = {"df": 0.49, "hf": 0.46, "spf": 0.42, "ns": 0.35}
-    if specie in visual:
-        return visual[specie]
-
-    if 8300 <= e <= 11700:
-        return 0.42
-    if 12400 <= e <= 13100:
-        return 0.47
-    if 13800 <= e <= 16500:
-        return 0.50
-    raise ValueError(f"Pas de densité au tableau A.11 pour {specie} avec E = {e} MPa.")
+def density_table_a11(specie, e=0):
+    """Déplacé : tableau A.11, G (tableau_A_11.G)."""
+    return _tableau_A_11.G(specie, e)
 
 
-def bearing_strength_from_density(density: float, tolerance_limit: bool = True) -> float:
-    """
-    A.6.5.6 Résistance prévue en compression perpendiculaire au fil à partir de la densité
-    (annexe A, informative). Option seulement : par défaut, fcp vient des tableaux 6.4 à 6.9.
-
-    fcp = 0,9 L (2243,8 G - 473,8) / M, L = 1,8125, M = 145,038
-    Pour le bois dont la densité est qualifiée et marquée selon les règles du NLGA, l'équation peut
-    être utilisée sans la limite de tolérance de 0,9.
-
-    Args:
-        density (float): G = Densité moyenne du bois anhydre (tableau A.11 ou densité marquée).
-        tolerance_limit (bool, optional): Appliquer la limite de tolérance de 0,9. Default to True.
-
-    Returns:
-        float: fcp, MPa.
-
-    Raises:
-        ValueError: Si la densité ne donne pas une résistance positive.
-
-    """
-    factor = 0.9 if tolerance_limit else 1
-    fcp = factor * 1.8125 * (2243.8 * density - 473.8) / 145.038
-    if fcp <= 0:
-        raise ValueError(f"La densité G = {density} ne donne pas une résistance positive.")
-
-    return fcp
+def bearing_strength_from_density(density, tolerance_limit=True):
+    """Déplacé : A.6.5.6, f_cp à partir de G (art_A_6_5_6.f_cp)."""
+    return _art_A_6_5_6.f_cp(density, tolerance_limit)
 
 
 @dataclass
