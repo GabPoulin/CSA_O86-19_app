@@ -44,8 +44,8 @@ GRANDEURS: dict[str, Grandeur] = {
     "aire": Grandeur("mm²", "po²", _PO_EN_MM**2, 0, 2),
     # Forces : kN et lb
     "force": Grandeur("kN", "lb", _LB_EN_N / 1000, 2, 0),
-    # Moments : kN·m et lb·pi
-    "moment": Grandeur("kN·m", "lb·pi", _LB_EN_N * _PI_EN_MM / 1e6, 2, 0),
+    # Moments : kN·m et lb·po (préférence de l'utilisateur)
+    "moment": Grandeur("kN·m", "lb·po", _LB_EN_N * _PO_EN_MM / 1e6, 2, 0),
     # Contraintes et résistances prévues : MPa et psi
     "contrainte": Grandeur("MPa", "psi", _LB_EN_N / _PO_EN_MM**2, 2, 0),
 }

@@ -12,7 +12,7 @@ from moteur.commun import unites
         (3000, "longueur", 9.84252),  # 3000 / 304,8
         (5320, "aire", 8.24602),  # 5320 / 645,16
         (12.62, "force", 2837.089),  # 12 620 N / 4,448 221 6 N
-        (1, "moment", 737.5621),  # 10^6 N·mm / (4,448 221 6 x 304,8)
+        (1, "moment", 8850.746),  # 10^6 N·mm / (4,448 221 6 x 25,4) = lb·po
         (11.5, "contrainte", 1667.937),  # 11,5 / (4,448 221 6 / 645,16)
     ],
 )
@@ -37,7 +37,7 @@ def test_facteurs_exacts():
         (38, "dimension", "38 mm (1.50 po)"),
         (3000, "longueur", "3000 mm (9.84 pi)"),
         (12.62, "force", "12.62 kN (2837 lb)"),
-        (1, "moment", "1.00 kN·m (738 lb·pi)"),
+        (1, "moment", "1.00 kN·m (8851 lb·po)"),
         (11.5, "contrainte", "11.50 MPa (1668 psi)"),
     ],
 )

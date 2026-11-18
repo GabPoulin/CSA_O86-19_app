@@ -325,7 +325,7 @@ la charge P_f, la longueur L et la section b × d.
   **résultats**. La conversion se fait à l'entrée (impérial → métrique) et à l'affichage
   (métrique → impérial), jamais ailleurs.
 - **Bascule métrique / impérial en tout temps** pour toutes les grandeurs : dimensions (mm / po),
-  longueurs (mm ou m / pi), forces (kN / lb), moments (kN·m / lb·pi), contraintes (MPa / psi), etc.
+  longueurs (mm ou m / pi), forces (kN / lb), moments (kN·m / lb·po), contraintes (MPa / psi), etc.
 - La **note de calcul indique les deux unités** pour les données et les résultats, par exemple
   `b = 38 mm (1.50 po)` et `P_r = 12.62 kN (2837 lb)`. Les étapes intermédiaires restent en métrique,
   comme dans la norme.
