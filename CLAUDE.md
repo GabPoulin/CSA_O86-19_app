@@ -166,4 +166,5 @@ l'interface :
 - `general_design.py` : chapitre 5, conception générale
 - `sawn_lumber.py` : chapitre 6, bois de sciage
 - `pages/` : pages Streamlit ; `Accueil.py` : page d'accueil (point d'entrée)
-- `csa_o86_19.db` : tableaux de la norme (SQLite, lus avec SQLAlchemy)
+- `moteur/normes/csa_o86_19/base_de_donnees/csa_o86_19.db` : tableaux de la norme (SQLite), lus par
+  `base_de_donnees.lire()` (lecture seule) ; les anciens modules y accèdent encore avec SQLAlchemy

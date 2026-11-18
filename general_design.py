@@ -39,6 +39,7 @@ ________________________________________________________________________________
 import math
 from dataclasses import dataclass
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
+from moteur.normes.csa_o86_19.base_de_donnees import CHEMIN as _CHEMIN_BD
 
 
 # DB CONNECTION
@@ -57,7 +58,7 @@ class SubfloorProperties(orm.declarative_base()):
     eas_par: float = Column("EAs_par", REAL)  # type: ignore
     eas_perp: float = Column("Eas_perp", REAL)  # type: ignore
     rho_s: int = Column("rho_s", INTEGER)  # type: ignore
-    engine = create_engine("sqlite:///csa_o86_19.db")
+    engine = create_engine(f"sqlite:///{_CHEMIN_BD}")
     Session = orm.sessionmaker(engine)
     session = Session()
 
