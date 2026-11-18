@@ -143,7 +143,19 @@ pytest                                # tous les tests (nouveau moteur et ancien
 streamlit run Accueil.py              # lancer l'application
 ```
 
-Les tests roulent aussi automatiquement sur GitHub à chaque PR (`.github/workflows/tests.yml`).
+Les tests roulent aussi automatiquement sur GitHub à chaque PR (`.github/workflows/tests.yml`), sur
+Python 3.14 et 3.15.
+
+## Environnement et versions
+
+- **Python 3.14** : version de l'application en ligne (Streamlit Cloud) et de l'environnement de
+  développement (`.devcontainer`). Les tests automatiques roulent aussi sur Python 3.15.
+- **Versions exactes** dans `requirements.txt` et `requirements-dev.txt` (`==`), pour que l'app en ligne,
+  les tests et l'ordinateur de l'utilisateur utilisent exactement les mêmes versions.
+- **Dependabot** (`.github/dependabot.yml`) propose chaque semaine des PR de mise à jour (paquets
+  Python, actions GitHub, `.devcontainer`). Pendant les séances, vérifier ces PR : tests automatiques,
+  notes de version (changements qui pourraient toucher les calculs), puis les signaler à l'utilisateur.
+  Ne jamais les merger soi-même.
 
 ## Structure
 

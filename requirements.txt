@@ -1,2 +1,4 @@
-sqlalchemy>=2.0
-streamlit>=1.50
+# Dépendances de l'application, en versions exactes (testées ensemble).
+# Dependabot propose les mises à jour par PR ; les tests automatiques les vérifient.
+sqlalchemy==2.1.9
+streamlit==1.67.0

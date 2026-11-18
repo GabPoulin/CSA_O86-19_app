@@ -1,4 +1,5 @@
 # Tests automatiques : roulent tous les tests (pytest) à chaque PR et à chaque merge dans main.
+# Python 3.14 : version de l'application en ligne (Streamlit Cloud). Python 3.15 : version la plus récente.
 name: Tests
 
 on:
@@ -9,11 +10,15 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.14", "3.15"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: pip
       - run: pip install -r requirements-dev.txt
       - run: pytest

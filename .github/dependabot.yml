@@ -1,0 +1,30 @@
+# Dependabot : propose chaque semaine une PR pour mettre à jour les dépendances.
+# Chaque PR est vérifiée par les tests automatiques avant d'être mergée par l'utilisateur.
+version: 2
+updates:
+  # Paquets Python (requirements.txt, requirements-dev.txt)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees: ["GabPoulin"]
+    labels: ["update"]
+    groups:
+      paquets-python:
+        patterns: ["*"]
+
+  # Actions GitHub des tests automatiques
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees: ["GabPoulin"]
+    labels: ["update"]
+
+  # Environnement de développement (.devcontainer)
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees: ["GabPoulin"]
+    labels: ["update"]
