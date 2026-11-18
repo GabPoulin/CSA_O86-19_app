@@ -1,4 +1,4 @@
-"""Tests de 3.2 Symboles : définitions exactes de la norme (p. 41 à 44)."""
+"""Tests de 3.2 Symboles : définitions exactes de la norme (p. 35 à 38)."""
 
 import pytest
 

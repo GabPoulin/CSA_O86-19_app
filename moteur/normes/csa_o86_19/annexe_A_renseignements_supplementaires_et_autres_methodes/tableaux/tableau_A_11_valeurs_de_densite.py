@@ -1,5 +1,5 @@
 """
-CSA O86:19 - Tableau A.11 Valeurs de densité (annexe A, p. 336).
+CSA O86:19 - Tableau A.11 Valeurs de densité (annexe A, p. 330).
 
 Densité moyenne du bois anhydre, G. Seules les colonnes « Bois de charpente classé visuellement » et
 « Classes E du MSR (ou MEL) de É-P-S » sont codées pour l'instant.

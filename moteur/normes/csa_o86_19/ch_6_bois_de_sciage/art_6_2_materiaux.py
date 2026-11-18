@@ -1,5 +1,5 @@
 """
-CSA O86:19 - 6.2 Matériaux (p. 46-48).
+CSA O86:19 - 6.2 Matériaux (p. 46-49).
 
     6.2.2.1 Bois de charpente classé visuellement (tableau 6.3 : catégories et dimensions)
     6.2.2.2 Bois de charpente MSR et MEL

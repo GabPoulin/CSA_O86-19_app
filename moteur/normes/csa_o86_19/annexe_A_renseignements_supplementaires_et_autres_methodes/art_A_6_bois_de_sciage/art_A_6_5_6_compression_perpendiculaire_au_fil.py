@@ -1,5 +1,5 @@
 """
-CSA O86:19 - A.6.5.6 Compression perpendiculaire au fil (annexe A, informative, p. 315).
+CSA O86:19 - A.6.5.6 Compression perpendiculaire au fil (annexe A, informative, p. 309).
 
 Rapport entre la résistance moyenne en compression perpendiculaire au fil et la densité moyenne du
 bois anhydre. Option seulement (décision de l'utilisateur) : par défaut, f_cp vient des tableaux

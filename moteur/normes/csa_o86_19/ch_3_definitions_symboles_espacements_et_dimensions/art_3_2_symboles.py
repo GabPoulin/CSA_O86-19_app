@@ -2,7 +2,7 @@
 CSA O86:19 - 3.2 Symboles.
 
 « Les symboles qui suivent doivent s'appliquer dans cette norme. Les symboles qui diffèrent de cet
-usage et la nomenclature additionnelle sont signalés le cas échéant. » (p. 41 à 44)
+usage et la nomenclature additionnelle sont signalés le cas échéant. » (p. 35 à 38)
 
 Chaque symbole est défini exactement comme à l'article 3.2. Les symboles sont ajoutés au fur et à
 mesure que les articles qui les utilisent sont codés. Dans le code, le `_` sépare le symbole de son

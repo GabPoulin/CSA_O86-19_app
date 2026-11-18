@@ -1,4 +1,4 @@
-"""Tests du tableau A.11 Valeurs de densité (p. 336)."""
+"""Tests du tableau A.11 Valeurs de densité (p. 330)."""
 
 import pytest
 
