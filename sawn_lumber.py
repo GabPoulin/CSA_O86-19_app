@@ -303,55 +303,56 @@ def modification_factors(
         kt = 1
 
     # 6.4.4 Coefficient de système, Kh (tableau 6.12)
-    if _2ft_spacing:
-        if connected_subfloor:
-            if category == "MSR":
-                # Cas 2 MSR
-                kh = {
-                    "flex": 1.2,
-                    "cis_f": 1,
-                    "cis_v": 1.2,
-                    "comp_para": 1.1,
-                    "comp_perp": 1,
-                    "trac": 1,
-                    "moe": 1,
-                }[prop]
-            else:
-                # Cas 2
-                kh = {
-                    "flex": 1.4,
-                    "cis_f": 1,
-                    "cis_v": 1.4,
-                    "comp_para": 1.1,
-                    "comp_perp": 1,
-                    "trac": 1,
-                    "moe": 1,
-                }[prop]
-        else:
-            # Cas 1
+    # 6.4.4.3 et décision de l'utilisateur (issue #7) : un élément composé de 2 plis ou plus prend
+    # toujours la colonne « Poutres composées », même si les conditions du cas 1 ou du cas 2 sont
+    # respectées. 6.4.4.2 : le cas 2 s'applique aux propriétés de section d'éléments simples.
+    if built_up_beam:
+        # Poutres composées
+        kh = {
+            "flex": 1.1,
+            "cis_f": 1,
+            "cis_v": 1.1,
+            "comp_para": 1,
+            "comp_perp": 1,
+            "trac": 1,
+            "moe": 1,
+        }[prop]
+    elif _2ft_spacing and connected_subfloor:
+        if category == "MSR":
+            # Cas 2, MSR
             kh = {
-                "flex": 1.1,
+                "flex": 1.2,
                 "cis_f": 1,
-                "cis_v": 1.1,
+                "cis_v": 1.2,
                 "comp_para": 1.1,
-                "comp_perp": 1,
-                "trac": 1.1,
-                "moe": 1,
-            }[prop]
-    else:
-        if built_up_beam:
-            # Cas poutres composées
-            kh = {
-                "flex": 1.1,
-                "cis_f": 1,
-                "cis_v": 1.1,
-                "comp_para": 1,
                 "comp_perp": 1,
                 "trac": 1,
                 "moe": 1,
             }[prop]
         else:
-            kh = 1
+            # Cas 2, classé visuellement
+            kh = {
+                "flex": 1.4,
+                "cis_f": 1,
+                "cis_v": 1.4,
+                "comp_para": 1.1,
+                "comp_perp": 1,
+                "trac": 1,
+                "moe": 1,
+            }[prop]
+    elif _2ft_spacing:
+        # Cas 1
+        kh = {
+            "flex": 1.1,
+            "cis_f": 1,
+            "cis_v": 1.1,
+            "comp_para": 1.1,
+            "comp_perp": 1,
+            "trac": 1.1,
+            "moe": 1,
+        }[prop]
+    else:
+        kh = 1
 
     # 6.4.5 Coefficient de dimensions, Kz (tableau 6.13)
     # 6.4.5.2 Charpente légère : KZ = 1,00 (KZc est calculé séparément, 6.5.5.2.4).
@@ -1683,7 +1684,9 @@ def _tests():
         connected_subfloor=True,
         built_up_beam=True,
     )
-    expected_result = (0.65, 0.84, 0.85, 1.4, 1.4)
+    # KH = 1,1 : élément composé -> colonne « Poutres composées » même au cas 2 (6.4.4.2, 6.4.4.3,
+    # issue #7). Ce test attendait 1,4 avant la correction.
+    expected_result = (0.65, 0.84, 0.85, 1.1, 1.4)
     assert (
         test_modification_factors == expected_result
     ), f"modification_factors -> FAILED\n {expected_result = }\n {test_modification_factors = }"
@@ -1743,6 +1746,34 @@ def _tests():
         assert (
             test_category == expected_result
         ), f"lumber_category({width}, {depth}) -> FAILED {expected_result = } {test_category = }"
+
+    # Test modification_factors : KH selon le tableau 6.12 (6.4.4.1 à 6.4.4.3, issue #7)
+    # (catégorie, 3 éléments <= 610 mm, revêtement, composé, propriété, KH attendu)
+    kh_cases = [
+        ("Lumber", False, False, False, "flex", 1),
+        ("Lumber", True, False, False, "flex", 1.1),  # cas 1
+        ("Lumber", True, False, False, "trac", 1.1),  # cas 1
+        ("Lumber", True, True, False, "flex", 1.4),  # cas 2, classé visuellement
+        ("Lumber", True, True, False, "comp_para", 1.1),
+        ("MSR", True, True, False, "flex", 1.2),  # cas 2, MSR
+        ("MSR", True, False, False, "flex", 1.1),  # cas 1
+        ("Lumber", False, False, True, "flex", 1.1),  # poutre composée seule
+        ("Lumber", True, False, True, "flex", 1.1),  # composée + cas 1 -> poutres composées
+        ("Lumber", True, False, True, "comp_para", 1),  # composée + cas 1 -> 1,00 (et non 1,10)
+        ("Lumber", True, False, True, "trac", 1),  # composée + cas 1 -> 1,00 (et non 1,10)
+        ("Lumber", True, True, True, "flex", 1.1),  # composée + cas 2 -> 1,10 (et non 1,40)
+        ("Lumber", True, True, True, "cis_v", 1.1),  # composée + cas 2 -> 1,10 (et non 1,40)
+        ("MSR", True, True, True, "flex", 1.1),  # MSR composé + cas 2 -> 1,10 (et non 1,20)
+    ]
+    for category, spacing, sheathing, built_up, prop, expected_kh in kh_cases:
+        kh_test = modification_factors(
+            38, 140, prop, "normale", category,
+            _2ft_spacing=spacing, connected_subfloor=sheathing, built_up_beam=built_up,
+        )[3]
+        assert kh_test == expected_kh, (
+            f"modification_factors KH {category, spacing, sheathing, built_up, prop} -> FAILED "
+            f"{kh_test = } {expected_kh = }"
+        )
 
     # Test sizes (tableau A.3)
     # (nominal, vert, brut, gros bois, attendu)
