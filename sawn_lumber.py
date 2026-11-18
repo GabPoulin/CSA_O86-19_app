@@ -57,6 +57,14 @@ ________________________________________________________________________________
 from dataclasses import dataclass
 import math
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
+from moteur.normes.csa_o86_19.base_de_donnees import CHEMIN as _CHEMIN_BD
+from moteur.normes.csa_o86_19.ch_6_bois_de_sciage import (
+    art_6_2_materiaux as _art_6_2,
+    art_6_3_resistances_prevues_et_modules_d_elasticite as _art_6_3,
+)
+from moteur.normes.csa_o86_19.annexe_A_renseignements_supplementaires_et_autres_methodes.tableaux import (  # noqa: E501
+    tableau_A_3_dimensions_minimales_apres_rabotage_du_bois_d_oeuvre as _tableau_A_3,
+)
 import general_design
 
 
@@ -80,7 +88,7 @@ class SawnLumberStrengths(orm.declarative_base()):
     ft: float = Column("ft", REAL)  # type: ignore
     e: int = Column("e", INTEGER)  # type: ignore
     e05: int = Column("e05", INTEGER)  # type: ignore
-    engine = create_engine("sqlite:///csa_o86_19.db")
+    engine = create_engine(f"sqlite:///{_CHEMIN_BD}")
     Session = orm.sessionmaker(engine)
     session = Session()
 
@@ -99,7 +107,7 @@ class LumberSizes(orm.declarative_base()):
     green_timber: int = Column("green_timber", INTEGER)  # type: ignore
     dry_brut: int = Column("dry_brut", INTEGER)  # type: ignore
     green_brut: int = Column("green_brut", INTEGER)  # type: ignore
-    engine = create_engine("sqlite:///csa_o86_19.db")
+    engine = create_engine(f"sqlite:///{_CHEMIN_BD}")
     Session = orm.sessionmaker(engine)
     session = Session()
 
@@ -109,107 +117,31 @@ def lumber_category(
     width: int, depth: int, is_msr: bool = False, is_mel: bool = False
 ) -> str:
     """
-    6.2 Matériaux.
+    6.2 Matériaux. Déplacé dans le nouveau moteur (art_6_2_materiaux.categorie_de_bois).
 
-    Args:
-        width (int): Largeur de l'élément, mm.
-        depth (int): Hauteur de l'élément, mm.
-        is_msr (bool, optional): Bois de charpente classé mécaniquement par résistance (MSR).
-        is_mel (bool, optional): Bois de charpente évalué par machine (MEL).
-
-    Returns:
-        str: Catégorie de bois d'oeuvre.
+    Garde l'ancien comportement pour l'interface : au-delà de 412 mm, retourne le message
+    « Valider la disponibilité du bois chez les fournisseurs. » au lieu de lever une erreur.
 
     Raises:
-        ValueError: Si les dimensions sont trop petites.
-
+        ValueError: Si les dimensions sont plus petites que 38 mm.
     """
-    small = min(width, depth)
-    large = max(width, depth)
-
-    if small < 38:
-        raise ValueError("Les dimensions ne peuvent pas être plus petites que 38 mm.")
-
-    if large > 412:
+    if min(width, depth) >= 38 and max(width, depth) > _art_6_2.DIMENSION_MAXIMALE:
         return "Valider la disponibilité du bois chez les fournisseurs."
-
-    if small < 89 and large < 89:
-        category = "Light"
-    elif small >= 114:
-        # Tableau 6.6, note 1 : poutres et longerons, grande face de plus de 51 mm de plus.
-        # Tableau 6.7, note 1 : poteaux et bois carrés, grande face d'au plus 51 mm de plus.
-        if large - small > 51:
-            category = "Beam"
-        else:
-            category = "Post"
-    else:
-        category = "Lumber"
-
-    if is_mel:
-        category = "MEL"
-
-    if is_msr:
-        category = "MSR"
-
-    return category
+    return _art_6_2.categorie_de_bois(width, depth, msr=is_msr, mel=is_mel)
 
 
 def specified_strengths(
     category: str, specie: str, grade: str, side: bool = False
 ) -> tuple[float, float, float, float, float, float, float]:
     """
-    6.3 Résistances prévues et modules d'élasticité.
-
-    Args:
-        category (str): Catégorie.
-            Choices: "Lumber", "Light", "Beam", "Post", "MSR", "MEL".
-
-        specie (str): Groupe d'essence.
-            Choices: "df", "hf", "spf", "ns".
-            Pour catégorie MSR et MEL: "normal", "courant", "rare".
-
-        grade (str): Classe.
-            Choices: "ss", "n1", "n2".
-            Pour catégorie Lumber: "ss", "n1-n2", "n3-stud".
-            Pour catégorie Light: "cst", "std".
-            Pour catégorie MSR: voir tableau 6.8. (ex: 1200Fb-1.2E = "1200-1.2").
-            Pour catégorie MEL: voir tableau 6.9. (ex: M-10 = "m-10").
-
-        side (bool, optional): Charges appliquées sur la grande face. (Default to False).
+    6.3 Résistances prévues et modules d'élasticité. Déplacé dans le nouveau moteur
+    (art_6_3_resistances_prevues_et_modules_d_elasticite.resistances_prevues).
 
     Returns:
-        float: fb = Résistance prévue en flexion, MPa.
-        float: fv = Résistance prévue en cisaillement longitudinal, MPa.
-        float: fc = Résistance prévue en compression parallèle au fil, MPa.
-        float: fcp = Résistance prévue en compression perpendiculaire au fil, MPa.
-        float: ft = Résistance prévue en traction parallèle au fil, MPa.
-        float: E = Module d'élasticité prévu, MPa.
-        float: E05 = Module d'élasticité pour les calculs des éléments en compression, MPa.
-
+        tuple: fb, fv, fc, fcp, ft, E, E05, MPa.
     """
-    strengths = (
-        SawnLumberStrengths.session.query(SawnLumberStrengths)
-        .filter(SawnLumberStrengths.category == category)  # type: ignore
-        .filter(SawnLumberStrengths.specie == specie)  # type: ignore
-        .filter(SawnLumberStrengths.grade == grade)  # type: ignore
-        .first()
-    )
-    fb = strengths.fb  # type: ignore
-    fv = strengths.fv  # type: ignore
-    fc = strengths.fc  # type: ignore
-    fcp = strengths.fcp  # type: ignore
-    ft = strengths.ft  # type: ignore
-    e = strengths.e  # type: ignore
-    e05 = strengths.e05  # type: ignore
-    if side and category == "Beam":
-        if grade == "ss":
-            fb *= 0.88
-        else:
-            fb *= 0.77
-            e *= 0.9
-            e05 *= 0.9
-
-    return fb, fv, fc, fcp, ft, e, e05
+    r = _art_6_3.resistances_prevues(category, specie, grade, charges_sur_grande_face=side)
+    return r.f_b, r.f_v, r.f_c, r.f_cp, r.f_t, r.E, r.E_05
 
 
 def modification_factors(
@@ -617,39 +549,13 @@ def modification_factors(
 
 
 def nominal_sizes() -> list[int]:
-    """
-    Tableau A.3 Dimensions nominales disponibles, po.
-
-    Les dimensions 7 et 9 po ne figurent au tableau A.3 que pour le gros bois vert (165 et 216 mm).
-
-    Returns:
-        list[int]: Dimensions nominales disponibles, po.
-
-    """
-    rows = (
-        LumberSizes.session.query(LumberSizes)
-        .filter(
-            LumberSizes.dry.isnot(None) | LumberSizes.green_timber.isnot(None)  # type: ignore
-        )
-        .order_by(LumberSizes.nominal)
-        .all()
-    )
-    return [row.nominal for row in rows]
+    """Tableau A.3. Déplacé dans le nouveau moteur (tableau_A_3.dimensions_nominales)."""
+    return _tableau_A_3.dimensions_nominales()
 
 
 def is_timber(width: float, depth: float) -> bool:
-    """
-    Tableau A.3 Gros bois : face étroite de 114 mm (5 po nominal) ou plus.
-
-    Args:
-        width (float): Largeur nominale, po.
-        depth (float): Hauteur nominale, po.
-
-    Returns:
-        bool: True si l'élément est du gros bois.
-
-    """
-    return min(width, depth) >= 5
+    """Tableau A.3 Gros bois. Déplacé dans le nouveau moteur (tableau_A_3.est_gros_bois)."""
+    return _tableau_A_3.est_gros_bois(width, depth)
 
 
 def sizes(
@@ -658,48 +564,8 @@ def sizes(
     brut: bool = False,
     timber: bool = False,
 ) -> int:
-    """
-    6.5.2 Dimensions (tableau A.3 Dimensions minimales après rabotage du bois d'œuvre).
-
-    Args:
-        dimension (float): Dimension nominale, po (dimension réelle, po, en mode brut).
-        green (bool, optional): Bois vert (teneur en humidité > 19%). Default to False.
-        brut (bool, optional): Dimensions brutes (convention de l'utilisateur, hors tableau A.3).
-            Default to False.
-        timber (bool, optional): Gros bois (voir is_timber). En vert, les dimensions du gros bois
-            du tableau A.3 sont utilisées. Default to False.
-
-    Returns:
-        int: Dimension nette, mm.
-
-    Raises:
-        ValueError: Si la dimension nominale n'existe pas au tableau A.3 (hors mode brut).
-
-    """
-    table = (
-        LumberSizes.session.query(LumberSizes)
-        .filter(LumberSizes.nominal == dimension)  # type: ignore
-        .first()
-    )
-
-    if brut:
-        if not table:
-            return int(round(dimension * 25.4))
-        return table.green_brut if green else table.dry_brut
-
-    if not table:
-        raise ValueError(
-            f"La dimension nominale {dimension} po n'est pas offerte (tableau A.3). "
-            f"Dimensions disponibles : {nominal_sizes()} po."
-        )
-    if green and timber and table.green_timber is not None:
-        return table.green_timber
-    if table.dry is None:
-        raise ValueError(
-            f"La dimension nominale {dimension} po est offerte seulement pour le gros bois vert "
-            "(tableau A.3) : face étroite de 5 po ou plus et bois vert."
-        )
-    return table.green if green else table.dry
+    """Tableau A.3 Dimension nette, mm. Déplacé dans le nouveau moteur (tableau_A_3.dimension_nette)."""
+    return _tableau_A_3.dimension_nette(dimension, vert=green, brut=brut, gros_bois=timber)
 
 
 # 6.5.5 ET 6.5.6 : DÉPLACÉS DANS LE NOUVEAU MOTEUR (moteur/normes/csa_o86_19/)
