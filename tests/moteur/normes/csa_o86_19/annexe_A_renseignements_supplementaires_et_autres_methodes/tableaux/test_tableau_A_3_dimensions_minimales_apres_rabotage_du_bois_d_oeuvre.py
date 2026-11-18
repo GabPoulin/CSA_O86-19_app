@@ -1,4 +1,4 @@
-"""Tests du tableau A.3 (CSA O86:19, annexe A, p. 308-309). Valeurs lues dans le tableau."""
+"""Tests du tableau A.3 (CSA O86:19, annexe A, p. 302-303). Valeurs lues dans le tableau."""
 
 import pytest
 

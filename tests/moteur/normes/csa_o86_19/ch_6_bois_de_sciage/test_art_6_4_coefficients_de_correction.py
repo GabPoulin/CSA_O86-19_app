@@ -1,4 +1,4 @@
-"""Tests de 6.4 Coefficients de correction (CSA O86:19, tableaux 6.10 à 6.13, p. 67-69)."""
+"""Tests de 6.4 Coefficients de correction (CSA O86:19, tableaux 6.10 à 6.13, p. 61-63)."""
 
 import pytest
 

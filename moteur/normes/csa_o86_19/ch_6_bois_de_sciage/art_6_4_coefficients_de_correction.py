@@ -1,5 +1,5 @@
 """
-CSA O86:19 - 6.4 Coefficients de correction (p. 65-69).
+CSA O86:19 - 6.4 Coefficients de correction (p. 59-63).
 
     6.4.1 Coefficient de durée d'application de la charge, K_D : voir 5.3.2 (chapitre 5).
     6.4.2 Coefficient de conditions d'utilisation, K_S (tableau 6.10)
@@ -43,7 +43,7 @@ def _verifier_propriete(propriete: str) -> None:
         raise ValueError(f"Propriété inconnue : {propriete!r}. Choix : {PROPRIETES}.")
 
 
-# 6.4.2 Tableau 6.10 Coefficients de conditions d'utilisation, K_S (p. 67)
+# 6.4.2 Tableau 6.10 Coefficients de conditions d'utilisation, K_S (p. 61)
 # propriété : (symbole, milieu sec, milieu humide face étroite <= 89 mm, milieu humide > 89 mm)
 TABLEAU_6_10: dict[str, tuple[str, float, float, float]] = {
     FLEXION: ("K_Sb", 1.00, 0.84, 1.00),
@@ -55,13 +55,13 @@ TABLEAU_6_10: dict[str, tuple[str, float, float, float]] = {
     MODULE_D_ELASTICITE: ("K_SE", 1.00, 0.94, 1.00),
 }
 
-# 6.4.3 Tableau 6.11 Coefficient de traitement, K_T (p. 68), bois traité d'au plus 89 mm, incisé
+# 6.4.3 Tableau 6.11 Coefficient de traitement, K_T (p. 62), bois traité d'au plus 89 mm, incisé
 # (milieu sec, milieu humide)
 TABLEAU_6_11_MODULE_D_ELASTICITE = (0.90, 0.95)
 TABLEAU_6_11_AUTRES_PROPRIETES = (0.75, 0.85)
 EPAISSEUR_MAXIMALE_INCISEE = 89  # mm, tableau 6.11 : « bois traité d'au plus 89 mm, incisé »
 
-# 6.4.4 Tableau 6.12 Coefficients de système, K_H (p. 68)
+# 6.4.4 Tableau 6.12 Coefficients de système, K_H (p. 62)
 CAS_1 = "cas_1"
 CAS_2 = "cas_2"
 POUTRES_COMPOSEES = "poutres_composees"
@@ -75,7 +75,7 @@ TABLEAU_6_12: dict[str, tuple[float, float, float, float]] = {
 }
 AUTRE_PROPRIETE_K_H = (1.00, 1.00, 1.00, 1.00)
 
-# 6.4.5 Tableau 6.13 Coefficient de dimensions, K_Z, bois classé visuellement (p. 69)
+# 6.4.5 Tableau 6.13 Coefficient de dimensions, K_Z, bois classé visuellement (p. 63)
 # (borne supérieure exclue de la grande face en mm, ligne du tableau,
 #  K_Zb et K_Zv selon la face étroite (38 à 64, 89 à 102, 114 ou plus), K_Zt)
 # Les lignes 38, 64 et 89 ont les mêmes valeurs (1,7 en flexion et cisaillement, 1,5 en traction).

@@ -14,7 +14,8 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 - Si un article est ambigu ou si une interprétation est nécessaire, **poser la question à l'utilisateur.
   Ne jamais deviner.**
 - **Justifier chaque choix par la norme** : citer l'article, le texte exact (français et anglais au
-  besoin) et la page du PDF, puis expliquer le raisonnement (ex. conservateur ou non conservateur).
+  besoin) et la page **de la norme** (numéro imprimé au bas de la page, pas celui du fichier PDF :
+  page imprimée = page du PDF - 6 dans `CSA O86-F19.pdf`), puis expliquer le raisonnement (ex. conservateur ou non conservateur).
   Toujours **lire la norme dans `pdf/` pour valider** avant de coder, au lieu de se fier à sa mémoire
   ou au code existant. Le code existant peut contenir des erreurs.
 - Citer l'article de la norme dans la docstring de chaque fonction (le style actuel est à conserver).

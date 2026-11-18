@@ -1,4 +1,4 @@
-"""Tests de 6.2 Matériaux, tableau 6.3 (CSA O86:19, p. 54)."""
+"""Tests de 6.2 Matériaux, tableau 6.3 (CSA O86:19, p. 48)."""
 
 import pytest
 

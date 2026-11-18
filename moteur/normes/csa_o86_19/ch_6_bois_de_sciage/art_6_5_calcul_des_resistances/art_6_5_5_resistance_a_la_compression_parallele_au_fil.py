@@ -1,5 +1,5 @@
 """
-CSA O86:19 - 6.5.5 Résistance à la compression parallèle au fil (p. 74-75).
+CSA O86:19 - 6.5.5 Résistance à la compression parallèle au fil (p. 68-69).
 
     6.5.5.1 Longueur effective, L_e
     6.5.5.2.1 Généralités : P_r vérifiée pour les deux axes

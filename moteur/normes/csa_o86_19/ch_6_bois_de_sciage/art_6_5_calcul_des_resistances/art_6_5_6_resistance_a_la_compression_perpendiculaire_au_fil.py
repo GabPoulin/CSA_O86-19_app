@@ -1,5 +1,5 @@
 """
-CSA O86:19 - 6.5.6 Résistance à la compression perpendiculaire au fil (p. 77-79).
+CSA O86:19 - 6.5.6 Résistance à la compression perpendiculaire au fil (p. 71-73).
 
     6.5.6.2 Effet de toutes les charges appliquées (Q_r, F_cp)
     6.5.6.3.1 Résistance pondérée sous les charges près d'un appui (Q'_r)

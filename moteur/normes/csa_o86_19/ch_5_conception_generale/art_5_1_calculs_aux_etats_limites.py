@@ -1,5 +1,5 @@
 """
-CSA O86:19 - 5.1 Calculs aux états limites (p. 46).
+CSA O86:19 - 5.1 Calculs aux états limites (p. 40).
 
     5.1.2 États limites ultimes
 
