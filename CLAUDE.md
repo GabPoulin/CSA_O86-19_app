@@ -90,12 +90,26 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 
 ## Git et GitHub
 
+Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
+
 1. **Une nouvelle branche par changement**, créée à partir de `main` à jour, avec un nom clair
-   (`feature/...`, `fix/...`, `docs/...`).
-2. Committer sur cette branche, la pousser sur GitHub, puis ouvrir une Pull Request vers `main`.
-3. **Ne jamais merger soi-même.** Le merge dans `main` se fait seulement quand l'utilisateur confirme
+   (`feature/...`, `fix/...`, `docs/...`). Ne jamais committer directement sur `main`.
+2. **Pas de PR automatique.** Créer une PR seulement quand c'est pertinent (travail prêt à être révisé,
+   correctif à appliquer, décision à faire valider). Sinon, pousser la branche et en parler à l'utilisateur.
+3. **Surveiller les PR créées** (abonnement à l'activité de la PR) : noter les approbations et répondre
+   aux commentaires laissés dans GitHub.
+4. **Ne jamais merger soi-même.** Le merge dans `main` se fait seulement quand l'utilisateur confirme
    que tout fonctionne.
-4. Ne jamais committer directement sur `main`.
+5. **Issues** : créer des issues pour les bogues, les écarts avec la norme et les améliorations repérés,
+   avec une **solution proposée**. Ne pas les régler sans accord quand elles touchent une interprétation
+   de la norme.
+
+## Être proactif
+
+- Travailler de façon autonome dans des **branches à part**, en suivant la feuille de route
+  (`ARCHITECTURE.md`, section 14), et **proposer les avancées de temps en temps** à l'utilisateur.
+- Les décisions d'interprétation de la norme et les changements de structure restent **toujours
+  soumis à l'utilisateur** avant d'être appliqués.
 
 ## Tests : tester et retester
 
