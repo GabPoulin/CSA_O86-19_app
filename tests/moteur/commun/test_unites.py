@@ -14,7 +14,9 @@ from moteur.commun import unites
         (5320, "aire", 8.24602),  # 5320 mm² / 645,16 mm²/po² = 8,24602 po²
         (12.62, "force", 2837.089),  # 12 620 N / 4,448 221 6 N/lb = 2837,089 lb
         (1, "moment", 8850.746),  # 10^6 N·mm / (4,448 221 6 N/lb x 25,4 mm/po) = 8850,746 lb·po
-        (11.5, "contrainte", 1667.937),  # 11,5 MPa / 0,006 894 76 MPa/psi = 1667,937 psi
+        # 1 psi = 1 lb/po² = 4,448 221 6 N / 645,16 mm² = 0,006 894 76 MPa
+        # 11,5 MPa / 0,006 894 76 MPa/psi = 1667,937 psi
+        (11.5, "contrainte", 1667.937),
     ],
 )
 def test_vers_imperial(valeur, nom, attendu):
@@ -28,10 +30,11 @@ def test_aller_retour(nom):
 
 
 def test_facteurs_exacts():
-    # 1 po = 25,4 mm ; 1 pi = 304,8 mm ; 1 lb = 0,004 448 221 615 260 5 kN
+    # 1 po = 25,4 mm ; 1 pi = 304,8 mm ; 1 lb = 0,004 448 221 615 260 5 kN ; 1 psi = 0,006 894 76 MPa
     assert unites.vers_metrique(1, "dimension") == 25.4
     assert unites.vers_metrique(1, "longueur") == pytest.approx(304.8)
     assert unites.vers_metrique(1, "force") == pytest.approx(0.0044482216152605)
+    assert unites.vers_metrique(1, "contrainte") == pytest.approx(0.00689475729)
 
 
 @pytest.mark.parametrize(
