@@ -382,7 +382,8 @@ la charge P_f, la longueur L et la section b × d.
 - **comptes et sauvegarde des projets** : base de données et authentification (ex. Supabase) ;
 - **abonnements mensuels ou annuels** : paiement en ligne (ex. Stripe) ;
 - **version gratuite de démonstration** : le registre indique, pour chaque calcul, s'il est offert en
-  démonstration ou réservé aux abonnés ;
+  démonstration ou réservé aux abonnés. **Par défaut, un calcul est réservé aux abonnés** (validé avec
+  l'utilisateur) ; les calculs offerts en démonstration sont marqués un par un ;
 - un hébergement payant de quelques dollars par mois évite la mise en veille de l'API.
 
 ---
