@@ -78,6 +78,9 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   catégories, y compris la charpente légère (6.4.5.2) et le MSR/MEL (6.4.5.3).
 - **KT dans KC (6.5.5.2.5)** : KT des « autres propriétés » (tableau 6.11), le même que dans Fc. Le KT
   du module d'élasticité ne sert qu'au calcul du module d'élasticité.
+- **KH (6.4.4, tableau 6.12)** (issue #7) : un élément composé de 2 plis ou plus prend **toujours** la
+  colonne « Poutres composées » (cas 1, cas 2, MSR compris). La colonne MSR (1,20) est une sous-colonne
+  du **cas 2** ; au cas 1, le MSR prend 1,10. Traction au cas 2 (« — » au tableau) : KH = 1,00.
 - **Ke** : une fonction simple reçoit Le (ou Ke) en chiffre. Une fonction séparée déduira Ke des
   conditions d'appui (annexe A, informative).
 
@@ -100,7 +103,8 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
    aux commentaires laissés dans GitHub.
 4. **Ne jamais merger soi-même.** Le merge dans `main` se fait seulement quand l'utilisateur confirme
    que tout fonctionne.
-5. **Issues** : créer des issues pour les bogues, les écarts avec la norme et les améliorations repérés,
+5. **Assigner l'utilisateur (`GabPoulin`)** à chaque issue et PR créée, pour qu'il soit notifié.
+6. **Issues** : créer des issues pour les bogues, les écarts avec la norme et les améliorations repérés,
    avec une **solution proposée**. Ne pas les régler sans accord quand elles touchent une interprétation
    de la norme.
 

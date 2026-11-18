@@ -318,6 +318,9 @@ def modification_factors(
             "moe": 1,
         }[prop]
     elif _2ft_spacing and connected_subfloor:
+        # Tableau 6.12 : la colonne MSR est une sous-colonne du cas 2. Au cas 1, le MSR prend la
+        # colonne du cas 1 (1,10). Traction au cas 2 : « — » dans le tableau, KH = 1,00 (conservateur).
+        # Interprétations validées avec l'utilisateur (issue #7).
         if category == "MSR":
             # Cas 2, MSR
             kh = {
@@ -1756,7 +1759,9 @@ def _tests():
         ("Lumber", True, True, False, "flex", 1.4),  # cas 2, classé visuellement
         ("Lumber", True, True, False, "comp_para", 1.1),
         ("MSR", True, True, False, "flex", 1.2),  # cas 2, MSR
-        ("MSR", True, False, False, "flex", 1.1),  # cas 1
+        ("MSR", True, False, False, "flex", 1.1),  # cas 1 (la colonne MSR est au cas 2)
+        ("Lumber", True, True, False, "trac", 1),  # cas 2 : « — » au tableau -> 1,00
+        ("MSR", True, True, False, "trac", 1),  # cas 2 : « — » au tableau -> 1,00
         ("Lumber", False, False, True, "flex", 1.1),  # poutre composée seule
         ("Lumber", True, False, True, "flex", 1.1),  # composée + cas 1 -> poutres composées
         ("Lumber", True, False, True, "comp_para", 1),  # composée + cas 1 -> 1,00 (et non 1,10)
