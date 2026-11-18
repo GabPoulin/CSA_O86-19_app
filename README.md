@@ -63,12 +63,12 @@ Chaque vérification affiche le ratio effet pondéré / résistance pondérée :
 
 ## Lancer l'application sur son ordinateur
 
-Prérequis : Python 3.10 ou plus récent.
+Prérequis : **Python 3.14** (même version que l'application en ligne).
 
 ```bash
 git clone https://github.com/LeRepere-GP/datum.git
 cd datum
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 streamlit run Accueil.py
 ```
 
