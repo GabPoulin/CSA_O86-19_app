@@ -1,9 +1,12 @@
-"""Page d'accueil de la calculatrice CSA O86:19."""
+"""Page d'accueil de Datum, par Le Repère Ingénierie."""
 
 import streamlit as st
-from config import TITLE
+import config
 
-st.title(body=TITLE, anchor=False)
+config.configurer_page("Accueil")
+
+st.title(body=config.TITLE, anchor=False)
+st.caption(config.SOUS_TITRE)
 st.header("Accueil", anchor=False)
 st.page_link(
     "pages/1_Bois de sciage.py",
