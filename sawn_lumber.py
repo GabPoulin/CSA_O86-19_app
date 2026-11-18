@@ -61,6 +61,7 @@ from moteur.normes.csa_o86_19.base_de_donnees import CHEMIN as _CHEMIN_BD
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage import (
     art_6_2_materiaux as _art_6_2,
     art_6_3_resistances_prevues_et_modules_d_elasticite as _art_6_3,
+    art_6_4_coefficients_de_correction as _art_6_4,
 )
 from moteur.normes.csa_o86_19.annexe_A_renseignements_supplementaires_et_autres_methodes.tableaux import (  # noqa: E501
     tableau_A_3_dimensions_minimales_apres_rabotage_du_bois_d_oeuvre as _tableau_A_3,
@@ -158,394 +159,44 @@ def modification_factors(
     built_up_beam: bool = False,
 ) -> tuple[float, float, float, float, float]:
     """
-    6.4 Coefficients de correction.
+    6.4 Coefficients de correction. Déplacé dans le nouveau moteur
+    (art_6_4_coefficients_de_correction : K_S, K_T, K_H, K_Z). K_D reste dans general_design (5.3.2).
 
     Args:
-        width (int): Largeur de l'élément, mm.
-        depth (int): Hauteur de l'élément, mm.
-
-        prop (str): Propriété évaluée.
-            Choices: "flex", "cis_f", "cis_v", "comp_para", "comp_perp", "trac", "moe".
-
-        duration (str): Durée d'application de la charge.
-            Choices: "courte", "normale", "continue".
-
-        category (str): Catégorie.
-            Choices: "Lumber", "Light", "Beam", "Post", "MSR", "MEL".
-
-        wet_service (bool, optional): Utilisation en milieu humide, Default to False.
-        treated (bool, optional): Bois traité, Default to False.
-        incised (bool, optional): Bois incisé, Default to False.
-        _2ft_spacing (bool, optional): L'espacement ne dépasse pas 610 mm, Default to False.
-        connected_subfloor (bool, optional): Sous-plancher fixé, Default to False.
-        built_up_beam (bool, optional): Poutres composées, Default to False.
+        prop (str): "flex", "cis_f", "cis_v", "comp_para", "comp_perp", "trac" ou "moe".
 
     Returns:
-        float: Kd = Coefficient de durée d'application de la charge.
-        float: Ks = Coefficient de conditions d'utilisation.
-        float: Kt = Coefficient de traitement.
-        float: Kh = Coefficient de système.
-        float: Kz = Coefficient de dimensions.
-
+        tuple: Kd, Ks, Kt, Kh, Kz. Comportement conservé pour l'interface : Kz = 1 en compression
+        (K_Zc et K_Zcp sont calculés à 6.5.5 et 6.5.6) et Kz du cisaillement par fissuration = Kz de la
+        flexion.
     """
-    small = min(width, depth)
-    large = max(width, depth)
+    propriete = _PROPRIETES_6_4[prop]
+    face_etroite = min(width, depth)
 
-    # 6.4.1 Coefficient de durée d'application de la charge, Kd.
     kd = general_design.load_duration(duration)
-
-    # 6.4.2 Coefficient de conditions d'utilisation, Ks (tableau 6.10)
-    if wet_service:
-        if small > 89:
-            ks = {
-                "flex": 1,
-                "cis_f": 0.7,
-                "cis_v": 1,
-                "comp_para": 0.91,
-                "comp_perp": 0.67,
-                "trac": 1,
-                "moe": 1,
-            }[prop]
-        else:
-            ks = {
-                "flex": 0.84,
-                "cis_f": 0.7,
-                "cis_v": 0.96,
-                "comp_para": 0.69,
-                "comp_perp": 0.67,
-                "trac": 0.84,
-                "moe": 0.94,
-            }[prop]
-    else:
-        ks = 1
-
-    # 6.4.3 Coefficient de traitement, Kt (tableau 6.11)
-    if treated and incised and small <= 89:
-        if wet_service:
-            if prop == "moe":
-                kt = 0.95
-            else:
-                kt = 0.85
-        else:
-            if prop == "moe":
-                kt = 0.90
-            else:
-                kt = 0.75
-    else:
-        kt = 1
-
-    # 6.4.4 Coefficient de système, Kh (tableau 6.12)
-    # 6.4.4.3 et décision de l'utilisateur (issue #7) : un élément composé de 2 plis ou plus prend
-    # toujours la colonne « Poutres composées », même si les conditions du cas 1 ou du cas 2 sont
-    # respectées. 6.4.4.2 : le cas 2 s'applique aux propriétés de section d'éléments simples.
-    if built_up_beam:
-        # Poutres composées
-        kh = {
-            "flex": 1.1,
-            "cis_f": 1,
-            "cis_v": 1.1,
-            "comp_para": 1,
-            "comp_perp": 1,
-            "trac": 1,
-            "moe": 1,
-        }[prop]
-    elif _2ft_spacing and connected_subfloor:
-        # Tableau 6.12 : la colonne MSR est une sous-colonne du cas 2. Au cas 1, le MSR prend la
-        # colonne du cas 1 (1,10). Traction au cas 2 : « — » dans le tableau, KH = 1,00 (conservateur).
-        # Interprétations validées avec l'utilisateur (issue #7).
-        if category == "MSR":
-            # Cas 2, MSR
-            kh = {
-                "flex": 1.2,
-                "cis_f": 1,
-                "cis_v": 1.2,
-                "comp_para": 1.1,
-                "comp_perp": 1,
-                "trac": 1,
-                "moe": 1,
-            }[prop]
-        else:
-            # Cas 2, classé visuellement
-            kh = {
-                "flex": 1.4,
-                "cis_f": 1,
-                "cis_v": 1.4,
-                "comp_para": 1.1,
-                "comp_perp": 1,
-                "trac": 1,
-                "moe": 1,
-            }[prop]
-    elif _2ft_spacing:
-        # Cas 1
-        kh = {
-            "flex": 1.1,
-            "cis_f": 1,
-            "cis_v": 1.1,
-            "comp_para": 1.1,
-            "comp_perp": 1,
-            "trac": 1.1,
-            "moe": 1,
-        }[prop]
-    else:
-        kh = 1
-
-    # 6.4.5 Coefficient de dimensions, Kz (tableau 6.13)
-    # 6.4.5.2 Charpente légère : KZ = 1,00 (KZc est calculé séparément, 6.5.5.2.4).
-    # 6.4.5.3 MSR et MEL : KZ = 1,00, sauf KZv selon le tableau 6.13 (KZc est calculé
-    # séparément, 6.5.5.2.4 ; KZcp optionnel, 6.5.6.4).
-    if category == "Light" or (category in ("MSR", "MEL") and prop != "cis_v"):
+    ks = _art_6_4.K_S(propriete, wet_service, face_etroite)
+    kt = _art_6_4.K_T(propriete, treated, incised, face_etroite, wet_service)
+    cas = _art_6_4.cas_de_systeme(_2ft_spacing, connected_subfloor, built_up_beam)
+    kh = _art_6_4.K_H(propriete, cas, msr=category == "MSR")
+    if propriete in (_art_6_4.COMPRESSION_PARALLELE, _art_6_4.COMPRESSION_PERPENDICULAIRE):
         kz = 1
+    elif propriete == _art_6_4.CISAILLEMENT_PAR_FISSURATION:
+        kz = _art_6_4.K_Z(_art_6_4.FLEXION, width, depth, category)
     else:
-        # Grande face 38, 64, 89
-        if large < 114:
-            kz = {
-                "flex": 1.7,
-                "cis_f": 1.7,
-                "cis_v": 1.7,
-                "comp_para": 1,
-                "comp_perp": 1,
-                "trac": 1.5,
-                "moe": 1,
-            }[prop]
-        # Grande face 114
-        elif large < 140:
-            # Face étroite 114 et +
-            if small >= 114:
-                kz = {
-                    "flex": 1.3,
-                    "cis_f": 1.3,
-                    "cis_v": 1.3,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.4,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 89 @ 102
-            elif small >= 89:
-                kz = {
-                    "flex": 1.6,
-                    "cis_f": 1.6,
-                    "cis_v": 1.6,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.4,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 38 @ 64
-            else:
-                kz = {
-                    "flex": 1.5,
-                    "cis_f": 1.5,
-                    "cis_v": 1.5,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.4,
-                    "moe": 1,
-                }[prop]
-        # Grande face 140
-        elif large < 159:
-            # Face étroite 114 et +
-            if small >= 114:
-                kz = {
-                    "flex": 1.3,
-                    "cis_f": 1.3,
-                    "cis_v": 1.3,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.3,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 89 @ 102
-            elif small >= 89:
-                kz = {
-                    "flex": 1.5,
-                    "cis_f": 1.5,
-                    "cis_v": 1.5,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.3,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 38 @ 64
-            else:
-                kz = {
-                    "flex": 1.4,
-                    "cis_f": 1.4,
-                    "cis_v": 1.4,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.3,
-                    "moe": 1,
-                }[prop]
-        # Grande face 184 @ 191
-        elif large < 210:
-            # Face étroite 114 et +
-            if small >= 114:
-                kz = {
-                    "flex": 1.3,
-                    "cis_f": 1.3,
-                    "cis_v": 1.3,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.2,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 89 @ 102
-            elif small >= 89:
-                kz = {
-                    "flex": 1.3,
-                    "cis_f": 1.3,
-                    "cis_v": 1.3,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.2,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 38 @ 64
-            else:
-                kz = {
-                    "flex": 1.2,
-                    "cis_f": 1.2,
-                    "cis_v": 1.2,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.2,
-                    "moe": 1,
-                }[prop]
-        # Grande face 235 @ 241
-        elif large < 286:
-            # Face étroite 114 et +
-            if small >= 114:
-                kz = {
-                    "flex": 1.2,
-                    "cis_f": 1.2,
-                    "cis_v": 1.2,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.1,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 89 @ 102
-            elif small >= 89:
-                kz = {
-                    "flex": 1.2,
-                    "cis_f": 1.2,
-                    "cis_v": 1.2,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.1,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 38 @ 64
-            else:
-                kz = {
-                    "flex": 1.1,
-                    "cis_f": 1.1,
-                    "cis_v": 1.1,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1.1,
-                    "moe": 1,
-                }[prop]
-        # Grande face 286 @ 292
-        elif large < 337:
-            # Face étroite 114 et +
-            if small >= 114:
-                kz = {
-                    "flex": 1.1,
-                    "cis_f": 1.1,
-                    "cis_v": 1.1,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 89 @ 102
-            elif small >= 89:
-                kz = {
-                    "flex": 1.1,
-                    "cis_f": 1.1,
-                    "cis_v": 1.1,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 1,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 38 @ 64
-            else:
-                kz = 1
-        # Grande face 337 @ 343
-        elif large < 362:
-            # Face étroite 114 et +
-            if small >= 114:
-                kz = {
-                    "flex": 1,
-                    "cis_f": 1,
-                    "cis_v": 1,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 0.9,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 89 @ 102
-            elif small >= 89:
-                kz = {
-                    "flex": 1,
-                    "cis_f": 1,
-                    "cis_v": 1,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 0.9,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 38 @ 64
-            else:
-                kz = {
-                    "flex": 0.9,
-                    "cis_f": 0.9,
-                    "cis_v": 0.9,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 0.9,
-                    "moe": 1,
-                }[prop]
-        # Grande face 387 et +
-        else:
-            # Face étroite 114 et +
-            if small >= 114:
-                kz = {
-                    "flex": 0.9,
-                    "cis_f": 0.9,
-                    "cis_v": 0.9,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 0.8,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 89 @ 102
-            elif small >= 89:
-                kz = {
-                    "flex": 0.9,
-                    "cis_f": 0.9,
-                    "cis_v": 0.9,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 0.8,
-                    "moe": 1,
-                }[prop]
-            # Face étroite 38 @ 64
-            else:
-                kz = {
-                    "flex": 0.8,
-                    "cis_f": 0.8,
-                    "cis_v": 0.8,
-                    "comp_para": 1,
-                    "comp_perp": 1,
-                    "trac": 0.8,
-                    "moe": 1,
-                }[prop]
+        kz = _art_6_4.K_Z(propriete, width, depth, category)
 
     return kd, ks, kt, kh, kz
+
+
+_PROPRIETES_6_4 = {
+    "flex": _art_6_4.FLEXION,
+    "cis_f": _art_6_4.CISAILLEMENT_PAR_FISSURATION,
+    "cis_v": _art_6_4.CISAILLEMENT_LONGITUDINAL,
+    "comp_para": _art_6_4.COMPRESSION_PARALLELE,
+    "comp_perp": _art_6_4.COMPRESSION_PERPENDICULAIRE,
+    "trac": _art_6_4.TRACTION_PARALLELE,
+    "moe": _art_6_4.MODULE_D_ELASTICITE,
+}
 
 
 def nominal_sizes() -> list[int]:

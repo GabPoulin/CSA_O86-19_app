@@ -411,7 +411,7 @@ la charge P_f, la longueur L et la section b × d.
 | `general_design.FireResistance` | `ch_5/art_5_6` + `annexe_B` | |
 | `sawn_lumber.lumber_category` | `ch_6/art_6_2` | `categorie_de_bois()` |
 | `sawn_lumber.specified_strengths` | `ch_6/art_6_3` | `resistances_prevues()` → `ResistancesPrevues` (`f_b`, `f_v`, `f_c`, `f_cp`, `f_t`, `E`, `E_05`), `classes()` |
-| `sawn_lumber.modification_factors` | `ch_6/art_6_4` | découpé : `K_D()`, `K_S()`, `K_T()`, `K_H()`, `K_Z()` |
+| `sawn_lumber.modification_factors` | `ch_6/art_6_4` | découpé : `K_S()`, `K_T()`, `cas_de_systeme()`, `K_H()`, `K_Z()` (tableaux 6.10 à 6.13) ; `K_D()` viendra avec 5.3.2 (étape 6) |
 | `sawn_lumber.sizes`, `nominal_sizes`, `is_timber` | `annexe_A/tableaux/tableau_A_3` | `dimension_nette()`, `dimensions_nominales()`, `est_gros_bois()` |
 | `Resistances.bending_moment` | `art_6_5/art_6_5_3` | découpé et validé : `M_r()`, K_L (6.5.3.2) |
 | `Resistances.shear` | `art_6_5/art_6_5_4` | découpé et validé : `V_r()`, `F_r()`, `K_N()` |
