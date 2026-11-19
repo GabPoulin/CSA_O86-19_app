@@ -16,8 +16,11 @@
 #let gris-pale = rgb("#EEEEEE")
 #let rouge = rgb("#A11D1D")
 
+// Sans logo du compte : logo de Datum (symbole de Le Repère, sans le nom, et « Datum »)
 #let logo(hauteur) = if apparence.logo == none {
-  image("/marque/logos/LeRepere_logo-horizontal_gris.svg", height: hauteur)
+  box(image("/marque/logos/LeRepere_symbole_gris.svg", height: hauteur), baseline: 25%)
+  h(0.2cm)
+  text(size: 16pt, weight: "bold", fill: principale)[Datum]
 } else {
   image(bytes(apparence.logo), height: hauteur)
 }
@@ -46,7 +49,7 @@
     logo(1.0cm),
     [
       #titre(12pt, principale, [Note de calcul]) \
-      #text(size: 7pt, fill: gris)[Datum, par Le Repère Ingénierie]
+      #text(size: 7pt, fill: gris)[Datum - Calculatrice Structurale]
     ],
   )
   v(0.2cm)
@@ -71,7 +74,7 @@
 #let pied = context grid(
   columns: (1fr, 4.2cm),
   align: (left + bottom, right + bottom),
-  text(size: 7pt, fill: gris)[Datum, par Le Repère Ingénierie — note produite le #entete.date],
+  text(size: 7pt, fill: gris)[Note produite avec Datum - Calculatrice Structurale le #entete.date],
   rect(width: 4.2cm, height: 2.3cm, stroke: 0.6pt + gris, radius: 2pt)[
     #align(center + top)[#text(size: 6.5pt, fill: gris)[Initiales et sceau]]
   ],

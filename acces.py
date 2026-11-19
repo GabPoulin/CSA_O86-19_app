@@ -170,8 +170,12 @@ def exiger_connexion() -> str:
         return compte
 
     mots_de_passe = _mots_de_passe()
-    st.title("Datum", anchor=False)
-    st.caption("par Le Repère Ingénierie")
+    with st.container(horizontal=True, vertical_alignment="center", gap="small"):
+        st.image(str(Path(__file__).resolve().parent / "marque" / "logos" / "LeRepere_symbole_gris.svg"),
+                 width=56)
+        with st.container(gap=None):
+            st.title("Datum", anchor=False)
+            st.caption("Calculatrice Structurale")
     if not mots_de_passe:
         st.error(
             "Connexion non configurée : ajoutez la section [mots_de_passe] aux secrets de "
