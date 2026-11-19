@@ -17,7 +17,8 @@ from pathlib import Path
 import typst
 
 from moteur.commun.resultat import Resultat, Verification
-from moteur.commun.unites import deux_unites
+from moteur.commun.nombres import cs
+from moteur.commun.unites import deux_unites, grandeur, vers_imperial
 
 DOSSIER = Path(__file__).resolve().parent
 GABARIT = DOSSIER / "gabarit.typ"
@@ -91,6 +92,22 @@ def formater_valeur(valeur: float | str, unite: str = "", grandeur: str | None =
     return f"{formater_nombre(valeur)} {unite}".strip()
 
 
+def formater_resultat(valeur: float, unite: str = "", nom_grandeur: str | None = None) -> str:
+    """
+    Résultat d'un calcul (étape ou vérification) avec le même nombre de chiffres significatifs partout
+    (moteur/commun/nombres.py), et son équivalent impérial si la grandeur est connue.
+
+    Exemple : formater_resultat(11.8, "MPa", "contrainte") -> « 11.80 MPa (1711 psi) ».
+    """
+    if nom_grandeur is None:
+        return f"{cs(valeur)} {unite}".strip()
+    g = grandeur(nom_grandeur)
+    return (
+        f"{cs(valeur)} {g.unite_metrique} "
+        f"({cs(vers_imperial(valeur, nom_grandeur))} {g.unite_imperiale})"
+    )
+
+
 def calcul_en_latex(formule: str, substitution: str) -> str:
     """
     Ligne de calcul d'une étape : « formule = substitution ». Si elle est longue, les égalités vont sur
@@ -113,8 +130,8 @@ def _verification(v: Verification) -> dict:
         "article": v.article,
         "symbole_charge": v.symbole_charge,
         "symbole_resistance": v.symbole_resistance,
-        "charge": formater_valeur(v.charge, v.unite, v.grandeur),
-        "resistance": formater_valeur(v.resistance, v.unite, v.grandeur),
+        "charge": formater_resultat(v.charge, v.unite, v.grandeur),
+        "resistance": formater_resultat(v.resistance, v.unite, v.grandeur),
         "ratio": f"{v.ratio * 100:.2f} %" if v.resistance > 0 else "—",
         "respecte": v.respecte,
         # Sans le ratio, déjà affiché à part (revue de la PR #55)
@@ -176,7 +193,7 @@ def donnees_de_la_note(
                     "formule": e.formule,
                     "substitution": e.substitution,
                     "calcul": calcul_en_latex(e.formule, e.substitution),
-                    "resultat": formater_valeur(e.valeur, e.unite, e.grandeur),
+                    "resultat": formater_resultat(e.valeur, e.unite, e.grandeur),
                 }
                 for e in r.etapes
             ],

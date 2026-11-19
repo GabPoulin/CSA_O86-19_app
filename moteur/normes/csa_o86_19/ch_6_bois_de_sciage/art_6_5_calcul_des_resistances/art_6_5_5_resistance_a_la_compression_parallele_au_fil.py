@@ -15,6 +15,7 @@ Interprétations validées avec l'utilisateur (CLAUDE.md) :
       les conditions d'appui (art_A_6_5_5_1_coefficient_de_longueur_effective.py).
 """
 
+from moteur.commun.nombres import cs
 from moteur.commun.registre import enregistrer
 from moteur.commun.resultat import Donnee, Etape, Resultat
 from moteur.normes.csa_o86_19.ch_5_conception_generale.art_5_1_calculs_aux_etats_limites import (
@@ -233,7 +234,7 @@ def verifier_compression_parallele_au_fil(
     f_c_corrige = r.ajouter_etape(Etape(
         "6.5.5.2.4", "Résistance corrigée en compression parallèle au fil", "F_c",
         r"F_c = f_c \, (K_D \, K_H \, K_{Sc} \, K_T)",
-        rf"{f_c} \times ({K_D} \times {K_H} \times {K_Sc} \times {K_T})",
+        rf"{cs(f_c)} \times ({cs(K_D)} \times {cs(K_H)} \times {cs(K_Sc)} \times {cs(K_T)})",
         F_c(f_c, K_D, K_H, K_Sc, K_T), "MPa", "contrainte",
     ))
     A = b * d
@@ -242,38 +243,38 @@ def verifier_compression_parallele_au_fil(
     for axe, dimension, K_e, L_appuis in (("b", b, K_e_b, L_b), ("d", d, K_e_d, L_d)):
         l_e = r.ajouter_etape(Etape(
             "6.5.5.1", f"Longueur effective selon {axe}", f"L_{{e,{axe}}}",
-            rf"L_{{e,{axe}}} = K_{{e,{axe}}} \, L_{axe}", rf"{K_e:g} \times {L_appuis:g}",
+            rf"L_{{e,{axe}}} = K_{{e,{axe}}} \, L_{axe}", rf"{cs(K_e)} \times {cs(L_appuis)}",
             L_e(K_e, L_appuis), "mm", "longueur",
         ))
         c_c = r.ajouter_etape(Etape(
             "6.5.5.2.2", f"Élancement selon {axe}", f"C_{{C,{axe}}}",
-            rf"C_C = L_{{e,{axe}}} / {axe} \leq 50", rf"{l_e:g} / {dimension:g}",
+            rf"C_C = L_{{e,{axe}}} / {axe} \leq 50", rf"{cs(l_e)} / {cs(dimension)}",
             C_C(l_e, dimension),
         ))
         k_zc = r.ajouter_etape(Etape(
             "6.5.5.2.4", f"Coefficient de dimensions selon {axe}", f"K_{{Zc,{axe}}}",
             rf"K_{{Zc}} = 6.3 \, ({axe} \, L)^{{-0.13}} \leq 1.3",
-            rf"6.3 \times ({dimension:g} \times {L:g})^{{-0.13}}",
+            rf"6.3 \times ({cs(dimension)} \times {cs(L)})^{{-0.13}}",
             K_Zc(dimension, L),
         ))
         k_c = r.ajouter_etape(Etape(
             "6.5.5.2.5", f"Coefficient d'élancement selon {axe}", f"K_{{C,{axe}}}",
             r"K_C = \left[1 + \frac{F_c \, K_{Zc} \, C_C^3}{35 \, E_{05} \, K_{SE} \, K_T}\right]^{-1}",
-            rf"\left[1 + \frac{{{f_c_corrige:.3f} \times {k_zc:.4f} \times {c_c:.2f}^3}}"
-            rf"{{35 \times {E_05:g} \times {K_SE} \times {K_T}}}\right]^{{-1}}",
+            rf"\left[1 + \frac{{{cs(f_c_corrige)} \times {cs(k_zc)} \times {cs(c_c)}^3}}"
+            rf"{{35 \times {cs(E_05)} \times {cs(K_SE)} \times {cs(K_T)}}}\right]^{{-1}}",
             K_C(f_c_corrige, k_zc, c_c, E_05, K_SE, K_T),
         ))
         resistances.append(r.ajouter_etape(Etape(
             "6.5.5.2.4", f"Résistance pondérée selon {axe}", f"P_{{r,{axe}}}",
             r"P_r = \phi \, F_c \, A \, K_{Zc} \, K_C",
-            rf"0.8 \times {f_c_corrige:.3f} \times {A:g} \times {k_zc:.4f} \times {k_c:.4f}",
+            rf"0.8 \times {cs(f_c_corrige)} \times {cs(A)} \times {cs(k_zc)} \times {cs(k_c)}",
             P_r(f_c_corrige, A, k_zc, k_c), "N",
         )))
 
     p_r = r.ajouter_etape(Etape(
         "6.5.5.2.1", "Résistance pondérée (plus petite des deux)", "P_r",
         r"P_r = \min(P_{r,b} \, ; \, P_{r,d})",
-        rf"\min({resistances[0]:.0f} \, ; \, {resistances[1]:.0f})",
+        rf"\min({cs(resistances[0])} \, ; \, {cs(resistances[1])})",
         min(resistances), "N",
     ))
 
