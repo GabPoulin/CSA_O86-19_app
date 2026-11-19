@@ -147,7 +147,11 @@ def K_N(d: float, alpha: float, eta: float) -> float:
     Returns:
         float: K_N.
     """
-    return (0.006 * d * (1.6 * (1 / alpha - 1) + eta**2 * (1 / alpha**3 - 1))) ** -0.5
+    # Parenthèses explicites : (1 / alpha) - 1 et (1 / (alpha**3)) - 1 ; le « - 1 » n'est pas dans
+    # l'exposant ni au dénominateur.
+    terme_1 = 1.6 * ((1 / alpha) - 1)
+    terme_2 = (eta**2) * ((1 / (alpha**3)) - 1)
+    return (0.006 * d * (terme_1 + terme_2)) ** (-1 / 2)
 
 
 # VÉRIFICATIONS
