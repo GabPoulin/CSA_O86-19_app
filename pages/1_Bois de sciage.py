@@ -449,6 +449,15 @@ with flex:
                 "Rive inférieure maintenue",
                 help="Rive en tension maintenue",
             )
+            PLIES_FASTENED = False
+            if built_up > 1:
+                PLIES_FASTENED = st.toggle(
+                    f"Plis fixés à au plus 4d = {4 * depth} mm c/c",
+                    help="""6.5.3.2.4 : poutre composée dont les plis sont solidement attachés les
+                    uns aux autres à intervalles ne dépassant pas quatre fois la hauteur. Les
+                    supports latéraux ci-dessus (6.5.3.2.3) ne s'appliquent pas aux poutres
+                    composées.""",
+                )
 
         try:
             mr = (
@@ -461,6 +470,7 @@ with flex:
                     tensile_edge_support=TEN_EDGE,
                     blocking_support=BLOCK,
                     tie_rods_support=TIE_ROD,
+                    plies_fastened=PLIES_FASTENED,
                 )
                 / 1000000
             )

@@ -348,6 +348,7 @@ class Resistances:
         tensile_edge_support: bool = False,
         blocking_support: bool = False,
         tie_rods_support: bool = False,
+        plies_fastened: bool = False,
     ):
         """
         6.5.3 Résistance au moment de flexion. Déplacé dans le nouveau moteur
@@ -357,14 +358,19 @@ class Resistances:
             float: Mr = Résistance pondérée au moment de flexion, N*mm.
 
         Raises:
-            ValueError: Si d/b dépasse la limite de 6.5.3.2 (KL selon 7.5.6.4, à venir).
+            ValueError: Si d/b dépasse la limite de 6.5.3.2 (KL selon 7.5.6.4, à venir), ou, pour une
+                poutre composée, si les plis ne sont pas fixés à au plus 4 d (plies_fastened).
         """
         b = self.b * self.ply
-        rapport_maximal = _art_6_5_3.rapport_hauteur_largeur_maximal(
-            lateral_support, tie_rods_support, compressive_edge_support, blocking_support,
-            tensile_edge_support,
-        )
-        kl = _art_6_5_3.K_L(b, self.d, rapport_maximal)
+        if self.ply > 1:
+            # 6.5.3.2.4 (issue #48) : plis fixés à au plus 4 d et d/(n b) <= 2.5
+            kl = _art_6_5_3.K_L_poutre_composee(b, self.d, plies_fastened)
+        else:
+            rapport_maximal = _art_6_5_3.rapport_hauteur_largeur_maximal(
+                lateral_support, tie_rods_support, compressive_edge_support, blocking_support,
+                tensile_edge_support,
+            )
+            kl = _art_6_5_3.K_L(b, self.d, rapport_maximal)
         f_b = _art_6_5_3.F_b(fb, self.kd, self.kh, ksb, self.kt)
         return _art_6_5_3.M_r(f_b, _art_6_5_3.S(b, self.d), kzb, kl)
 
