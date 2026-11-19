@@ -135,8 +135,12 @@
 
   v(0.15cm)
   text(size: 9.5pt, fill: principale, weight: "bold")[Calcul]
+  // Vérification ancrée en bas à droite, juste au-dessus du sceau (revue de la PR #55). Placée avant
+  // les étapes pour réserver l'espace : les calculs ne passent jamais dessous.
+  if r.verification != none {
+    place(bottom + right, float: true, clearance: 0.3cm, block(width: 50% - 0.3cm, verification(r.verification)))
+  }
   columns(2, gutter: 0.6cm)[
     #for e in r.etapes { etape(e) }
-    #if r.verification != none { v(0.15cm); verification(r.verification) }
   ]
 }
