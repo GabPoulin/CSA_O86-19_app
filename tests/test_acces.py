@@ -231,3 +231,12 @@ def test_couleur_du_texte():
     assert config.couleur_du_texte("#233614") == "#FFFFFF"  # vert forêt : texte blanc
     assert config.couleur_du_texte("#47aeaa") == "#333333"  # sarcelle : texte charbon
     assert config.couleur_du_texte("#9E5A00") == "#FFFFFF"  # orange brûlé : texte blanc
+
+
+def test_eclaircir():
+    import config
+
+    assert config.eclaircir("#273c3c", 0) == "#273C3C"
+    assert config.eclaircir("#273c3c", 1) == "#FFFFFF"
+    # 0x27 = 39 : 39 + (255 - 39) x 0.5 = 147 = 0x93 ; 0x3c = 60 : 60 + 195 x 0.5 = 157.5 -> 158 = 0x9E
+    assert config.eclaircir("#273c3c", 0.5) == "#939E9E"

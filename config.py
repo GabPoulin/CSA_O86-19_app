@@ -44,6 +44,12 @@ def couleur_du_texte(fond: str) -> str:
     return "#FFFFFF" if luminance < 0.5 else "#333333"
 
 
+def eclaircir(couleur: str, part: float) -> str:
+    """Couleur (#RRGGBB) mélangée avec du blanc : part = 0 (inchangée) à 1 (blanc)."""
+    canaux = (int(couleur[i : i + 2], 16) for i in (1, 3, 5))
+    return "#" + "".join(f"{round(c + (255 - c) * part):02X}" for c in canaux)
+
+
 def configurer_page(titre_page: str) -> None:
     """
     Configure la page à l'image du compte connecté : titre de l'onglet, icône, logo de la barre
@@ -65,6 +71,15 @@ def configurer_page(titre_page: str) -> None:
     st.html(
         f"""<style>
         [data-testid="stSidebar"] {{ background-color: {apparence.principale}; }}
+        [data-testid="stSidebar"] button {{
+            background-color: {eclaircir(apparence.principale, 0.10)};
+            border-color: {eclaircir(apparence.principale, 0.30)};
+            color: #FFFFFF;
+        }}
+        [data-testid="stSidebar"] button:hover {{
+            background-color: {eclaircir(apparence.principale, 0.20)};
+            border-color: {eclaircir(apparence.principale, 0.50)};
+        }}
         [data-testid="stBaseButton-primary"] {{
             background-color: {apparence.accent}; border-color: {apparence.accent};
             color: {couleur_du_texte(apparence.accent)};
