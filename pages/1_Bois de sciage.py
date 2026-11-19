@@ -3,6 +3,13 @@
 # IMPORTS
 import streamlit as st
 import config
+import datetime
+from moteur.commun.note_de_calcul import EnTete, produire_pdf
+from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (
+    art_6_5_3_resistance_au_moment_de_flexion as art_6_5_3,
+    art_6_5_4_resistance_au_cisaillement as art_6_5_4,
+    art_6_5_5_resistance_a_la_compression_parallele_au_fil as art_6_5_5,
+)
 import sawn_lumber
 import general_design
 from sawn_lumber import SawnLumberStrengths
@@ -385,6 +392,9 @@ with st.container(horizontal_alignment="center"):
 # --- section calcul des résistances ---
 st.divider()
 st.subheader("Calcul des résistances", anchor=False)
+# Vérifications pour la note de calcul PDF (issue #50) : traces du nouveau moteur, mêmes entrées
+NOTE = {}
+
 flex, shear, comp_para, comp_perp, comp_angle, trac, combi = st.tabs(
     [
         "Moment de flexion",
@@ -493,6 +503,14 @@ with flex:
                 VERIF = general_design.limit_states_design(mf, mr)
                 st.write(f"$Mr = {round(mr,2)} kN \\cdot m$")
                 show_verification(VERIF)
+                NOTE["Flexion (6.5.3)"] = art_6_5_3.verifier_flexion(
+                    b=width, d=depth, f_b=compute_resistance[0], plis=built_up,
+                    K_D=kd, K_H=kh, K_Sb=ksb, K_T=kt, K_Zb=kzb,
+                    support_lateral_aux_appuis=LATERAL, pannes_ou_tirants=TIE_ROD,
+                    rive_comprimee_maintenue=COMP_EDGE, entretoises_ou_entremises=BLOCK,
+                    rive_tendue_maintenue=TEN_EDGE, plis_fixes_a_au_plus_4d=PLIES_FASTENED,
+                    M_f=mf,
+                )
 
 with shear:
     kd, ksv, kt, kh, kzv = sawn_lumber.modification_factors(
@@ -581,6 +599,21 @@ with shear:
                 st.write(f"$Vr = {round(vr,2)} kN$")
             VERIF = general_design.limit_states_design(vf, vr)
             show_verification(VERIF)
+
+            entaille = bool(notch_depth and notch_length)
+            NOTE["Cisaillement (6.5.4.3)"] = art_6_5_4.verifier_cisaillement(
+                b=width, d=depth, f_v=compute_resistance[1], plis=built_up,
+                d_n=notch_depth if entaille else 0,
+                K_D=beam_shear.kd, K_H=beam_shear.kh, K_Sv=ksv, K_T=beam_shear.kt, K_Zv=kzv,
+                V_f=vf,
+            )
+            if entaille:
+                NOTE["Cisaillement par fissuration à l'entaille (6.5.4.4)"] = (
+                    art_6_5_4.verifier_cisaillement_par_fissuration(
+                        b=width, d=depth, d_n=notch_depth, e=notch_length, plis=built_up,
+                        K_D=kd, K_H=kh, K_Sf=ksf, K_T=kt, V_f=vf,
+                    )
+                )
 
 with comp_para:
     with st.container(horizontal_alignment="center"):
@@ -701,6 +734,13 @@ with comp_para:
                         st.write(f"$Pr = {pr:.2f} kN$")
                         VERIF = general_design.limit_states_design(pf, pr)
                         show_verification(VERIF)
+                        NOTE["Compression parallèle au fil (6.5.5)"] = (
+                            art_6_5_5.verifier_compression_parallele_au_fil(
+                                b=width, d=depth, L=length, L_b=le_b, L_d=le_d,
+                                f_c=compute_resistance[2], E_05=e05,
+                                K_D=kd, K_H=kh, K_Sc=ksc, K_T=kt, K_SE=kse, P_f=pf,
+                            )
+                        )
 
             if axes:
                 with st.expander("Voir plus:", width=650):
@@ -943,3 +983,43 @@ with trac:
 with combi:
     with st.container(horizontal_alignment="center"):
         st.warning("Fonctionnalité à venir.", width=200)
+
+
+# --- note de calcul PDF (issue #50) ---
+st.divider()
+st.subheader("Note de calcul (PDF)", anchor=False)
+with st.container(horizontal_alignment="center"):
+    if not NOTE:
+        st.info(
+            "Faites au moins une vérification (flexion, cisaillement ou compression parallèle) "
+            "pour produire la note de calcul.",
+            width=650,
+            icon=":material/info:",
+        )
+    else:
+        with st.expander("En-tête de la note", width=650):
+            col1, col2 = st.columns(2)
+            client = col1.text_input("Client")
+            projet = col2.text_input("Projet")
+            adresse = col1.text_input("Adresse du projet")
+            dossier = col2.text_input("Numéro de dossier")
+            ingenieur = col1.text_input("Ingénieur")
+            oiq = col2.text_input("Numéro OIQ")
+            date = col1.date_input("Date", value=datetime.date.today(), format="YYYY-MM-DD")
+            element = col2.text_input("Nom de l'élément", value="Élément 1")
+        with st.container(width=650):
+            st.markdown("Vérifications à inclure :")
+            choix = [nom for nom in NOTE if st.checkbox(nom, value=True, key=f"note_{nom}")]
+            if choix:
+                pdf = produire_pdf(
+                    [(element, NOTE[nom]) for nom in choix],
+                    EnTete(client, projet, adresse, dossier, str(date), ingenieur, oiq),
+                )
+                st.download_button(
+                    "Télécharger la note de calcul (PDF)",
+                    data=pdf,
+                    file_name=f"note_de_calcul_{dossier or 'datum'}_{date}.pdf",
+                    mime="application/pdf",
+                    icon=":material/download:",
+                    type="primary",
+                )
