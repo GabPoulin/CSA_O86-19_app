@@ -38,6 +38,7 @@ def show_verification(message: str) -> None:
 # ---- en-tête ----
 config.configurer_page("Bois de sciage")
 st.title(config.TITLE, anchor=False)
+st.caption(config.SOUS_TITRE)
 st.header(
     "Bois de Sciage",
     anchor=False,

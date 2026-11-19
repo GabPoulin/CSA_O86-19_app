@@ -11,8 +11,9 @@ import acces
 import retours
 from moteur.commun.note_de_calcul import Apparence
 
-TITLE = "Datum - Calculatrice Structurale"  # nom du logiciel : seul nom affiché, sans marque
-NOM_COURT = "Datum"  # onglet du navigateur
+TITLE = "Datum"  # nom du logiciel : seul nom affiché, sans marque
+SOUS_TITRE = "Calculatrice Structurale"  # en petit sous le nom
+NOM_COURT = TITLE  # onglet du navigateur
 # Logo de Datum : symbole de Le Repère, sans le nom (onglet du navigateur et page de connexion)
 SYMBOLE_DE_DATUM = "marque/logos/LeRepere_symbole_gris.svg"
 ICONE_PAR_DEFAUT = SYMBOLE_DE_DATUM  # onglet du navigateur avant la connexion
