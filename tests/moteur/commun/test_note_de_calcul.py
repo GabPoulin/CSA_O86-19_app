@@ -120,3 +120,11 @@ def test_sources_des_donnees():
     assert sources["K_T"] == "Tableau 6.11"
     assert sources["K_H"] == "Tableau 6.12"
     assert sources["K_{Zb}"] == "Tableau 6.13"
+
+
+def test_ratio_une_seule_fois():
+    v = donnees_de_la_note([("S-1", flexion())], ENTETE)["resultats"][0]["verification"]
+    assert v["ratio"] == "97.90 %"
+    assert v["message"] == "État limite respecté"  # sans répéter le ratio
+    depasse = donnees_de_la_note([("S-1", flexion(M_f=5.0))], ENTETE)["resultats"][0]["verification"]
+    assert depasse["message"] == "État limite dépassé"  # 5.0 kN·m / 4.086 kN·m = 122.37 %

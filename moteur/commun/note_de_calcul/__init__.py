@@ -117,7 +117,12 @@ def _verification(v: Verification) -> dict:
         "resistance": formater_valeur(v.resistance, v.unite, v.grandeur),
         "ratio": f"{v.ratio * 100:.2f} %" if v.resistance > 0 else "—",
         "respecte": v.respecte,
-        "message": v.message(),
+        # Sans le ratio, déjà affiché à part (revue de la PR #55)
+        "message": (
+            ("État limite respecté" if v.respecte else "État limite dépassé")
+            if v.resistance > 0
+            else v.message()
+        ),
     }
 
 
