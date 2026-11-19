@@ -43,3 +43,8 @@ Couleurs : `palette.png` et `couleurs.md`.
 
 - **Le plus simple** : les joindre dans la conversation avec Claude, qui les placera ici dans une PR.
 - **Sur GitHub** : ouvrir ce dossier sur la branche de la PR, puis **Add file → Upload files**.
+
+## Logo et couleurs des comptes
+
+`comptes/<compte>/` : logo et couleurs de la note de calcul propres à un compte (ex. `comptes/lantier/`
+pour Groupe Lantier). Voir `comptes/README.md`.

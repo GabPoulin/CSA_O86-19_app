@@ -1,9 +1,14 @@
 """Paramètres partagés de l'interface : nom du produit et image de marque (voir marque/)."""
 
+import re
+import tomllib
+from pathlib import Path
+
 import streamlit as st
 
 import acces
 import retours
+from moteur.commun.note_de_calcul import Apparence
 
 TITLE = "Datum"
 SOUS_TITRE = "par Le Repère Ingénierie"
@@ -13,6 +18,11 @@ LOGO_BARRE_LATERALE = "marque/logos/LeRepere_logo-horizontal_blanc.svg"
 SYMBOLE_BARRE_LATERALE = "marque/logos/LeRepere_symbole_blanc.svg"
 # Icône de l'onglet du navigateur
 ICONE = "marque/logos/LeRepere_symbole_gris.png"
+
+# Logo et couleurs de la note de calcul propres à un compte : marque/comptes/<compte>/
+DOSSIER_COMPTES = Path(__file__).resolve().parent / "marque" / "comptes"
+LOGOS_DU_COMPTE = ("logo.svg", "logo.png", "logo.jpg", "logo.jpeg")
+_COULEUR = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 
 def configurer_page(titre_page: str) -> None:
@@ -26,3 +36,42 @@ def configurer_page(titre_page: str) -> None:
     st.logo(LOGO_BARRE_LATERALE, size="large", icon_image=SYMBOLE_BARRE_LATERALE)
     acces.exiger_connexion()
     retours.formulaire(titre_page)
+
+
+def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparence:
+    """
+    Logo et couleurs de la note de calcul d'un compte (marque/comptes/<compte>/, voir son README).
+
+    Le premier fichier trouvé parmi logo.svg, logo.png, logo.jpg et logo.jpeg sert de logo. Les
+    couleurs viennent de couleurs.toml (clés « principale » et « accent », ex. "#233614"). Ce qui
+    manque garde la valeur par défaut (Le Repère).
+
+    Args:
+        compte (str): Identifiant du compte (ex. « lantier »).
+        dossier (Path, optional): Dossier des comptes. Default to marque/comptes/.
+
+    Returns:
+        Apparence: Logo et couleurs.
+
+    Raises:
+        ValueError: Si une couleur de couleurs.toml n'est pas au format #RRGGBB.
+    """
+    defaut = Apparence()
+    if not compte or not re.fullmatch(r"[a-z_]+", compte):
+        return defaut
+    dossier_du_compte = dossier / compte
+    logo = next(
+        (f.read_bytes() for nom in LOGOS_DU_COMPTE if (f := dossier_du_compte / nom).is_file()), None
+    )
+    couleurs = {}
+    fichier_couleurs = dossier_du_compte / "couleurs.toml"
+    if fichier_couleurs.is_file():
+        couleurs = tomllib.loads(fichier_couleurs.read_text(encoding="utf-8"))
+        for cle in ("principale", "accent"):
+            if cle in couleurs and not _COULEUR.match(str(couleurs[cle])):
+                raise ValueError(f"{fichier_couleurs} : couleur « {cle} » invalide (format #RRGGBB).")
+    return Apparence(
+        logo,
+        couleurs.get("principale", defaut.principale),
+        couleurs.get("accent", defaut.accent),
+    )
