@@ -16,8 +16,10 @@
 #let gris-pale = rgb("#EEEEEE")
 #let rouge = rgb("#A11D1D")
 
-// Sans logo du compte : le nom du logiciel seulement (aucune marque par défaut)
+// Sans logo du compte : logo de Datum (symbole de Le Repère, sans le nom, et « Datum »)
 #let logo(hauteur) = if apparence.logo == none {
+  box(image("/marque/logos/LeRepere_symbole_gris.svg", height: hauteur), baseline: 25%)
+  h(0.2cm)
   text(size: 16pt, weight: "bold", fill: principale)[Datum]
 } else {
   image(bytes(apparence.logo), height: hauteur)

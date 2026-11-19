@@ -13,7 +13,9 @@ from moteur.commun.note_de_calcul import Apparence
 
 TITLE = "Datum - Calculatrice Structurale"  # nom du logiciel : seul nom affiché, sans marque
 NOM_COURT = "Datum"  # onglet du navigateur
-ICONE_PAR_DEFAUT = ":material/architecture:"  # onglet du navigateur avant la connexion
+# Logo de Datum : symbole de Le Repère, sans le nom (onglet du navigateur et page de connexion)
+SYMBOLE_DE_DATUM = "marque/logos/LeRepere_symbole_gris.svg"
+ICONE_PAR_DEFAUT = SYMBOLE_DE_DATUM  # onglet du navigateur avant la connexion
 # Thème global de l'interface (.streamlit/config.toml) : couleurs remplacées par celles du compte
 THEME = tomllib.loads(
     (Path(__file__).resolve().parent / ".streamlit" / "config.toml").read_text(encoding="utf-8")
