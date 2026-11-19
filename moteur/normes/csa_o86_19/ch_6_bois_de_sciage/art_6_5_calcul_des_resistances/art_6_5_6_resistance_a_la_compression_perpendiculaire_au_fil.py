@@ -195,7 +195,7 @@ def _donnees_communes(
     ))
     k_zcp = r.ajouter_etape(Etape(
         "6.5.6.4", "Coefficient de dimensions pour l'appui", "K_{Zcp}",
-        r"K_{Zcp} : \text{tableau 6.15, rapport largeur / hauteur de l'élément}",
+        r"K_{Zcp} : \text{tableau 6.15, } b_{élément} / d",
         rf"{cs(largeur_element)} / {cs(d)} = {cs(largeur_element / d)}",
         K_Zcp(largeur_element, d),
     ))
