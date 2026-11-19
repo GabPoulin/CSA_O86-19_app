@@ -44,8 +44,12 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   7 et 9 po : seulement pour le gros bois vert (165 et 216 mm, seules valeurs du tableau A.3) ;
   11, 13 et 15 po n'existent pas en dimensions nominales.
   Gros bois (face étroite >= 5 po nominal) vert : dimensions du gros bois du tableau A.3.
-- **KZ pour une dimension absente du tableau 6.13** (ex. 165 ou 216 mm) : prendre la ligne de la
-  dimension supérieure (KZ diminue avec la dimension, donc conservateur). Validé avec l'utilisateur.
+- **KZ (tableau 6.13)** (issue #45) : la **dimension réelle** (sèche, verte ou brute) choisit la ligne.
+  Une grande face absente du tableau (ex. 143, 165 ou 216 mm) prend la ligne de la dimension
+  **supérieure** (KZ diminue avec la dimension, donc conservateur). Une face étroite entre deux colonnes
+  (65 à 88 mm, 103 à 113 mm) prend la **plus petite** valeur des deux colonnes voisines.
+- **KT (tableau 6.11)** (issue #45) : bois traité et incisé de plus de 89 mm d'épaisseur (absent du
+  tableau) : KT = 1,00.
 - **Mode « dimensions brutes »** : convention de l'utilisateur (hors tableau A.3), à conserver telle quelle.
 - **Traction du MSR de plus de 184 mm (tableau 6.8)** : pour les classes sans valeur dans la colonne
   « > 184 mm », bloquer la traction avec un message (à faire lors de l'ajout de l'onglet de traction).

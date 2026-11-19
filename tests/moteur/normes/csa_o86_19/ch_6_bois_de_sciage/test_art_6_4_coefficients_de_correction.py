@@ -191,3 +191,60 @@ def test_tableau_6_13_tirets():
     assert lignes["64"] == (1.7, None, None)
     assert lignes["89"] == (1.7, 1.7, None)
     assert lignes["114"] == (1.5, 1.6, 1.3)
+
+
+# Issue #45 : dimensions réelles absentes du tableau 6.13 (bois vert, mode brut)
+# (b mm, d mm, ligne, K_Zb = K_Zv, K_Zt)
+@pytest.mark.parametrize(
+    ("b", "d", "ligne", "K_Zb", "K_Zt"),
+    [
+        (40, 66, "89", 1.7, 1.5),  # 2 x 3 vert : 66 mm -> ligne 89
+        (40, 91, "114", 1.5, 1.4),  # 2 x 4 vert : 91 mm > 89 mm -> ligne 114, face étroite 38 à 64
+        (40, 117, "140", 1.4, 1.3),  # 2 x 5 vert : 117 mm -> ligne 140
+        (40, 143, "184 à 191", 1.2, 1.2),  # 2 x 6 vert : 143 mm -> ligne « 184 à 191 »
+        (40, 190, "184 à 191", 1.2, 1.2),  # 2 x 8 vert : 190 mm, dans « 184 à 191 »
+        (40, 191, "184 à 191", 1.2, 1.2),  # 191 mm : borne supérieure incluse
+        (40, 192, "235 à 241", 1.1, 1.1),  # 192 mm : ligne supérieure
+        (40, 150, "184 à 191", 1.2, 1.2),  # brut 150 mm -> ligne « 184 à 191 »
+        (40, 260, "286 à 292", 1.0, 1.0),  # brut 260 mm -> ligne « 286 à 292 »
+        (40, 344, "387 ou plus", 0.8, 0.8),  # brut 344 mm -> ligne « 387 ou plus »
+        (40, 393, "387 ou plus", 0.8, 0.8),  # 2 x 16 vert : 393 mm
+        (91, 143, "184 à 191", 1.3, 1.2),  # 4 x 6 vert : face étroite 91 mm (89 à 102)
+    ],
+)
+def test_K_Z_dimensions_absentes(b, d, ligne, K_Zb, K_Zt):
+    assert m.ligne_du_tableau_6_13(max(b, d)) == ligne
+    assert K_Z(FLEXION, b, d, "Lumber") == K_Zb
+    assert K_Z(CISAILLEMENT_LONGITUDINAL, b, d, "Lumber") == K_Zb
+    assert K_Z(TRACTION_PARALLELE, b, d, "Lumber") == K_Zt
+
+
+@pytest.mark.parametrize(
+    ("face_etroite", "colonnes"),
+    [(38, (0,)), (64, (0,)), (65, (0, 1)), (66, (0, 1)), (88, (0, 1)), (89, (1,)), (102, (1,)),
+     (103, (1, 2)), (113, (1, 2)), (114, (2,)), (394, (2,))],
+)
+def test_colonnes_du_tableau_6_13(face_etroite, colonnes):
+    assert m.colonnes_du_tableau_6_13(face_etroite) == colonnes
+
+
+@pytest.mark.parametrize(
+    ("b", "d", "K_Zb"),
+    [
+        (66, 114, 1.5),  # face étroite 66 mm, ligne 114 : min(1.5 ; 1.6) = 1.5
+        (66, 143, 1.2),  # 3 x 6 vert, ligne « 184 à 191 » : min(1.2 ; 1.3) = 1.2
+        (76, 140, 1.4),  # brut 76 mm (3 po), ligne 140 : min(1.4 ; 1.5) = 1.4
+        (105, 140, 1.3),  # brut 105 mm, ligne 140 : min(1.5 ; 1.3) = 1.3
+        (110, 191, 1.3),  # brut 110 mm, ligne « 184 à 191 » : min(1.3 ; 1.3) = 1.3
+        (110, 114, 1.3),  # brut 110 x 114 mm, ligne 114 : min(1.6 ; 1.3) = 1.3
+        (70, 89, 1.7),  # 70 x 89 mm, ligne 89 : min(1.7 ; 1.7) = 1.7
+    ],
+)
+def test_K_Z_face_etroite_entre_deux_colonnes(b, d, K_Zb):
+    assert K_Z(FLEXION, b, d, "Lumber") == K_Zb
+    assert K_Z(CISAILLEMENT_LONGITUDINAL, b, d, "Beam") == K_Zb
+
+
+def test_K_Zv_msr_dimension_absente():
+    # 6.4.5.3 : K_Zv du tableau 6.13 pour le MSR, même règle (38 x 143 mm -> ligne « 184 à 191 »)
+    assert K_Z(CISAILLEMENT_LONGITUDINAL, 38, 143, "MSR") == 1.2
