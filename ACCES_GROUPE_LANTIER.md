@@ -12,7 +12,7 @@ Le compte **admin** voit toujours tout. Ne modifie pas les identifiants entre ac
 Seulement des fonctions **intégrées au nouveau moteur** et **testées**. Claude ajoute ici chaque
 nouvelle fonction intégrée, **non cochée** ; c'est toi qui décides de la cocher.
 
-- [ ] `flexion` : Flexion (6.5.3). Limite : bloquée si d/b dépasse la limite de 6.5.3.2 (K_L selon 7.5.6.4, à venir) ; poutres composées selon 6.5.3.2.4 (lecture stricte, #48).
+- [x] `flexion` : Flexion (6.5.3). Limite : bloquée si d/b dépasse la limite de 6.5.3.2 (K_L selon 7.5.6.4, à venir) ; poutres composées selon 6.5.3.2.4 (lecture stricte, #48).
 - [x] `cisaillement` : Cisaillement (6.5.4.3) et cisaillement par fissuration à l'entaille (6.5.4.4).
 - [ ] `compression_parallele` : Compression parallèle au fil (6.5.5). Limite : éléments composés (6.5.5.3) à venir.
 - [x] `compression_perpendiculaire` : Compression perpendiculaire au fil (6.5.6), y compris f_cp à partir de la densité G (A.6.5.6).
@@ -28,7 +28,7 @@ Coche-la quand elle est testée convenablement.
 - [ ] `cisaillement`
 - [ ] `compression_parallele`
 - [ ] `compression_perpendiculaire`
-- [ ] `note_pdf`
+- [x] `note_pdf`
 
 ## Pas encore intégrées au nouveau moteur (non offertes)
 
