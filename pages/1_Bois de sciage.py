@@ -128,6 +128,14 @@ with st.container(horizontal_alignment="center"):
             MSR = True
         elif msr_mel == "MEL":
             MEL = True
+        LIGHT_FRAMING = False
+        if not (MSR or MEL) and sawn_lumber.admits_light_framing(width, depth):
+            LIGHT_FRAMING = col2.toggle(
+                "Charpente légère (Const., Std.)",
+                help="""Tableau 6.3 : une section de 38 à 89 mm x 38 à 89 mm peut prendre les classes
+                du tableau 6.4 (structure choisie, n° 1/n° 2, n° 3/montant), utilisées par défaut, ou
+                celles du tableau 6.5 (Construction, Standard).""",
+            )
 
     # --- calcul pour déterminer la catégorie ---
     CATEGORY = sawn_lumber.lumber_category(
@@ -135,6 +143,7 @@ with st.container(horizontal_alignment="center"):
         depth=depth,
         is_msr=MSR,
         is_mel=MEL,
+        light_framing=LIGHT_FRAMING,
     )
     if CATEGORY == "Valider la disponibilité du bois chez les fournisseurs.":
         col1.warning(
