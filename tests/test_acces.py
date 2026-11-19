@@ -49,7 +49,7 @@ def test_connexion_non_configuree():
     at = _accueil()
     assert not at.exception
     assert any("Connexion non configurée" in e.value for e in at.error)
-    assert not at.header  # la page s'arrête avant l'accueil
+    assert not at.header  # la page s'arrête avant le calcul
 
 
 def test_mauvais_mot_de_passe():
@@ -67,7 +67,7 @@ def test_connexion_et_deconnexion(mot, compte):
     at.button[0].click().run()
     assert not at.exception
     assert at.session_state["compte"] == compte
-    assert [h.value for h in at.header] == ["Accueil"]
+    assert [h.value for h in at.header][0] == "Bois de Sciage"  # pas de page d'accueil
     assert any(acces.NOMS_DES_COMPTES[compte] in c.value for c in at.sidebar.caption)
     [b for b in at.sidebar.button if b.label == "Se déconnecter"][0].click().run()
     assert "compte" not in at.session_state
@@ -98,8 +98,7 @@ def test_formulaire_de_commentaire():
 
 
 def test_page_bois_de_sciage_protegee():
-    at = _accueil(MOTS_DE_PASSE)
-    at.switch_page("pages/1_Bois de sciage.py").run()
+    at = _accueil(MOTS_DE_PASSE)  # le point d'entrée ouvre directement Bois de sciage
     assert not at.exception
     assert not at.tabs  # rien du calcul avant la connexion
     at.text_input[0].input("mot-admin")
@@ -149,7 +148,6 @@ def _connecte(compte, mot):
     at = _accueil(MOTS_DE_PASSE)
     at.text_input[0].input(mot)
     at.button[0].click().run()
-    at.switch_page("pages/1_Bois de sciage.py").run()
     assert not at.exception
     return at
 
@@ -230,3 +228,64 @@ def test_note_seulement_les_verifications_faites():
         assert cases() == [("Compression perpendiculaire au fil (6.5.6.2)", False)]
         assert not any(b.label.startswith("Télécharger") for b in at.get("download_button"))
     assert not at.exception
+
+def test_aucune_mention_de_le_repere_avant_la_connexion():
+    at = _accueil(MOTS_DE_PASSE)
+    textes = [e.value for e in at.title] + [e.value for e in at.caption] + [e.value for e in at.markdown]
+    assert "Datum" in textes and "Calculatrice Structurale" in textes
+    assert not any("Repère" in t for t in textes)
+
+
+@pytest.mark.parametrize("compte", ["admin", "lantier"])
+def test_identite_du_compte(compte):
+    import config
+
+    # Chaque compte a son logo pour la barre latérale foncée, son symbole et ses couleurs
+    assert config.fichier_du_compte(compte, "logo_renverse.svg")
+    assert config.fichier_du_compte(compte, "symbole.svg")
+    assert config.fichier_du_compte("", "symbole.svg") is None
+    assert config.fichier_du_compte("../x", "symbole.svg") is None
+    at = _connecte(compte, f"mot-{compte}")
+    textes = [e.value for e in at.title] + [e.value for e in at.caption] + [e.value for e in at.sidebar.caption]
+    assert not any("Repère" in t for t in textes)
+
+
+def test_couleur_du_texte():
+    import config
+
+    assert config.couleur_du_texte("#233614") == "#FFFFFF"  # vert forêt : texte blanc
+    assert config.couleur_du_texte("#47aeaa") == "#333333"  # sarcelle : texte charbon
+    assert config.couleur_du_texte("#9E5A00") == "#FFFFFF"  # orange brûlé : texte blanc
+
+
+def test_eclaircir():
+    import config
+
+    assert config.eclaircir("#273c3c", 0) == "#273C3C"
+    assert config.eclaircir("#273c3c", 1) == "#FFFFFF"
+    # 0x27 = 39 : 39 + (255 - 39) x 0.5 = 147 = 0x93 ; 0x3c = 60 : 60 + 195 x 0.5 = 157.5 -> 158 = 0x9E
+    assert config.eclaircir("#273c3c", 0.5) == "#939E9E"
+
+
+def test_couleurs_de_l_interface_par_compte():
+    import config
+
+    assert config.rvb("#47aeaa") == "71, 174, 170"
+    # Admin : couleurs du thème global, rien à remplacer
+    assert config.remplacements_du_theme(config.THEME["primaryColor"], None) == []
+    assert config.fond_du_compte("admin") is None
+    # Groupe Lantier : accents en sarcelle et fond blanc (charte, p. 6)
+    assert config.fond_du_compte("lantier") == "#ffffff"
+    assert config.remplacements_du_theme("#47aeaa", "#ffffff") == [
+        ("158, 90, 0", "71, 174, 170"),  # orange brûlé du thème -> sarcelle
+        ("244, 241, 234", "255, 255, 255"),  # sable du thème -> blanc
+    ]
+
+
+def test_fond_invalide(tmp_path):
+    import config
+
+    (tmp_path / "x").mkdir()
+    (tmp_path / "x" / "couleurs.toml").write_text('fond = "blanc"\n', encoding="utf-8")
+    with pytest.raises(ValueError):
+        config.fond_du_compte("x", tmp_path)

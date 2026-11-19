@@ -39,11 +39,6 @@ def show_verification(message: str) -> None:
 config.configurer_page("Bois de sciage")
 st.title(config.TITLE, anchor=False)
 st.caption(config.SOUS_TITRE)
-st.page_link(
-    "Accueil.py",
-    label="Retour à l'accueil",
-    icon=":material/home:",
-)
 st.header(
     "Bois de Sciage",
     anchor=False,
@@ -1079,7 +1074,7 @@ if acces.permis("note_pdf"):
                 element = col2.text_input("Nom de l'élément", value="Élément 1")
             with st.expander("Apparence de la note (logo et couleurs)", width=650):
                 st.caption(
-                    """Par défaut : logo et couleurs du compte (marque/comptes/), sinon ceux de Le Repère.
+                    """Par défaut : logo et couleurs du compte (marque/comptes/), sinon ceux par défaut.
                     Un logo téléversé ici sert seulement pendant la séance."""
                 )
                 APPARENCE = config.apparence_du_compte(st.session_state.get("compte", ""))

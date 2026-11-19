@@ -60,7 +60,7 @@ class Apparence:
     Logo et couleurs de la note (ceux de la marque par défaut ; l'utilisateur peut mettre les siens).
 
     Args:
-        logo (bytes | None): Image du logo (PNG, JPG ou SVG). None : logo de Le Repère.
+        logo (bytes | None): Image du logo (PNG, JPG ou SVG). None : le nom du logiciel (Datum).
         principale (str): Couleur principale, hexadécimale (titres, lignes, en-têtes de tableau).
         accent (str): Couleur d'accent, hexadécimale (articles, sources).
         police_titres (str | None): Famille de police des titres, en majuscules (ex. « Rift »). None :
