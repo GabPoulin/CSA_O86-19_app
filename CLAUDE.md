@@ -138,7 +138,10 @@ Chaque changement de calcul doit être vérifié dans **plusieurs scénarios** a
 - toutes les branches de la logique (chaque `if` de la norme : catégories, coefficients, conditions) ;
 - les valeurs attendues sont calculées à la main à partir de la norme, pas recopiées de la sortie du code ;
 - la page Streamlit est testée (pas d'exception, bon affichage) avec `streamlit.testing.v1.AppTest`
-  en partant d'`Accueil.py`, puis `switch_page(...)`.
+  en partant d'`Accueil.py`, puis `switch_page(...)`. La connexion est exigée (`acces.py`) : dans les
+  tests, définir `at.secrets["mots_de_passe"]` et se connecter (voir `tests/test_acces.py`).
+- **Secrets** (mots de passe, jetons) : dans les secrets de Streamlit Cloud ou dans
+  `.streamlit/secrets.toml` en local (ignoré par git). Jamais dans le code, une issue ou un commentaire.
 
 Commandes :
 

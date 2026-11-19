@@ -376,6 +376,16 @@ la charge P_f, la longueur L et la section b × d.
 - API : offre gratuite qui se met en veille (ex. Google Cloud Run ou Render). Le premier calcul après
   une pause peut prendre quelques secondes.
 
+**Comptes d'essai (Streamlit, issue #56)** : deux comptes protégés par mot de passe, en attendant les
+vrais comptes :
+
+- `acces.py` : connexion (mots de passe dans les secrets de Streamlit Cloud, section `[mots_de_passe]`,
+  jamais dans le code), comptes `admin` (tout) et `lantier` (Groupe Lantier : seulement les fonctions
+  choisies par l'utilisateur), et état « en test » de chaque fonction (avertissement affiché tant que
+  la fonction n'est pas testée convenablement) ;
+- `retours.py` : formulaire « Commentaire » qui crée une issue dans un dépôt GitHub privé (secrets
+  `[retours]` : `jeton` et `depot`).
+
 **Plus tard** :
 
 - **comptes et sauvegarde des projets** : base de données et authentification (ex. Supabase) ;
