@@ -115,10 +115,17 @@ class LumberSizes(orm.declarative_base()):
 
 # CODE
 def lumber_category(
-    width: int, depth: int, is_msr: bool = False, is_mel: bool = False
+    width: int,
+    depth: int,
+    is_msr: bool = False,
+    is_mel: bool = False,
+    light_framing: bool = False,
 ) -> str:
     """
     6.2 Matériaux. Déplacé dans le nouveau moteur (art_6_2_materiaux.categorie_de_bois).
+
+    light_framing : classes du tableau 6.5 (Const., Std.) au lieu du tableau 6.4 pour une section de
+    38 à 89 mm x 38 à 89 mm (issue #34) ; tableau 6.4 par défaut.
 
     Garde l'ancien comportement pour l'interface : au-delà de 412 mm, retourne le message
     « Valider la disponibilité du bois chez les fournisseurs. » au lieu de lever une erreur.
@@ -128,7 +135,14 @@ def lumber_category(
     """
     if min(width, depth) >= 38 and max(width, depth) > _art_6_2.DIMENSION_MAXIMALE:
         return "Valider la disponibilité du bois chez les fournisseurs."
-    return _art_6_2.categorie_de_bois(width, depth, msr=is_msr, mel=is_mel)
+    return _art_6_2.categorie_de_bois(
+        width, depth, msr=is_msr, mel=is_mel, charpente_legere=light_framing
+    )
+
+
+def admits_light_framing(width: float, depth: float) -> bool:
+    """Tableau 6.3 : section de 38 à 89 mm x 38 à 89 mm (art_6_2_materiaux.admet_charpente_legere)."""
+    return _art_6_2.admet_charpente_legere(width, depth)
 
 
 def specified_strengths(
@@ -894,12 +908,16 @@ def _tests():
         (140, 241, "Beam"),  # 6x10
         (114, 114, "Post"),
         (89, 140, "Lumber"),
-        (38, 64, "Light"),
+        (38, 64, "Lumber"),  # tableau 6.4 par défaut (issue #34)
     ):
         test_category = lumber_category(width=width, depth=depth)
         assert (
             test_category == expected_result
         ), f"lumber_category({width}, {depth}) -> FAILED {expected_result = } {test_category = }"
+    # Tableau 6.5 au choix pour 38 à 89 mm x 38 à 89 mm (issue #34)
+    assert lumber_category(38, 64, light_framing=True) == "Light"
+    assert lumber_category(89, 89, light_framing=True) == "Light"
+    assert lumber_category(38, 140, light_framing=True) == "Lumber"  # 140 mm > 89 mm
 
     # Test modification_factors : KH selon le tableau 6.12 (6.4.4.1 à 6.4.4.3, issue #7)
     # (catégorie, 3 éléments <= 610 mm, revêtement, composé, propriété, KH attendu)

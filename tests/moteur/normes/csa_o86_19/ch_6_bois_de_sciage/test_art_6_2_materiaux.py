@@ -2,15 +2,18 @@
 
 import pytest
 
-from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_2_materiaux import categorie_de_bois
+from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_2_materiaux import (
+    admet_charpente_legere,
+    categorie_de_bois,
+)
 
 
 @pytest.mark.parametrize(
     ("b", "d", "attendu"),
     [
-        (38, 38, "Light"),  # 38 x 38 mm : charpente légère
-        (38, 64, "Light"),  # 38 x 64 mm
-        (64, 64, "Light"),
+        (38, 38, "Lumber"),  # 38 x 38 mm : tableau 6.4 par défaut (issue #34)
+        (38, 64, "Lumber"),  # 38 x 64 mm : tableau 6.4 par défaut (issue #34)
+        (64, 64, "Lumber"),
         (38, 89, "Lumber"),  # 38 x 89 mm : grande face de 89 mm -> tableau 6.4
         (89, 89, "Lumber"),  # 89 x 89 mm
         (38, 140, "Lumber"),  # 38 x 140 mm : solives et madriers
@@ -44,3 +47,32 @@ def test_moins_de_38_mm():
 def test_plus_de_412_mm():
     with pytest.raises(ValueError, match="fournisseurs"):
         categorie_de_bois(140, 413)  # 413 mm > 412 mm
+
+
+# Tableau 6.3 et issue #34 : tableau 6.4 par défaut, tableau 6.5 (Const., Std.) au choix pour les
+# sections de 38 à 89 mm x 38 à 89 mm, bornes incluses
+@pytest.mark.parametrize(
+    ("b", "d", "admet"),
+    [
+        (38, 38, True),
+        (38, 64, True),
+        (38, 89, True),  # borne de 89 mm incluse
+        (89, 89, True),  # borne de 89 mm incluse
+        (40, 91, False),  # 91 mm > 89 mm (2 x 4 vert)
+        (38, 114, False),
+        (89, 140, False),
+    ],
+)
+def test_admet_charpente_legere(b, d, admet):
+    assert admet_charpente_legere(b, d) is admet
+    assert categorie_de_bois(b, d, charpente_legere=True) == ("Light" if admet else categorie_de_bois(b, d))
+
+
+def test_charpente_legere_par_defaut_tableau_6_4():
+    for b, d in ((38, 38), (38, 64), (38, 89), (64, 89), (89, 89)):
+        assert categorie_de_bois(b, d) == "Lumber"  # tableau 6.4 par défaut
+
+
+def test_charpente_legere_msr_mel_prioritaires():
+    assert categorie_de_bois(38, 89, msr=True, charpente_legere=True) == "MSR"
+    assert categorie_de_bois(38, 89, mel=True, charpente_legere=True) == "MEL"

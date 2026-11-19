@@ -15,14 +15,39 @@ Frontière poutres / poteaux (tableau 6.3, version anglaise ; notes des tableaux
 grande face dépasse la face étroite de **plus de** 51 mm pour les poutres, de **51 mm ou moins** pour
 les poteaux. (La version française du tableau 6.3 écrit « au moins 51 » pour les poutres.)
 
-Comportement conservé tel quel pendant la migration. Voir l'issue #34 pour le choix entre les tableaux
-6.4 et 6.5 lorsque les deux s'appliquent (tableau 6.3).
+Sections de 38 à 89 mm x 38 à 89 mm (tableau 6.3, issue #34, décision de l'utilisateur) : la norme
+permet les classes du tableau 6.4 (charpente légère de structure : SS, n° 1, n° 2, n° 3 ; montants) et
+celles du tableau 6.5 (charpente légère : Construction, Standard). Le tableau 6.4 est utilisé par défaut
+(« Lumber ») ; le tableau 6.5 (« Light ») est un choix (charpente_legere=True). Bornes de 89 mm incluses.
 """
 
 DIMENSION_MAXIMALE = 412  # mm : au-delà, valider la disponibilité chez les fournisseurs
+CHARPENTE_LEGERE_MIN = 38  # mm, tableau 6.3 : charpente légère, 38 à 89 mm x 38 à 89 mm
+CHARPENTE_LEGERE_MAX = 89  # mm
 
 
-def categorie_de_bois(b: float, d: float, msr: bool = False, mel: bool = False) -> str:
+def admet_charpente_legere(b: float, d: float) -> bool:
+    """
+    Tableau 6.3 : la section admet les classes de charpente légère (Construction, Standard, tableau 6.5),
+    soit les deux faces de 38 à 89 mm (bornes incluses).
+
+    Args:
+        b (float): Largeur de l'élément, mm.
+        d (float): Hauteur de l'élément, mm.
+
+    Returns:
+        bool: True si les deux faces sont de 38 à 89 mm.
+    """
+    return all(CHARPENTE_LEGERE_MIN <= x <= CHARPENTE_LEGERE_MAX for x in (b, d))
+
+
+def categorie_de_bois(
+    b: float,
+    d: float,
+    msr: bool = False,
+    mel: bool = False,
+    charpente_legere: bool = False,
+) -> str:
     """
     6.2.2 Catégorie de bois d'œuvre selon les dimensions (tableau 6.3).
 
@@ -31,6 +56,9 @@ def categorie_de_bois(b: float, d: float, msr: bool = False, mel: bool = False) 
         d (float): Hauteur de l'élément, mm.
         msr (bool, optional): Bois classé mécaniquement par résistance (MSR). Default to False.
         mel (bool, optional): Bois évalué par machine (MEL). Default to False.
+        charpente_legere (bool, optional): Classes de charpente légère (Construction, Standard, tableau
+            6.5) au lieu du tableau 6.4, pour une section de 38 à 89 mm x 38 à 89 mm (issue #34). Ignoré
+            pour les autres sections. Default to False.
 
     Returns:
         str: Code de la catégorie ("Light", "Lumber", "Beam", "Post", "MSR" ou "MEL").
@@ -47,8 +75,8 @@ def categorie_de_bois(b: float, d: float, msr: bool = False, mel: bool = False) 
     if grande_face > DIMENSION_MAXIMALE:
         raise ValueError("Valider la disponibilité du bois chez les fournisseurs.")
 
-    if face_etroite < 89 and grande_face < 89:
-        categorie = "Light"
+    if charpente_legere and admet_charpente_legere(b, d):
+        categorie = "Light"  # tableau 6.5, au choix (issue #34)
     elif face_etroite >= 114:
         categorie = "Beam" if grande_face - face_etroite > 51 else "Post"
     else:
