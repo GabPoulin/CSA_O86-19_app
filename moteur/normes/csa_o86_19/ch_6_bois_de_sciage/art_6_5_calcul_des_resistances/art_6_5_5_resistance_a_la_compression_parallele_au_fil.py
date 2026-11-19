@@ -180,6 +180,7 @@ def verifier_compression_parallele_au_fil(
     K_T: float = 1,
     K_SE: float = 1,
     P_f: float | None = None,
+    source_resistances: str = "Tableaux 6.4 à 6.9",
 ) -> Resultat:
     """
     6.5.5.2 Résistance pondérée à la compression parallèle au fil d'un élément simple, selon les
@@ -197,6 +198,8 @@ def verifier_compression_parallele_au_fil(
             (tableau A.4). Default to 1.
         K_D, K_H, K_Sc, K_T, K_SE (float, optional): Coefficients de correction. Default to 1.
         P_f (float | None, optional): Charge de compression axiale pondérée, kN. Default to None.
+        source_resistances (str, optional): Tableau des résistances prévues (6.3), pour la note de
+            calcul (voir art_6_3.tableau_des_resistances()). Default to "Tableaux 6.4 à 6.9".
 
     Returns:
         Resultat: Trace du calcul. P_r de chaque axe en N ; vérification en kN.
@@ -213,14 +216,17 @@ def verifier_compression_parallele_au_fil(
         Donnee("L_d", "Entraxe des appuis latéraux (flambage selon d)", L_d, "mm", "longueur"),
         Donnee("K_{e,b}", "Coefficient de longueur effective selon b", K_e_b, source="Tableau A.4"),
         Donnee("K_{e,d}", "Coefficient de longueur effective selon d", K_e_d, source="Tableau A.4"),
-        Donnee("f_c", "Résistance prévue en compression parallèle au fil", f_c, "MPa", "contrainte"),
+        Donnee("f_c", "Résistance prévue en compression parallèle au fil", f_c, "MPa", "contrainte",
+               source_resistances),
         Donnee("E_{05}", "Module d'élasticité pour les éléments en compression", E_05, "MPa",
-               "contrainte"),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D),
-        Donnee("K_H", "Coefficient de système", K_H),
-        Donnee("K_{Sc}", "Coefficient de conditions d'utilisation (compression)", K_Sc),
-        Donnee("K_T", "Coefficient de traitement", K_T),
-        Donnee("K_{SE}", "Coefficient de conditions d'utilisation (module d'élasticité)", K_SE),
+               "contrainte", source_resistances),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
+        Donnee("K_H", "Coefficient de système", K_H, source="Tableau 6.12"),
+        Donnee("K_{Sc}", "Coefficient de conditions d'utilisation (compression)", K_Sc,
+               source="Tableau 6.10"),
+        Donnee("K_T", "Coefficient de traitement", K_T, source="Tableau 6.11"),
+        Donnee("K_{SE}", "Coefficient de conditions d'utilisation (module d'élasticité)", K_SE,
+               source="Tableau 6.10"),
     ):
         r.ajouter_donnee(donnee)
 

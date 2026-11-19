@@ -70,3 +70,53 @@ def test_produire_pdf():
 def test_produire_pdf_sans_verification():
     with pytest.raises(ValueError, match="Aucune vérification"):
         produire_pdf([], ENTETE)
+
+
+def test_calcul_sur_une_ligne():
+    from moteur.commun.note_de_calcul import calcul_en_latex
+
+    assert calcul_en_latex("S = b d^2 / 6", "38 \\times 235^2 / 6") == "S = b d^2 / 6 = 38 \\times 235^2 / 6"
+
+
+def test_calcul_long_sur_plusieurs_lignes():
+    from moteur.commun.note_de_calcul import LONGUEUR_UNE_LIGNE, calcul_en_latex
+
+    formule = "K_N = " + "x" * LONGUEUR_UNE_LIGNE
+    calcul = calcul_en_latex(formule, "1.86")
+    # Égalités alignées : K_N &= ... \\ &= 1.86
+    assert calcul.startswith("\\begin{aligned} K_N &= ")
+    assert calcul.endswith(" \\\\ &= 1.86 \\end{aligned}")
+
+
+def test_apparence_par_defaut_et_personnalisee():
+    from moteur.commun.note_de_calcul import Apparence
+
+    defaut = donnees_de_la_note([("S-1", flexion())], ENTETE)["apparence"]
+    assert defaut == {"logo": None, "principale": "#233614", "accent": "#9E5A00"}
+    logo = bytes([137, 80, 78, 71])  # début d'un fichier PNG
+    perso = donnees_de_la_note(
+        [("S-1", flexion())], ENTETE, Apparence(logo, "#003366", "#CC0000")
+    )["apparence"]
+    assert perso == {"logo": [137, 80, 78, 71], "principale": "#003366", "accent": "#CC0000"}
+
+
+def test_produire_pdf_couleurs_personnalisees():
+    from moteur.commun.note_de_calcul import Apparence
+
+    pdf = produire_pdf([("S-1", flexion())], ENTETE, Apparence(principale="#003366", accent="#CC0000"))
+    assert pdf.startswith(b"%PDF")
+
+
+def test_sources_des_donnees():
+    # Références à la norme dans le tableau des données (revue de la PR #55)
+    r = art_6_5_3.verifier_flexion(
+        38, 235, 11.8, support_lateral_aux_appuis=True, rive_comprimee_maintenue=True,
+        source_resistances="Tableau 6.4",
+    )
+    sources = {d.symbole: d.source for d in r.donnees}
+    assert sources["f_b"] == "Tableau 6.4"
+    assert sources["K_D"] == "Tableau 5.1"
+    assert sources["K_{Sb}"] == "Tableau 6.10"
+    assert sources["K_T"] == "Tableau 6.11"
+    assert sources["K_H"] == "Tableau 6.12"
+    assert sources["K_{Zb}"] == "Tableau 6.13"

@@ -230,6 +230,7 @@ def verifier_flexion(
     rive_tendue_maintenue: bool = False,
     plis_fixes_a_au_plus_4d: bool = False,
     M_f: float | None = None,
+    source_resistances: str = "Tableaux 6.4 à 6.9",
 ) -> Resultat:
     """
     6.5.3 Résistance pondérée au moment de flexion d'un élément en bois de sciage.
@@ -246,6 +247,8 @@ def verifier_flexion(
         plis_fixes_a_au_plus_4d (bool, optional): Poutre composée : plis fixés ensemble à intervalles
             d'au plus 4 d (6.5.3.2.4). Default to False.
         M_f (float | None, optional): Moment de flexion pondéré, kN·m. Default to None.
+        source_resistances (str, optional): Tableau des résistances prévues (6.3), pour la note de
+            calcul (voir art_6_3.tableau_des_resistances()). Default to "Tableaux 6.4 à 6.9".
 
     Returns:
         Resultat: Trace du calcul. M_r en N·mm ; vérification en kN·m.
@@ -258,12 +261,12 @@ def verifier_flexion(
         Donnee("b", "Largeur d'un pli", b, "mm", "dimension"),
         Donnee("d", "Hauteur de l'élément", d, "mm", "dimension"),
         Donnee("n", "Nombre de plis", plis),
-        Donnee("f_b", "Résistance prévue en flexion", f_b, "MPa", "contrainte"),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D),
-        Donnee("K_H", "Coefficient de système", K_H),
-        Donnee("K_{Sb}", "Coefficient de conditions d'utilisation (flexion)", K_Sb),
-        Donnee("K_T", "Coefficient de traitement", K_T),
-        Donnee("K_{Zb}", "Coefficient de dimensions (flexion)", K_Zb),
+        Donnee("f_b", "Résistance prévue en flexion", f_b, "MPa", "contrainte", source_resistances),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
+        Donnee("K_H", "Coefficient de système", K_H, source="Tableau 6.12"),
+        Donnee("K_{Sb}", "Coefficient de conditions d'utilisation (flexion)", K_Sb, source="Tableau 6.10"),
+        Donnee("K_T", "Coefficient de traitement", K_T, source="Tableau 6.11"),
+        Donnee("K_{Zb}", "Coefficient de dimensions (flexion)", K_Zb, source="Tableau 6.13"),
     ):
         r.ajouter_donnee(donnee)
 

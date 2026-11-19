@@ -90,3 +90,15 @@ def test_classes():
 def test_classe_introuvable():
     with pytest.raises(ValueError, match="introuvable"):
         resistances_prevues("Lumber", "spf", "n1")  # au tableau 6.4 : n1-n2, pas n1
+
+
+def test_tableau_des_resistances():
+    from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_3_resistances_prevues_et_modules_d_elasticite import (  # noqa: E501
+        tableau_des_resistances,
+    )
+
+    attendus = {"Lumber": "6.4", "Light": "6.5", "Beam": "6.6", "Post": "6.7", "MSR": "6.8", "MEL": "6.9"}
+    for categorie, tableau in attendus.items():
+        assert tableau_des_resistances(categorie) == f"Tableau {tableau}"
+    with pytest.raises(ValueError, match="inconnue"):
+        tableau_des_resistances("Autre")

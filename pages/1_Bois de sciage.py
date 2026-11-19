@@ -4,7 +4,16 @@
 import streamlit as st
 import config
 import datetime
-from moteur.commun.note_de_calcul import EnTete, produire_pdf
+from moteur.commun.note_de_calcul import (
+    COULEUR_ACCENT,
+    COULEUR_PRINCIPALE,
+    Apparence,
+    EnTete,
+    produire_pdf,
+)
+from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_3_resistances_prevues_et_modules_d_elasticite import (  # noqa: E501
+    tableau_des_resistances,
+)
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (
     art_6_5_3_resistance_au_moment_de_flexion as art_6_5_3,
     art_6_5_4_resistance_au_cisaillement as art_6_5_4,
@@ -394,6 +403,7 @@ st.divider()
 st.subheader("Calcul des résistances", anchor=False)
 # Vérifications pour la note de calcul PDF (issue #50) : traces du nouveau moteur, mêmes entrées
 NOTE = {}
+SOURCE = tableau_des_resistances(CATEGORY)  # tableau des résistances prévues (6.3)
 
 flex, shear, comp_para, comp_perp, comp_angle, trac, combi = st.tabs(
     [
@@ -509,7 +519,7 @@ with flex:
                     support_lateral_aux_appuis=LATERAL, pannes_ou_tirants=TIE_ROD,
                     rive_comprimee_maintenue=COMP_EDGE, entretoises_ou_entremises=BLOCK,
                     rive_tendue_maintenue=TEN_EDGE, plis_fixes_a_au_plus_4d=PLIES_FASTENED,
-                    M_f=mf,
+                    M_f=mf, source_resistances=SOURCE,
                 )
 
 with shear:
@@ -605,7 +615,7 @@ with shear:
                 b=width, d=depth, f_v=compute_resistance[1], plis=built_up,
                 d_n=notch_depth if entaille else 0,
                 K_D=beam_shear.kd, K_H=beam_shear.kh, K_Sv=ksv, K_T=beam_shear.kt, K_Zv=kzv,
-                V_f=vf,
+                V_f=vf, source_resistances=SOURCE,
             )
             if entaille:
                 NOTE["Cisaillement par fissuration à l'entaille (6.5.4.4)"] = (
@@ -739,6 +749,7 @@ with comp_para:
                                 b=width, d=depth, L=length, L_b=le_b, L_d=le_d,
                                 f_c=compute_resistance[2], E_05=e05,
                                 K_D=kd, K_H=kh, K_Sc=ksc, K_T=kt, K_SE=kse, P_f=pf,
+                                source_resistances=SOURCE,
                             )
                         )
 
@@ -1007,6 +1018,15 @@ with st.container(horizontal_alignment="center"):
             oiq = col2.text_input("Numéro OIQ")
             date = col1.date_input("Date", value=datetime.date.today(), format="YYYY-MM-DD")
             element = col2.text_input("Nom de l'élément", value="Élément 1")
+        with st.expander("Apparence de la note (logo et couleurs)", width=650):
+            st.caption(
+                """Par défaut : logo et couleurs de Le Repère. Ces réglages restent actifs pendant la
+                séance ; l'enregistrement permanent viendra avec les comptes utilisateurs."""
+            )
+            logo = st.file_uploader("Logo (PNG, JPG ou SVG)", type=["png", "jpg", "jpeg", "svg"])
+            col1, col2 = st.columns(2)
+            principale = col1.color_picker("Couleur principale", value=COULEUR_PRINCIPALE)
+            accent = col2.color_picker("Couleur d'accent", value=COULEUR_ACCENT)
         with st.container(width=650):
             st.markdown("Vérifications à inclure :")
             choix = [nom for nom in NOTE if st.checkbox(nom, value=True, key=f"note_{nom}")]
@@ -1014,6 +1034,7 @@ with st.container(horizontal_alignment="center"):
                 pdf = produire_pdf(
                     [(element, NOTE[nom]) for nom in choix],
                     EnTete(client, projet, adresse, dossier, str(date), ingenieur, oiq),
+                    Apparence(logo.getvalue() if logo else None, principale, accent),
                 )
                 st.download_button(
                     "Télécharger la note de calcul (PDF)",

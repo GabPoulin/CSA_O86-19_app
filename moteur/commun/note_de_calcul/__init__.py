@@ -48,6 +48,27 @@ class EnTete:
     oiq: str = ""
 
 
+COULEUR_PRINCIPALE = "#233614"  # vert forêt (marque/couleurs.md)
+COULEUR_ACCENT = "#9E5A00"  # orange brûlé
+LONGUEUR_UNE_LIGNE = 55  # caractères LaTeX : au-delà, la formule s'écrit sur plusieurs lignes
+
+
+@dataclass(frozen=True)
+class Apparence:
+    """
+    Logo et couleurs de la note (ceux de la marque par défaut ; l'utilisateur peut mettre les siens).
+
+    Args:
+        logo (bytes | None): Image du logo (PNG, JPG ou SVG). None : logo de Le Repère.
+        principale (str): Couleur principale, hexadécimale (titres, lignes, en-têtes de tableau).
+        accent (str): Couleur d'accent, hexadécimale (articles, sources).
+    """
+
+    logo: bytes | None = None
+    principale: str = COULEUR_PRINCIPALE
+    accent: str = COULEUR_ACCENT
+
+
 def formater_nombre(valeur: float) -> str:
     """
     Nombre affiché avec un point décimal (CLAUDE.md) : entier au-delà de 1000, 2 décimales de 10 à 1000,
@@ -70,9 +91,21 @@ def formater_valeur(valeur: float | str, unite: str = "", grandeur: str | None =
     return f"{formater_nombre(valeur)} {unite}".strip()
 
 
-def _en_latex(texte: str) -> str:
-    """Résultat formaté (nombre, unités) en texte LaTeX, en gras : \textbf{...}."""
-    return r"\textbf{" + texte.replace("%", r"\%") + "}"
+def calcul_en_latex(formule: str, substitution: str) -> str:
+    """
+    Ligne de calcul d'une étape : « formule = substitution ». Si elle est longue, les égalités vont sur
+    plusieurs lignes alignées (demande de l'utilisateur, revue de la PR #55) :
+
+        K_N &= [...]
+            &= [valeurs]
+    """
+    if len(formule) + len(substitution) <= LONGUEUR_UNE_LIGNE or " = " not in formule:
+        return f"{formule} = {substitution}"
+    gauche, droite = formule.split(" = ", 1)
+    return (
+        r"\begin{aligned} " + gauche + r" &= " + droite + r" \\ &= " + substitution
+        + r" \end{aligned}"
+    )
 
 
 def _verification(v: Verification) -> dict:
@@ -88,19 +121,32 @@ def _verification(v: Verification) -> dict:
     }
 
 
-def donnees_de_la_note(resultats: list[tuple[str, Resultat]], entete: EnTete) -> dict:
+def donnees_de_la_note(
+    resultats: list[tuple[str, Resultat]],
+    entete: EnTete,
+    apparence: Apparence = Apparence(),
+) -> dict:
     """
     Données transmises au gabarit Typst (aussi utilisées par les tests).
 
     Args:
         resultats (list[tuple[str, Resultat]]): (nom de l'élément, trace), dans l'ordre de la note.
         entete (EnTete): Champs de l'en-tête.
+        apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
 
     Returns:
         dict: Données sérialisables en JSON.
     """
     normes = sorted({r.norme for _, r in resultats})
-    note = {"entete": {**vars(entete), "norme": ", ".join(normes)}, "resultats": []}
+    note = {
+        "entete": {**vars(entete), "norme": ", ".join(normes)},
+        "apparence": {
+            "logo": list(apparence.logo) if apparence.logo else None,  # octets, pour Typst
+            "principale": apparence.principale,
+            "accent": apparence.accent,
+        },
+        "resultats": [],
+    }
     for element, r in resultats:
         note["resultats"].append({
             "norme": r.norme,
@@ -124,8 +170,8 @@ def donnees_de_la_note(resultats: list[tuple[str, Resultat]], entete: EnTete) ->
                     "symbole": e.symbole,
                     "formule": e.formule,
                     "substitution": e.substitution,
+                    "calcul": calcul_en_latex(e.formule, e.substitution),
                     "resultat": formater_valeur(e.valeur, e.unite, e.grandeur),
-                    "resultat_latex": _en_latex(formater_valeur(e.valeur, e.unite, e.grandeur)),
                 }
                 for e in r.etapes
             ],
@@ -134,13 +180,18 @@ def donnees_de_la_note(resultats: list[tuple[str, Resultat]], entete: EnTete) ->
     return note
 
 
-def produire_pdf(resultats: list[tuple[str, Resultat]], entete: EnTete) -> bytes:
+def produire_pdf(
+    resultats: list[tuple[str, Resultat]],
+    entete: EnTete,
+    apparence: Apparence = Apparence(),
+) -> bytes:
     """
     Produit la note de calcul PDF.
 
     Args:
         resultats (list[tuple[str, Resultat]]): (nom de l'élément, trace), dans l'ordre de la note.
         entete (EnTete): Champs de l'en-tête.
+        apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
 
     Returns:
         bytes: Contenu du fichier PDF.
@@ -150,5 +201,5 @@ def produire_pdf(resultats: list[tuple[str, Resultat]], entete: EnTete) -> bytes
     """
     if not resultats:
         raise ValueError("Aucune vérification à mettre dans la note de calcul.")
-    donnees = json.dumps(donnees_de_la_note(resultats, entete), ensure_ascii=False)
+    donnees = json.dumps(donnees_de_la_note(resultats, entete, apparence), ensure_ascii=False)
     return typst.compile(str(GABARIT), root=str(RACINE), sys_inputs={"donnees": donnees})
