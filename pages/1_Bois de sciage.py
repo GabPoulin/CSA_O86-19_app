@@ -1053,13 +1053,16 @@ FONCTION_DE_LA_VERIFICATION = {
     "Compression perpendiculaire au fil (6.5.6.2)": "compression_perpendiculaire",
     "Compression perpendiculaire près d'un appui (6.5.6.3)": "compression_perpendiculaire",
 }
+# Seulement les vérifications faites (charge pondérée entrée) : pas de page inutile dans la note
+FAITES = {nom: r for nom, r in NOTE.items() if r.verification is not None}
 if acces.permis("note_pdf"):
     st.divider()
     st.subheader("Note de calcul (PDF)", anchor=False)
     with st.container(horizontal_alignment="center"):
-        if not NOTE:
+        if not FAITES:
             st.info(
-                "Faites au moins une vérification pour produire la note de calcul.",
+                "Entrez la charge pondérée d'au moins une vérification pour produire la note de "
+                "calcul.",
                 width=650,
                 icon=":material/info:",
             )
@@ -1087,11 +1090,11 @@ if acces.permis("note_pdf"):
             with st.container(width=650):
                 acces.avertir_si_en_test("note_pdf")
                 st.markdown("Vérifications à inclure :")
-                choix = [nom for nom in NOTE if st.checkbox(nom, value=True, key=f"note_{nom}")]
+                choix = [nom for nom in FAITES if st.checkbox(nom, value=True, key=f"note_{nom}")]
                 if choix:
                     pdf = produire_pdf(
                         [
-                        (element, NOTE[nom], acces.en_test(FONCTION_DE_LA_VERIFICATION[nom]))
+                        (element, FAITES[nom], acces.en_test(FONCTION_DE_LA_VERIFICATION[nom]))
                         for nom in choix
                     ],
                         EnTete(client, projet, adresse, dossier, str(date), ingenieur, oiq),
