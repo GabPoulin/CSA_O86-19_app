@@ -1,5 +1,6 @@
 """Paramètres partagés de l'interface : nom du produit et image de marque (voir marque/)."""
 
+import json
 import re
 import tomllib
 from pathlib import Path
@@ -12,6 +13,10 @@ from moteur.commun.note_de_calcul import Apparence
 
 TITLE = "Datum"  # nom du logiciel : seul nom affiché, sans marque (chaque compte a la sienne)
 ICONE_PAR_DEFAUT = ":material/architecture:"  # onglet du navigateur avant la connexion
+# Thème global de l'interface (.streamlit/config.toml) : couleurs remplacées par celles du compte
+THEME = tomllib.loads(
+    (Path(__file__).resolve().parent / ".streamlit" / "config.toml").read_text(encoding="utf-8")
+)["theme"]
 
 # Image de marque propre à chaque compte : marque/comptes/<compte>/ (logo, couleurs, polices)
 DOSSIER_COMPTES = Path(__file__).resolve().parent / "marque" / "comptes"
@@ -50,6 +55,58 @@ def eclaircir(couleur: str, part: float) -> str:
     return "#" + "".join(f"{round(c + (255 - c) * part):02X}" for c in canaux)
 
 
+def fond_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> str | None:
+    """Couleur de fond de l'interface du compte (clé « fond » de couleurs.toml), ou None."""
+    fichier = fichier_du_compte(compte, "couleurs.toml", dossier)
+    if fichier is None:
+        return None
+    fond = tomllib.loads(fichier.read_text(encoding="utf-8")).get("fond")
+    if fond is not None and not _COULEUR.match(str(fond)):
+        raise ValueError(f"{fichier} : couleur « fond » invalide (format #RRGGBB).")
+    return fond
+
+
+def rvb(couleur: str) -> str:
+    """« #RRGGBB » -> « R, V, B » (format des couleurs dans le CSS calculé par le navigateur)."""
+    return ", ".join(str(int(couleur[i : i + 2], 16)) for i in (1, 3, 5))
+
+
+def remplacements_du_theme(accent: str, fond: str | None) -> list[tuple[str, str]]:
+    """
+    Couleurs du thème global à remplacer dans le CSS de la page : couleur principale du thème
+    (accents : cases, boutons radio, onglets, liens) par l'accent du compte, et fond par celui du compte.
+    """
+    paires = [(THEME["primaryColor"], accent)]
+    if fond:
+        paires.append((THEME["backgroundColor"], fond))
+    return [(rvb(a), rvb(b)) for a, b in paires if a.lower() != b.lower()]
+
+
+# Remplace des couleurs dans toutes les règles CSS de la page (Streamlit en ajoute au fil de l'eau).
+# Les couleurs viennent de couleurs.toml, validées au format #RRGGBB : aucune donnée de l'utilisateur.
+_SCRIPT_COULEURS = """<script>
+(() => {
+  const paires = %s;
+  const traiter = (regles) => {
+    for (const r of regles) {
+      if (r.cssRules) traiter(r.cssRules);
+      if (!r.style) continue;
+      for (let i = 0; i < r.style.length; i++) {
+        const p = r.style[i], v = r.style.getPropertyValue(p);
+        let n = v;
+        for (const [a, b] of paires) n = n.split(a).join(b);
+        if (n !== v) r.style.setProperty(p, n, r.style.getPropertyPriority(p));
+      }
+    }
+  };
+  const tout = () => { for (const f of document.styleSheets) { try { traiter(f.cssRules); } catch (e) {} } };
+  tout();
+  clearInterval(window.__datumCouleurs);
+  window.__datumCouleurs = setInterval(tout, 400);
+})();
+</script>"""
+
+
 def configurer_page(titre_page: str) -> None:
     """
     Configure la page à l'image du compte connecté : titre de l'onglet, icône, logo de la barre
@@ -86,6 +143,9 @@ def configurer_page(titre_page: str) -> None:
         }}
         </style>"""
     )
+    paires = remplacements_du_theme(apparence.accent, fond_du_compte(compte))
+    if paires:
+        st.html(_SCRIPT_COULEURS % json.dumps(paires), unsafe_allow_javascript=True)
     retours.formulaire(titre_page)
 
 
@@ -120,7 +180,7 @@ def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparen
     fichier_couleurs = dossier_du_compte / "couleurs.toml"
     if fichier_couleurs.is_file():
         couleurs = tomllib.loads(fichier_couleurs.read_text(encoding="utf-8"))
-        for cle in ("principale", "accent"):
+        for cle in ("principale", "accent", "fond"):
             if cle in couleurs and not _COULEUR.match(str(couleurs[cle])):
                 raise ValueError(f"{fichier_couleurs} : couleur « {cle} » invalide (format #RRGGBB).")
     polices = {}

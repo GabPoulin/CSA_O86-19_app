@@ -1,3 +1,4 @@
 # Charte graphique Groupe Lantier 2021, p. 6
 principale = "#273c3c"  # vert foncé : fond et typographie
 accent = "#47aeaa"  # sarcelle : accent et logo
+fond = "#ffffff"  # blanc : fond de l'interface (p. 6)

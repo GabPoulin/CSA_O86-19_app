@@ -12,7 +12,7 @@ Il peut encore les changer pour la séance, dans « Apparence de la note ».
 | `logo_vertical*.svg` | Autres versions du logo, gardées pour plus tard. |
 | `polices.toml` | Familles de polices : `titres` (en majuscules) et `texte`. Ex. `titres = "Rift"`, `texte = "DIN 2014"`. |
 | `polices/` | Fichiers de polices (`.otf`, `.ttf`). **Jamais dans git** (`.gitignore`) : ce sont des polices sous licence et le dépôt est public. Une police absente est remplacée par la police par défaut. |
-| `couleurs.toml` | Deux couleurs hexadécimales : `principale` (titres, lignes, en-têtes de tableau ; fond de la barre latérale) et `accent` (articles, sources ; boutons principaux). Exemple ci-dessous. |
+| `couleurs.toml` | Deux couleurs hexadécimales : `principale` (titres, lignes, en-têtes de tableau ; fond de la barre latérale) et `accent` (articles, sources ; boutons principaux et accents de l'interface). Facultatif : `fond`, couleur de fond de l'interface. Exemple ci-dessous. |
 
 ```toml
 principale = "#233614"

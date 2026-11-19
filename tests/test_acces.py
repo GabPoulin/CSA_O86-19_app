@@ -240,3 +240,27 @@ def test_eclaircir():
     assert config.eclaircir("#273c3c", 1) == "#FFFFFF"
     # 0x27 = 39 : 39 + (255 - 39) x 0.5 = 147 = 0x93 ; 0x3c = 60 : 60 + 195 x 0.5 = 157.5 -> 158 = 0x9E
     assert config.eclaircir("#273c3c", 0.5) == "#939E9E"
+
+
+def test_couleurs_de_l_interface_par_compte():
+    import config
+
+    assert config.rvb("#47aeaa") == "71, 174, 170"
+    # Admin : couleurs du thème global, rien à remplacer
+    assert config.remplacements_du_theme(config.THEME["primaryColor"], None) == []
+    assert config.fond_du_compte("admin") is None
+    # Groupe Lantier : accents en sarcelle et fond blanc (charte, p. 6)
+    assert config.fond_du_compte("lantier") == "#ffffff"
+    assert config.remplacements_du_theme("#47aeaa", "#ffffff") == [
+        ("158, 90, 0", "71, 174, 170"),  # orange brûlé du thème -> sarcelle
+        ("244, 241, 234", "255, 255, 255"),  # sable du thème -> blanc
+    ]
+
+
+def test_fond_invalide(tmp_path):
+    import config
+
+    (tmp_path / "x").mkdir()
+    (tmp_path / "x" / "couleurs.toml").write_text('fond = "blanc"\n', encoding="utf-8")
+    with pytest.raises(ValueError):
+        config.fond_du_compte("x", tmp_path)
