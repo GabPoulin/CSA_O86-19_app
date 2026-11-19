@@ -6,8 +6,6 @@ import acces
 import config
 import datetime
 from moteur.commun.note_de_calcul import (
-    COULEUR_ACCENT,
-    COULEUR_PRINCIPALE,
     Apparence,
     EnTete,
     produire_pdf,
@@ -1078,13 +1076,14 @@ if acces.permis("note_pdf"):
                 element = col2.text_input("Nom de l'élément", value="Élément 1")
             with st.expander("Apparence de la note (logo et couleurs)", width=650):
                 st.caption(
-                    """Par défaut : logo et couleurs de Le Repère. Ces réglages restent actifs pendant la
-                    séance ; l'enregistrement permanent viendra avec les comptes utilisateurs."""
+                    """Par défaut : logo et couleurs du compte (marque/comptes/), sinon ceux de Le Repère.
+                    Un logo téléversé ici sert seulement pendant la séance."""
                 )
+                APPARENCE = config.apparence_du_compte(st.session_state.get("compte", ""))
                 logo = st.file_uploader("Logo (PNG, JPG ou SVG)", type=["png", "jpg", "jpeg", "svg"])
                 col1, col2 = st.columns(2)
-                principale = col1.color_picker("Couleur principale", value=COULEUR_PRINCIPALE)
-                accent = col2.color_picker("Couleur d'accent", value=COULEUR_ACCENT)
+                principale = col1.color_picker("Couleur principale", value=APPARENCE.principale)
+                accent = col2.color_picker("Couleur d'accent", value=APPARENCE.accent)
             with st.container(width=650):
                 acces.avertir_si_en_test("note_pdf")
                 st.markdown("Vérifications à inclure :")
@@ -1096,7 +1095,7 @@ if acces.permis("note_pdf"):
                         for nom in choix
                     ],
                         EnTete(client, projet, adresse, dossier, str(date), ingenieur, oiq),
-                        Apparence(logo.getvalue() if logo else None, principale, accent),
+                        Apparence(logo.getvalue() if logo else APPARENCE.logo, principale, accent),
                     )
                     st.download_button(
                         "Télécharger la note de calcul (PDF)",

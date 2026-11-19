@@ -1,0 +1,22 @@
+# Logo et couleurs de la note de calcul, par compte
+
+Un dossier par compte, nommé avec l'identifiant du compte (`acces.py`) : `lantier/` pour Groupe Lantier.
+Quand ce compte est connecté, la note de calcul PDF prend ce logo et ces couleurs par défaut.
+Il peut encore les changer pour la séance, dans « Apparence de la note ».
+
+| Fichier | Contenu |
+|---|---|
+| `logo.svg` (ou `logo.png`, `logo.jpg`) | Logo de l'en-tête. **SVG de préférence**, sinon PNG haute résolution (au moins 1000 px de large, fond transparent). Format horizontal, idéalement : il est affiché à 1.0 cm de haut. |
+| `couleurs.toml` | Deux couleurs hexadécimales : `principale` (titres, lignes, en-têtes de tableau) et `accent` (articles, sources). Exemple ci-dessous. |
+
+```toml
+principale = "#233614"
+accent = "#9E5A00"
+```
+
+Un fichier absent garde la valeur par défaut (Le Repère). Une couleur mal écrite (autre que `#RRGGBB`)
+produit une erreur.
+
+**Pour déposer les fichiers** : sur GitHub, ouvre `marque/comptes/lantier/`, puis « Add file » >
+« Upload files ». Choisis « Create a new branch » et propose les changements (PR). Le logo s'applique
+après le merge dans `main`.
