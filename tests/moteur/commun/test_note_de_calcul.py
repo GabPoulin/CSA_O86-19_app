@@ -139,3 +139,9 @@ def test_meme_nombre_de_chiffres_significatifs_dans_les_calculs():
     r = donnees_de_la_note([("S-1", flexion())], ENTETE)["resultats"][0]
     # Substitution de M_r : chaque valeur avec 3 chiffres significatifs (349 758 mm³ -> 350000)
     assert r"0.9 \times 11.8 \times 350000 \times 1.10 \times 1.00" in r["etapes"][-1]["calcul"]
+
+
+def test_avertissement_en_test_dans_la_note():
+    note = donnees_de_la_note([("S-1", flexion(), True), ("S-1", flexion())], ENTETE)
+    assert [r["en_test"] for r in note["resultats"]] == [True, False]
+    assert produire_pdf([("S-1", flexion(), True)], ENTETE).startswith(b"%PDF")

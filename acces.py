@@ -6,20 +6,29 @@ Accès à l'application : comptes, connexion par mot de passe et fonctions offer
   et testées, choisies par l'utilisateur).
 - Les mots de passe sont dans les secrets de Streamlit Cloud (section [mots_de_passe]), jamais dans
   le code. En local : .streamlit/secrets.toml (ignoré par git).
-- Une fonction « en test » affiche un avertissement, retiré quand l'utilisateur confirme qu'elle est
-  testée convenablement.
+- Les fonctions offertes au compte Groupe Lantier et les fonctions testées sont lues dans
+  ACCES_GROUPE_LANTIER.md : l'utilisateur coche les cases (demande dans l'issue #56).
+- Une fonction non cochée comme « testée » affiche un avertissement « en test ».
 
 Aucune logique de calcul ici.
 """
 
 import hmac
+import re
 from dataclasses import dataclass
+from pathlib import Path
 
 import streamlit as st
 
 ADMIN = "admin"
 LANTIER = "lantier"
 NOMS_DES_COMPTES = {ADMIN: "Administrateur", LANTIER: "Groupe Lantier"}
+
+
+FICHIER_ACCES = Path(__file__).resolve().parent / "ACCES_GROUPE_LANTIER.md"
+SECTION_OFFERTES = "## Fonctions offertes au compte Groupe Lantier"
+SECTION_TESTEES = "## Fonctions testées convenablement"
+_CASE = re.compile(r"^- \[([ xX])\] `([a-z_]+)`")
 
 
 @dataclass(frozen=True)
@@ -29,31 +38,72 @@ class Fonction:
 
     Args:
         nom (str): Nom affiché (ex. « Flexion (6.5.3) »).
-        en_test (bool): True tant qu'elle n'est pas testée convenablement : un avertissement s'affiche.
     """
 
     nom: str
-    en_test: bool = True
 
 
-# Fonctions de l'application, dans l'ordre de la page. « en_test » : à retirer fonction par fonction
-# quand l'utilisateur confirme qu'elle est testée convenablement (issue #56).
+# Fonctions de l'application, dans l'ordre de la page (identifiants de ACCES_GROUPE_LANTIER.md)
 FONCTIONS: dict[str, Fonction] = {
     "flexion": Fonction("Flexion (6.5.3)"),
     "cisaillement": Fonction("Cisaillement (6.5.4)"),
     "compression_parallele": Fonction("Compression parallèle au fil (6.5.5)"),
     "compression_perpendiculaire": Fonction("Compression perpendiculaire au fil (6.5.6)"),
-    "compression_oblique": Fonction("Compression oblique (6.5.7)"),
+    "compression_oblique": Fonction("Compression oblique par rapport au fil (6.5.7)"),
     "traction": Fonction("Traction parallèle au fil (6.5.8)"),
     "flexion_et_charge_axiale": Fonction("Flexion et charge axiale combinée (6.5.9)"),
     "note_pdf": Fonction("Note de calcul PDF"),
 }
 
-# Fonctions offertes à chaque compte. Groupe Lantier : liste à fournir par l'utilisateur (issue #56).
+
+def lire_cases(texte: str) -> dict[str, frozenset[str]]:
+    """
+    Cases cochées de ACCES_GROUPE_LANTIER.md, par section.
+
+    Args:
+        texte (str): Contenu du fichier.
+
+    Returns:
+        dict[str, frozenset[str]]: {"offertes": ..., "testees": ...} (identifiants cochés).
+
+    Raises:
+        ValueError: Si une section manque ou si un identifiant est inconnu.
+    """
+    sections = {SECTION_OFFERTES: "offertes", SECTION_TESTEES: "testees"}
+    cochees: dict[str, set[str]] = {"offertes": set(), "testees": set()}
+    trouvees, courante = set(), None
+    for ligne in texte.splitlines():
+        if ligne.startswith("## "):
+            courante = sections.get(ligne.strip())
+            if courante:
+                trouvees.add(courante)
+            continue
+        case = _CASE.match(ligne.strip())
+        if case and courante:
+            identifiant = case.group(2)
+            if identifiant not in FONCTIONS:
+                raise ValueError(f"Fonction inconnue dans ACCES_GROUPE_LANTIER.md : {identifiant!r}.")
+            if case.group(1) in "xX":
+                cochees[courante].add(identifiant)
+    if trouvees != {"offertes", "testees"}:
+        raise ValueError("ACCES_GROUPE_LANTIER.md : section manquante.")
+    return {cle: frozenset(valeurs) for cle, valeurs in cochees.items()}
+
+
+_CASES = lire_cases(FICHIER_ACCES.read_text(encoding="utf-8"))
+
+# Fonctions offertes à chaque compte : admin voit tout ; Groupe Lantier, les cases cochées.
 ACCES: dict[str, frozenset[str]] = {
     ADMIN: frozenset(FONCTIONS),
-    LANTIER: frozenset(),
+    LANTIER: _CASES["offertes"],
 }
+TESTEES: frozenset[str] = _CASES["testees"]
+
+
+def en_test(fonction: str) -> bool:
+    """True si la fonction n'est pas encore cochée comme testée (ACCES_GROUPE_LANTIER.md)."""
+    return fonction not in TESTEES
+
 
 MESSAGE_EN_TEST = (
     "En test : vérifiez les résultats avant de les utiliser dans un dossier. Vos commentaires sont "
@@ -92,7 +142,7 @@ def permis(fonction: str, compte: str | None = None) -> bool:
 
 def avertir_si_en_test(fonction: str) -> None:
     """Affiche l'avertissement « en test » si la fonction n'est pas encore testée convenablement."""
-    if FONCTIONS[fonction].en_test:
+    if en_test(fonction):
         st.warning(MESSAGE_EN_TEST, icon=":material/science:", width=650)
 
 

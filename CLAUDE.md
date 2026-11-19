@@ -129,6 +129,9 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
   son merge. Rappeler à l'utilisateur les PR à merger.
 - Les décisions d'interprétation de la norme et les changements de structure restent **toujours
   soumis à l'utilisateur** avant d'être appliqués.
+- **Compte Groupe Lantier** (`ACCES_GROUPE_LANTIER.md`, lu par l'application, issue #56) : quand une
+  fonction est intégrée au nouveau moteur, l'ajouter dans les deux listes **non cochée**. Seul
+  l'utilisateur coche les cases (offerte à Groupe Lantier ; testée, sans avertissement « en test »).
 
 ## Tests : tester et retester
 

@@ -144,7 +144,7 @@ def _verification(v: Verification) -> dict:
 
 
 def donnees_de_la_note(
-    resultats: list[tuple[str, Resultat]],
+    resultats: list[tuple],
     entete: EnTete,
     apparence: Apparence = Apparence(),
 ) -> dict:
@@ -152,14 +152,16 @@ def donnees_de_la_note(
     Données transmises au gabarit Typst (aussi utilisées par les tests).
 
     Args:
-        resultats (list[tuple[str, Resultat]]): (nom de l'élément, trace), dans l'ordre de la note.
+        resultats (list[tuple]): (nom de l'élément, trace) ou (nom de l'élément, trace, en test), dans
+            l'ordre de la note. « en test » (bool) : affiche l'avertissement de la fonction en test
+            (acces.py, issue #56).
         entete (EnTete): Champs de l'en-tête.
         apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
 
     Returns:
         dict: Données sérialisables en JSON.
     """
-    normes = sorted({r.norme for _, r in resultats})
+    normes = sorted({r[1].norme for r in resultats})
     note = {
         "entete": {**vars(entete), "norme": ", ".join(normes)},
         "apparence": {
@@ -169,8 +171,9 @@ def donnees_de_la_note(
         },
         "resultats": [],
     }
-    for element, r in resultats:
+    for element, r, *option in resultats:
         note["resultats"].append({
+            "en_test": bool(option and option[0]),
             "norme": r.norme,
             "article": r.article,
             "titre": r.titre,
@@ -203,7 +206,7 @@ def donnees_de_la_note(
 
 
 def produire_pdf(
-    resultats: list[tuple[str, Resultat]],
+    resultats: list[tuple],
     entete: EnTete,
     apparence: Apparence = Apparence(),
 ) -> bytes:
@@ -211,7 +214,7 @@ def produire_pdf(
     Produit la note de calcul PDF.
 
     Args:
-        resultats (list[tuple[str, Resultat]]): (nom de l'élément, trace), dans l'ordre de la note.
+        resultats (list[tuple]): Voir donnees_de_la_note().
         entete (EnTete): Champs de l'en-tête.
         apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
 

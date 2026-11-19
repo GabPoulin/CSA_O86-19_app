@@ -106,3 +106,77 @@ def test_page_bois_de_sciage_protegee():
     at.button[0].click().run()
     assert not at.exception
     assert len(at.tabs) == 7  # onglets de calcul affichés une fois connecté
+
+
+# ACCES_GROUPE_LANTIER.md : cases à cocher lues par l'application (issue #56)
+EXEMPLE = """
+## Fonctions offertes au compte Groupe Lantier
+- [x] `flexion` : Flexion
+- [ ] `cisaillement` : Cisaillement
+## Fonctions testées convenablement
+- [X] `flexion`
+- [ ] `cisaillement`
+## Autre section
+- [x] `compression_oblique`
+"""
+
+
+def test_lire_cases():
+    cases = acces.lire_cases(EXEMPLE)
+    assert cases["offertes"] == {"flexion"}
+    assert cases["testees"] == {"flexion"}  # [X] majuscule accepté ; autre section ignorée
+
+
+def test_lire_cases_identifiant_inconnu():
+    with pytest.raises(ValueError, match="inconnue"):
+        acces.lire_cases(EXEMPLE.replace("`cisaillement` :", "`cisaillements` :"))
+
+
+def test_lire_cases_section_manquante():
+    with pytest.raises(ValueError, match="section manquante"):
+        acces.lire_cases("## Fonctions offertes au compte Groupe Lantier\n- [x] `flexion`\n")
+
+
+def test_fichier_d_acces_valide():
+    texte = acces.FICHIER_ACCES.read_text(encoding="utf-8")
+    cases = acces.lire_cases(texte)
+    # Garde-fou : une fonction pas encore intégrée au nouveau moteur ne peut pas être offerte
+    assert not cases["offertes"] & {"compression_oblique", "traction", "flexion_et_charge_axiale"}
+    assert acces.ACCES[acces.LANTIER] == cases["offertes"]
+
+
+def _connecte(compte, mot):
+    at = _accueil(MOTS_DE_PASSE)
+    at.text_input[0].input(mot)
+    at.button[0].click().run()
+    at.switch_page("pages/1_Bois de sciage.py").run()
+    assert not at.exception
+    return at
+
+
+def test_lantier_sans_fonction_offerte():
+    with mock.patch.dict(acces.ACCES, {acces.LANTIER: frozenset()}):
+        at = _connecte("lantier", "mot-lantier")
+    assert not at.tabs
+    assert any("Aucune vérification" in i.value for i in at.info)
+    assert not [s for s in at.subheader if s.value == "Note de calcul (PDF)"]
+
+
+def test_lantier_voit_seulement_les_fonctions_offertes():
+    with mock.patch.dict(acces.ACCES, {acces.LANTIER: frozenset({"flexion", "note_pdf"})}), \
+            mock.patch.object(acces, "TESTEES", frozenset()):
+        at = _connecte("lantier", "mot-lantier")
+    assert [t.label for t in at.tabs] == ["Moment de flexion"]
+    assert any("En test" in w.value for w in at.warning)  # flexion non cochée comme testée
+
+
+def test_fonction_testee_sans_avertissement():
+    with mock.patch.dict(acces.ACCES, {acces.LANTIER: frozenset({"flexion"})}), \
+            mock.patch.object(acces, "TESTEES", frozenset({"flexion"})):
+        at = _connecte("lantier", "mot-lantier")
+    assert not any("En test" in w.value for w in at.warning)
+
+
+def test_admin_voit_tout():
+    at = _connecte("admin", "mot-admin")
+    assert len(at.tabs) == 7

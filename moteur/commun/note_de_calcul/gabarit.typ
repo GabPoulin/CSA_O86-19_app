@@ -124,6 +124,12 @@
     #h(1fr) #text(size: 8.5pt, fill: accent, weight: "bold")[#r.norme, article #r.article]
   ]
 
+  if r.en_test {
+    block(width: 100%, fill: rgb("#FFF4D6"), stroke: 0.8pt + rgb("#B07A00"), inset: 5pt, radius: 2pt, below: 0.2cm)[
+      #text(size: 8pt, fill: rgb("#7A5200"), weight: "bold")[En test :]
+      #text(size: 8pt, fill: rgb("#7A5200"))[vérifiez les résultats avant de les utiliser dans un dossier.]
+    ]
+  }
   grid(
     columns: (4.2cm, 1fr),
     column-gutter: 0.35cm,

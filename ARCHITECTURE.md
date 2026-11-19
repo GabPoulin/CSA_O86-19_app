@@ -388,7 +388,8 @@ vrais comptes :
 - `acces.py` : connexion (mots de passe dans les secrets de Streamlit Cloud, section `[mots_de_passe]`,
   jamais dans le code), comptes `admin` (tout) et `lantier` (Groupe Lantier : seulement les fonctions
   choisies par l'utilisateur), et état « en test » de chaque fonction (avertissement affiché tant que
-  la fonction n'est pas testée convenablement) ;
+  la fonction n'est pas testée convenablement). Les deux listes sont des **cases à cocher dans
+  `ACCES_GROUPE_LANTIER.md`**, lues par l'application ;
 - `retours.py` : formulaire « Commentaire » qui crée une issue dans un dépôt GitHub privé (secrets
   `[retours]` : `jeton` et `depot`).
 
