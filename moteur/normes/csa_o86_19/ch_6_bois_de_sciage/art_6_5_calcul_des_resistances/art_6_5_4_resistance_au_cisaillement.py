@@ -10,6 +10,7 @@ CSA O86:19 - 6.5.4 Résistance au cisaillement (p. 65-68).
 6.5.4.2 (charges près des appuis) touche le calcul de la charge pondérée V_f, pas les résistances.
 """
 
+from moteur.commun.nombres import cs
 from moteur.commun.registre import enregistrer
 from moteur.commun.resultat import Donnee, Etape, Resultat
 from moteur.normes.csa_o86_19 import NORME
@@ -168,6 +169,7 @@ def verifier_cisaillement(
     K_T: float = 1,
     K_Zv: float = 1,
     V_f: float | None = None,
+    source_resistances: str = "Tableaux 6.4 à 6.9",
 ) -> Resultat:
     """
     6.5.4.3 Résistance pondérée au cisaillement d'un élément en bois de sciage.
@@ -180,6 +182,8 @@ def verifier_cisaillement(
         d_n (float, optional): Profondeur d'une entaille, mm (aire nette A_n, 5.3.8). Default to 0.
         K_D, K_H, K_Sv, K_T, K_Zv (float, optional): Coefficients de correction. Default to 1.
         V_f (float | None, optional): Effort tranchant pondéré, kN. Default to None.
+        source_resistances (str, optional): Tableau des résistances prévues (6.3), pour la note de
+            calcul (voir art_6_3.tableau_des_resistances()). Default to "Tableaux 6.4 à 6.9".
 
     Returns:
         Resultat: Trace du calcul. V_r en N ; vérification en kN.
@@ -190,30 +194,31 @@ def verifier_cisaillement(
         Donnee("d", "Hauteur de l'élément", d, "mm", "dimension"),
         Donnee("n", "Nombre de plis", plis),
         Donnee("d_n", "Profondeur de l'entaille", d_n, "mm", "dimension"),
-        Donnee("f_v", "Résistance prévue en cisaillement", f_v, "MPa", "contrainte"),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D),
-        Donnee("K_H", "Coefficient de système", K_H),
-        Donnee("K_{Sv}", "Coefficient de conditions d'utilisation (cisaillement)", K_Sv),
-        Donnee("K_T", "Coefficient de traitement", K_T),
-        Donnee("K_{Zv}", "Coefficient de dimensions (cisaillement)", K_Zv),
+        Donnee("f_v", "Résistance prévue en cisaillement", f_v, "MPa", "contrainte", source_resistances),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
+        Donnee("K_H", "Coefficient de système", K_H, source="Tableau 6.12"),
+        Donnee("K_{Sv}", "Coefficient de conditions d'utilisation (cisaillement)", K_Sv,
+               source="Tableau 6.10"),
+        Donnee("K_T", "Coefficient de traitement", K_T, source="Tableau 6.11"),
+        Donnee("K_{Zv}", "Coefficient de dimensions (cisaillement)", K_Zv, source="Tableau 6.13"),
     ):
         r.ajouter_donnee(donnee)
 
     f_v_corrige = r.ajouter_etape(Etape(
         "6.5.4.3", "Résistance corrigée en cisaillement", "F_v",
         r"F_v = f_v \, (K_D \, K_H \, K_{Sv} \, K_T)",
-        rf"{f_v} \times ({K_D} \times {K_H} \times {K_Sv} \times {K_T})",
+        rf"{cs(f_v)} \times ({cs(K_D)} \times {cs(K_H)} \times {cs(K_Sv)} \times {cs(K_T)})",
         F_v(f_v, K_D, K_H, K_Sv, K_T), "MPa", "contrainte",
     ))
     a_n = r.ajouter_etape(Etape(
         "5.3.8", "Aire de la section transversale nette", "A_n",
-        r"A_n = n \, b \, (d - d_n)", rf"{plis} \times {b:g} \times ({d:g} - {d_n:g})",
+        r"A_n = n \, b \, (d - d_n)", rf"{plis} \times {cs(b)} \times ({cs(d)} - {cs(d_n)})",
         plis * b * (d - d_n), "mm²",
     ))
     v_r = r.ajouter_etape(Etape(
         "6.5.4.3", "Résistance pondérée au cisaillement", "V_r",
         r"V_r = \phi \, F_v \, \frac{2 \, A_n}{3} \, K_{Zv}",
-        rf"0.9 \times {f_v_corrige:.3f} \times \frac{{2 \times {a_n:.0f}}}{{3}} \times {K_Zv}",
+        rf"0.9 \times {cs(f_v_corrige)} \times \frac{{2 \times {cs(a_n)}}}{{3}} \times {cs(K_Zv)}",
         V_r(f_v_corrige, a_n, K_Zv), "N",
     ))
 
@@ -263,44 +268,44 @@ def verifier_cisaillement_par_fissuration(
         Donnee("n", "Nombre de plis", plis),
         Donnee("d_n", "Profondeur de l'entaille", d_n, "mm", "dimension"),
         Donnee("e", "Longueur de l'entaille", e, "mm", "dimension"),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D),
-        Donnee("K_H", "Coefficient de système", K_H),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
+        Donnee("K_H", "Coefficient de système", K_H, source="Tableau 6.12"),
         Donnee("K_{Sf}", "Coefficient de conditions d'utilisation (cisaillement par fissuration)",
-               K_Sf),
-        Donnee("K_T", "Coefficient de traitement", K_T),
+               K_Sf, source="Tableau 6.10"),
+        Donnee("K_T", "Coefficient de traitement", K_T, source="Tableau 6.11"),
     ):
         r.ajouter_donnee(donnee)
 
     f_f_corrige = r.ajouter_etape(Etape(
         "6.5.4.4.1", "Résistance corrigée en cisaillement par fissuration", "F_f",
         r"F_f = f_f \, (K_D \, K_H \, K_{Sf} \, K_T)",
-        rf"0.50 \times ({K_D} \times {K_H} \times {K_Sf} \times {K_T})",
+        rf"0.50 \times ({cs(K_D)} \times {cs(K_H)} \times {cs(K_Sf)} \times {cs(K_T)})",
         F_f(K_D, K_H, K_Sf, K_T), "MPa", "contrainte",
     ))
     a = r.ajouter_etape(Etape(
         "6.5.4.4.2", "Rapport de la hauteur nette", r"\alpha",
-        r"\alpha = 1 - \frac{d_n}{d}", rf"1 - \frac{{{d_n:g}}}{{{d:g}}}", alpha(d_n, d),
+        r"\alpha = 1 - \frac{d_n}{d}", rf"1 - \frac{{{cs(d_n)}}}{{{cs(d)}}}", alpha(d_n, d),
     ))
     rapport_eta = r.ajouter_etape(Etape(
         "6.5.4.4.2", "Rapport de la longueur de l'entaille", r"\eta",
-        r"\eta = \frac{e}{d}", rf"\frac{{{e:g}}}{{{d:g}}}", eta(e, d),
+        r"\eta = \frac{e}{d}", rf"\frac{{{cs(e)}}}{{{cs(d)}}}", eta(e, d),
     ))
     k_n = r.ajouter_etape(Etape(
         "6.5.4.4.2", "Coefficient d'entaille", "K_N",
         r"K_N = \left[0.006 \, d \left(1.6 \left(\frac{1}{\alpha} - 1\right) + \eta^2 "
         r"\left(\frac{1}{\alpha^3} - 1\right)\right)\right]^{-1/2}",
-        rf"\left[0.006 \times {d:g} \left(1.6 \left(\frac{{1}}{{{a:.4f}}} - 1\right) + {rapport_eta:.4f}^2 "
-        rf"\left(\frac{{1}}{{{a:.4f}^3}} - 1\right)\right)\right]^{{-1/2}}",
+        rf"\left[0.006 \times {cs(d)} \left(1.6 \left(\frac{{1}}{{{cs(a)}}} - 1\right) + {cs(rapport_eta)}^2 "
+        rf"\left(\frac{{1}}{{{cs(a)}^3}} - 1\right)\right)\right]^{{-1/2}}",
         K_N(d, a, rapport_eta),
     ))
     a_g = r.ajouter_etape(Etape(
         "6.5.4.4.1", "Aire brute de la section transversale", "A_g",
-        r"A_g = n \, b \, d", rf"{plis} \times {b:g} \times {d:g}", plis * b * d, "mm²",
+        r"A_g = n \, b \, d", rf"{plis} \times {cs(b)} \times {cs(d)}", plis * b * d, "mm²",
     ))
     f_r = r.ajouter_etape(Etape(
         "6.5.4.4.1", "Résistance pondérée au cisaillement par fissuration", "F_r",
         r"F_r = \phi \, F_f \, A_g \, K_N",
-        rf"0.9 \times {f_f_corrige:.3f} \times {a_g:.0f} \times {k_n:.4f}",
+        rf"0.9 \times {cs(f_f_corrige)} \times {cs(a_g)} \times {cs(k_n)}",
         F_r(f_f_corrige, a_g, k_n), "N",
     ))
 

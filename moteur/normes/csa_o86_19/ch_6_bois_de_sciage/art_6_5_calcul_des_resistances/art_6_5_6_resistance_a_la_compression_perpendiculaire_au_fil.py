@@ -14,6 +14,7 @@ Décisions validées avec l'utilisateur :
     - K_Zcp appliqué automatiquement.
 """
 
+from moteur.commun.nombres import cs
 from moteur.commun.registre import enregistrer
 from moteur.commun.resultat import Donnee, Etape, Resultat
 from moteur.normes.csa_o86_19.ch_5_conception_generale.art_5_1_calculs_aux_etats_limites import (
@@ -189,13 +190,13 @@ def _donnees_communes(
     f_cp_corrige = r.ajouter_etape(Etape(
         "6.5.6.2", "Résistance corrigée en compression perpendiculaire au fil", "F_{cp}",
         r"F_{cp} = f_{cp} \, (K_D \, K_{Scp} \, K_T)",
-        rf"{f_cp:g} \times ({K_D} \times {K_Scp} \times {K_T})",
+        rf"{cs(f_cp)} \times ({cs(K_D)} \times {cs(K_Scp)} \times {cs(K_T)})",
         F_cp(f_cp, K_D, K_Scp, K_T), "MPa", "contrainte",
     ))
     k_zcp = r.ajouter_etape(Etape(
         "6.5.6.4", "Coefficient de dimensions pour l'appui", "K_{Zcp}",
         r"K_{Zcp} : \text{tableau 6.15, rapport largeur / hauteur de l'élément}",
-        rf"{largeur_element:g} / {d:g} = {largeur_element / d:.2f}",
+        rf"{cs(largeur_element)} / {cs(d)} = {cs(largeur_element / d)}",
         K_Zcp(largeur_element, d),
     ))
     return f_cp_corrige, k_zcp
@@ -240,17 +241,17 @@ def verifier_compression_perpendiculaire_au_fil(
 
     k_b = r.ajouter_etape(Etape(
         "6.5.6.5", "Coefficient de longueur d'appui", "K_B",
-        r"K_B = (L_b + 9.525) / L_b \leq 1.75", rf"({L_b:g} + 9.525) / {L_b:g}",
+        r"K_B = (L_b + 9.525) / L_b \leq 1.75", rf"({cs(L_b)} + 9.525) / {cs(L_b)}",
         K_B(L_b, loin_de_l_extremite, hors_fortes_contraintes_de_flexion),
     ))
     A_b = r.ajouter_etape(Etape(
-        "6.5.6.2", "Surface d'appui", "A_b", r"A_b = b \, L_b", rf"{b:g} \times {L_b:g}",
+        "6.5.6.2", "Surface d'appui", "A_b", r"A_b = b \, L_b", rf"{cs(b)} \times {cs(L_b)}",
         b * L_b, "mm²", "aire",
     ))
     q_r = r.ajouter_etape(Etape(
         "6.5.6.2", "Résistance pondérée à la compression perpendiculaire au fil", "Q_r",
         r"Q_r = \phi \, F_{cp} \, A_b \, K_B \, K_{Zcp}",
-        rf"0.8 \times {f_cp_corrige:.3f} \times {A_b:g} \times {k_b:.4f} \times {k_zcp:.4f}",
+        rf"0.8 \times {cs(f_cp_corrige)} \times {cs(A_b)} \times {cs(k_b)} \times {cs(k_zcp)}",
         Q_r(f_cp_corrige, A_b, k_b, k_zcp), "N",
     ))
     if R_f is not None:
@@ -307,19 +308,19 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
     k_b = r.ajouter_etape(Etape(
         "6.5.6.5", "Coefficient de longueur d'appui (le plus petit des deux)", "K_B",
         r"K_B = \min(K_{B,appui} \, ; \, K_{B,charge})",
-        rf"\min({k_b_appui:.4f} \, ; \, {k_b_charge:.4f})", min(k_b_appui, k_b_charge),
+        rf"\min({cs(k_b_appui)} \, ; \, {cs(k_b_charge)})", min(k_b_appui, k_b_charge),
     ))
     a_b_prime = r.ajouter_etape(Etape(
         "6.5.6.3.2", "Surface d'appui moyenne", "A'_b",
         r"A'_b = b \, (L_{b1} + L_{b2}) / 2 \leq 1.5 \, b \, L_{b1}",
-        rf"{b:g} \times ({min(L_b_appui, L_b_charge):g} + {max(L_b_appui, L_b_charge):g}) / 2",
+        rf"{cs(b)} \times ({cs(min(L_b_appui, L_b_charge))} + {cs(max(L_b_appui, L_b_charge))}) / 2",
         A_b_prime(b, L_b_appui, L_b_charge), "mm²", "aire",
     ))
     q_r_prime = r.ajouter_etape(Etape(
         "6.5.6.3.1", "Résistance pondérée sous les charges près de l'appui", "Q'_r",
         r"Q'_r = \frac{2}{3} \, \phi \, F_{cp} \, A'_b \, K_B \, K_{Zcp}",
-        rf"\frac{{2}}{{3}} \times 0.8 \times {f_cp_corrige:.3f} \times {a_b_prime:g} "
-        rf"\times {k_b:.4f} \times {k_zcp:.4f}",
+        rf"\frac{{2}}{{3}} \times 0.8 \times {cs(f_cp_corrige)} \times {cs(a_b_prime)} "
+        rf"\times {cs(k_b)} \times {cs(k_zcp)}",
         Q_r_prime(f_cp_corrige, a_b_prime, k_b, k_zcp), "N",
     ))
     if P_f is not None:

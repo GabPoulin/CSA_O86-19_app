@@ -1,0 +1,227 @@
+"""
+Note de calcul PDF (ARCHITECTURE.md, section 8 ; issue #50).
+
+Transforme une ou plusieurs traces de calcul (Resultat) en PDF, avec le gabarit Typst gabarit.typ
+(format Lettre, 8.5 x 11 po). Aucune logique de calcul ici : les valeurs viennent telles quelles de la
+trace. Les données et les résultats sont affichés dans les deux unités (ex. « 38 mm (1.50 po) ») ; les
+étapes intermédiaires restent en métrique, comme dans la norme.
+
+Les formules LaTeX de la trace sont rendues par l'extension Typst « mitex » 0.2.7 (licence Apache-2.0),
+incluse dans le dossier mitex/ pour ne dépendre d'aucun téléchargement.
+"""
+
+import json
+from dataclasses import dataclass
+from pathlib import Path
+
+import typst
+
+from moteur.commun.resultat import Resultat, Verification
+from moteur.commun.nombres import cs
+from moteur.commun.unites import deux_unites, grandeur, vers_imperial
+
+DOSSIER = Path(__file__).resolve().parent
+GABARIT = DOSSIER / "gabarit.typ"
+RACINE = DOSSIER.parents[2]  # racine du dépôt : le gabarit lit le logo dans marque/
+
+
+@dataclass(frozen=True)
+class EnTete:
+    """
+    Champs de l'en-tête, répétés sur chaque page (format validé, ARCHITECTURE.md, section 8).
+
+    Args:
+        client (str): Nom du client.
+        projet (str): Nom du projet.
+        adresse (str): Adresse du projet.
+        dossier (str): Numéro de dossier (ou de projet).
+        date (str): Date de la note (ex. « 2026-11-19 »).
+        ingenieur (str): Nom de l'ingénieur.
+        oiq (str): Numéro de membre de l'Ordre des ingénieurs du Québec.
+    """
+
+    client: str = ""
+    projet: str = ""
+    adresse: str = ""
+    dossier: str = ""
+    date: str = ""
+    ingenieur: str = ""
+    oiq: str = ""
+
+
+COULEUR_PRINCIPALE = "#233614"  # vert forêt (marque/couleurs.md)
+COULEUR_ACCENT = "#9E5A00"  # orange brûlé
+LONGUEUR_UNE_LIGNE = 55  # caractères LaTeX : au-delà, la formule s'écrit sur plusieurs lignes
+
+
+@dataclass(frozen=True)
+class Apparence:
+    """
+    Logo et couleurs de la note (ceux de la marque par défaut ; l'utilisateur peut mettre les siens).
+
+    Args:
+        logo (bytes | None): Image du logo (PNG, JPG ou SVG). None : logo de Le Repère.
+        principale (str): Couleur principale, hexadécimale (titres, lignes, en-têtes de tableau).
+        accent (str): Couleur d'accent, hexadécimale (articles, sources).
+    """
+
+    logo: bytes | None = None
+    principale: str = COULEUR_PRINCIPALE
+    accent: str = COULEUR_ACCENT
+
+
+def formater_nombre(valeur: float) -> str:
+    """
+    Nombre affiché avec un point décimal (CLAUDE.md) : entier au-delà de 1000, 2 décimales de 10 à 1000,
+    et 4 chiffres significatifs en dessous de 10 (ex. coefficients).
+    """
+    absolue = abs(valeur)
+    if absolue >= 1000:
+        return f"{valeur:.0f}"
+    if absolue >= 10:
+        return f"{valeur:.2f}"
+    return f"{valeur:.4g}"
+
+
+def formater_valeur(valeur: float | str, unite: str = "", grandeur: str | None = None) -> str:
+    """Valeur avec son unité ; avec l'équivalent impérial si la grandeur est connue."""
+    if isinstance(valeur, str):
+        return valeur
+    if grandeur is not None:
+        return deux_unites(valeur, grandeur)
+    return f"{formater_nombre(valeur)} {unite}".strip()
+
+
+def formater_resultat(valeur: float, unite: str = "", nom_grandeur: str | None = None) -> str:
+    """
+    Résultat d'un calcul (étape ou vérification) avec le même nombre de chiffres significatifs partout
+    (moteur/commun/nombres.py), et son équivalent impérial si la grandeur est connue.
+
+    Exemple : formater_resultat(11.8, "MPa", "contrainte") -> « 11.80 MPa (1711 psi) ».
+    """
+    if nom_grandeur is None:
+        return f"{cs(valeur)} {unite}".strip()
+    g = grandeur(nom_grandeur)
+    return (
+        f"{cs(valeur)} {g.unite_metrique} "
+        f"({cs(vers_imperial(valeur, nom_grandeur))} {g.unite_imperiale})"
+    )
+
+
+def calcul_en_latex(formule: str, substitution: str) -> str:
+    """
+    Ligne de calcul d'une étape : « formule = substitution ». Si elle est longue, les égalités vont sur
+    plusieurs lignes alignées (demande de l'utilisateur, revue de la PR #55) :
+
+        K_N &= [...]
+            &= [valeurs]
+    """
+    if len(formule) + len(substitution) <= LONGUEUR_UNE_LIGNE or " = " not in formule:
+        return f"{formule} = {substitution}"
+    gauche, droite = formule.split(" = ", 1)
+    return (
+        r"\begin{aligned} " + gauche + r" &= " + droite + r" \\ &= " + substitution
+        + r" \end{aligned}"
+    )
+
+
+def _verification(v: Verification) -> dict:
+    return {
+        "article": v.article,
+        "symbole_charge": v.symbole_charge,
+        "symbole_resistance": v.symbole_resistance,
+        "charge": formater_resultat(v.charge, v.unite, v.grandeur),
+        "resistance": formater_resultat(v.resistance, v.unite, v.grandeur),
+        "ratio": f"{v.ratio * 100:.2f} %" if v.resistance > 0 else "—",
+        "respecte": v.respecte,
+        # Sans le ratio, déjà affiché à part (revue de la PR #55)
+        "message": (
+            ("État limite respecté" if v.respecte else "État limite dépassé")
+            if v.resistance > 0
+            else v.message()
+        ),
+    }
+
+
+def donnees_de_la_note(
+    resultats: list[tuple[str, Resultat]],
+    entete: EnTete,
+    apparence: Apparence = Apparence(),
+) -> dict:
+    """
+    Données transmises au gabarit Typst (aussi utilisées par les tests).
+
+    Args:
+        resultats (list[tuple[str, Resultat]]): (nom de l'élément, trace), dans l'ordre de la note.
+        entete (EnTete): Champs de l'en-tête.
+        apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
+
+    Returns:
+        dict: Données sérialisables en JSON.
+    """
+    normes = sorted({r.norme for _, r in resultats})
+    note = {
+        "entete": {**vars(entete), "norme": ", ".join(normes)},
+        "apparence": {
+            "logo": list(apparence.logo) if apparence.logo else None,  # octets, pour Typst
+            "principale": apparence.principale,
+            "accent": apparence.accent,
+        },
+        "resultats": [],
+    }
+    for element, r in resultats:
+        note["resultats"].append({
+            "norme": r.norme,
+            "article": r.article,
+            "titre": r.titre,
+            "element": element,
+            "figure": r.figure or "",
+            "donnees": [
+                {
+                    "symbole": d.symbole,
+                    "description": d.description,
+                    "valeur": formater_valeur(d.valeur, d.unite, d.grandeur),
+                    "source": d.source,
+                }
+                for d in r.donnees
+            ],
+            "etapes": [
+                {
+                    "article": e.article,
+                    "description": e.description,
+                    "symbole": e.symbole,
+                    "formule": e.formule,
+                    "substitution": e.substitution,
+                    "calcul": calcul_en_latex(e.formule, e.substitution),
+                    "resultat": formater_resultat(e.valeur, e.unite, e.grandeur),
+                }
+                for e in r.etapes
+            ],
+            "verification": _verification(r.verification) if r.verification else None,
+        })
+    return note
+
+
+def produire_pdf(
+    resultats: list[tuple[str, Resultat]],
+    entete: EnTete,
+    apparence: Apparence = Apparence(),
+) -> bytes:
+    """
+    Produit la note de calcul PDF.
+
+    Args:
+        resultats (list[tuple[str, Resultat]]): (nom de l'élément, trace), dans l'ordre de la note.
+        entete (EnTete): Champs de l'en-tête.
+        apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
+
+    Returns:
+        bytes: Contenu du fichier PDF.
+
+    Raises:
+        ValueError: Si aucune vérification n'est fournie.
+    """
+    if not resultats:
+        raise ValueError("Aucune vérification à mettre dans la note de calcul.")
+    donnees = json.dumps(donnees_de_la_note(resultats, entete, apparence), ensure_ascii=False)
+    return typst.compile(str(GABARIT), root=str(RACINE), sys_inputs={"donnees": donnees})
