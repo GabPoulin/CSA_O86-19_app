@@ -47,12 +47,12 @@ def test_donnees_de_la_note():
     assert (r["titre"], r["element"], r["article"]) == ("Résistance au moment de flexion", "Solive S-1", "6.5.3")
     assert r["donnees"][0]["valeur"] == "38 mm (1.50 po)"  # b
     assert r["etapes"][-1]["symbole"] == "M_r"
-    assert r["etapes"][-1]["resultat"] == "4086000 N·mm"  # 4 085 877 N·mm, 4 chiffres significatifs
+    assert r["etapes"][-1]["resultat"] == "4090000 N·mm"  # 4 085 877 N·mm, 3 chiffres significatifs
     v = r["verification"]
     # 4.0 kN·m / 4.086 kN·m = 97.90 %
     assert v["ratio"] == "97.90 %"
     assert v["respecte"] is True
-    assert v["charge"].startswith("4.000 kN·m (")  # 4 chiffres significatifs
+    assert v["charge"].startswith("4.00 kN·m (")  # 3 chiffres significatifs
 
 
 def test_verification_absente():
@@ -133,9 +133,9 @@ def test_ratio_une_seule_fois():
 def test_meme_nombre_de_chiffres_significatifs_dans_les_calculs():
     from moteur.commun.note_de_calcul import formater_resultat
 
-    # 11.8 MPa x 145.04 psi/MPa = 1711.4 psi -> 1711 psi
-    assert formater_resultat(11.8, "MPa", "contrainte") == "11.80 MPa (1711 psi)"
-    assert formater_resultat(0.794512) == "0.7945"
+    # 11.8 MPa x 145.04 psi/MPa = 1711.4 psi -> 1710 psi (3 chiffres significatifs)
+    assert formater_resultat(11.8, "MPa", "contrainte") == "11.8 MPa (1710 psi)"
+    assert formater_resultat(0.794512) == "0.795"
     r = donnees_de_la_note([("S-1", flexion())], ENTETE)["resultats"][0]
-    # Substitution de M_r : chaque valeur avec 4 chiffres significatifs
-    assert r"0.9 \times 11.80 \times 349800 \times 1.100 \times 1.000" in r["etapes"][-1]["calcul"]
+    # Substitution de M_r : chaque valeur avec 3 chiffres significatifs (349 758 mm³ -> 350000)
+    assert r"0.9 \times 11.8 \times 350000 \times 1.10 \times 1.00" in r["etapes"][-1]["calcul"]

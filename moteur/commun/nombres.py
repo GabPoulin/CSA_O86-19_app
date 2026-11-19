@@ -8,15 +8,15 @@ restent écrites telles quelles dans les formules ; cs() sert aux valeurs (donn�
 
 import math
 
-CHIFFRES_SIGNIFICATIFS = 4
+CHIFFRES_SIGNIFICATIFS = 3  # décision de l'utilisateur (revue de la PR #55)
 
 
 def cs(valeur: float, chiffres: int = CHIFFRES_SIGNIFICATIFS) -> str:
     """
     Valeur arrondie à un nombre fixe de chiffres significatifs, sans notation scientifique.
 
-    Exemples (4 chiffres) : 11.8 -> « 11.80 » ; 0.79451 -> « 0.7945 » ; 4 085 877 -> « 4086000 » ;
-    1 -> « 1.000 » ; 0 -> « 0 ».
+    Exemples (3 chiffres) : 11.8 -> « 11.8 » ; 0.79451 -> « 0.795 » ; 4 085 877 -> « 4090000 » ;
+    1 -> « 1.00 » ; 0 -> « 0 ».
 
     Args:
         valeur (float): Valeur à formater.
