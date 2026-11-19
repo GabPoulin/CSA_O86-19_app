@@ -204,6 +204,31 @@ def test_note_avec_compression_perpendiculaire():
     assert any(b.label.startswith("Télécharger") for b in at.get("download_button"))
 
 
+def test_note_seulement_les_verifications_faites():
+    # Sans charge pondérée, la vérification n'est pas proposée dans la note (pas de page inutile).
+    # Dès que la charge est entrée, sa case apparaît, cochée par défaut.
+    with mock.patch.dict(acces.ACCES, {acces.LANTIER: frozenset({"compression_perpendiculaire", "note_pdf"})}):
+        at = _connecte("lantier", "mot-lantier")
+
+        def ni(cle):
+            return [n for n in at.number_input if n.key == cle][0]
+
+        def cases():
+            return [(c.label, c.value) for c in at.checkbox if c.key and c.key.startswith("note_")]
+
+        ni("cp_support_length").set_value(89.0)
+        at.run()
+        assert cases() == []  # Q_r calculée, mais R_f non entrée
+        assert any("charge pondérée" in i.value for i in at.info)
+        ni("cp_rf").set_value(5.0)  # kN
+        at.run()
+        assert cases() == [("Compression perpendiculaire au fil (6.5.6.2)", True)]
+        [c for c in at.checkbox if c.key and c.key.startswith("note_")][0].uncheck()
+        at.run()
+        assert cases() == [("Compression perpendiculaire au fil (6.5.6.2)", False)]
+        assert not any(b.label.startswith("Télécharger") for b in at.get("download_button"))
+    assert not at.exception
+
 def test_aucune_mention_de_le_repere_avant_la_connexion():
     at = _accueil(MOTS_DE_PASSE)
     textes = [e.value for e in at.title] + [e.value for e in at.caption] + [e.value for e in at.markdown]
