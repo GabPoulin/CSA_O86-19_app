@@ -223,6 +223,8 @@ def sizes(
 # Ces fonctions gardent leur ancien nom pour l'interface Streamlit et appellent le nouveau moteur.
 # Les formules ne sont plus ici. Voir ARCHITECTURE.md, section 14 (migration).
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (  # noqa: E402
+    art_6_5_3_resistance_au_moment_de_flexion as _art_6_5_3,
+    art_6_5_4_resistance_au_cisaillement as _art_6_5_4,
     art_6_5_5_resistance_a_la_compression_parallele_au_fil as _art_6_5_5,
     art_6_5_6_resistance_a_la_compression_perpendiculaire_au_fil as _art_6_5_6,
 )
@@ -348,61 +350,23 @@ class Resistances:
         tie_rods_support: bool = False,
     ):
         """
-        6.5.3 Résistance au moment de flexion.
-
-        Args:
-            fb (float): Résistance prévue en flexion, MPa.
-            ksb (float, optional): Coefficient de conditions d'utilisation pour la flexion.
-            kzb (float, optional): Coefficient de dimensions pour la flexion.
-
-            lateral_support (bool, optional): Support latéral aux appuis. Default to False.
-            compressive_edge_support (bool, optional): Rive comprimée maintenu. Default to False.
-            tensile_edge_support (bool, optional): Rive en tension maintenu. Default to False.
-            blocking_support (bool, optional): Entretoises ou entremises. Default to False.
-            tie_rods_support (bool, optional): Pannes ou tirants. Default to False.
+        6.5.3 Résistance au moment de flexion. Déplacé dans le nouveau moteur
+        (art_6_5_3_resistance_au_moment_de_flexion : F_b, S, K_L, M_r).
 
         Returns:
             float: Mr = Résistance pondérée au moment de flexion, N*mm.
 
+        Raises:
+            ValueError: Si d/b dépasse la limite de 6.5.3.2 (KL selon 7.5.6.4, à venir).
         """
-        phi = 0.9
-
-        kd = self.kd
-        kh = self.kh
-        kt = self.kt
-        f_b = fb * (kd * kh * ksb * kt)
-
         b = self.b * self.ply
-        d = self.d
-        s = (b * d**2) / 6
-
-        kl = 1
-
-        rapport_h_l = d / b
-        criteria = 2.5
-        if lateral_support:
-            criteria = 4
-            if compressive_edge_support:
-                criteria = 6.5
-                if tensile_edge_support:
-                    criteria = 9
-                elif blocking_support:
-                    criteria = 7.5
-            elif tie_rods_support:
-                criteria = 5
-
-        # 6.5.3.2.1 et 6.5.3.2.3 : KL = 1 si d/b ne dépasse pas la limite selon les supports.
-        # 6.5.3.2.2 : sinon, KL doit être déterminé selon 7.5.6.4 (pas encore offert).
-        if rapport_h_l > criteria:
-            raise ValueError(
-                f"Rapport hauteur/largeur d/b = {rapport_h_l:.2f} > {criteria} : KL doit être "
-                "déterminé selon l'article 7.5.6.4 (6.5.3.2.2), fonctionnalité à venir. "
-                "Ajoutez des supports latéraux (6.5.3.2.3) ou modifiez la section."
-            )
-
-        mr = phi * f_b * s * kzb * kl
-
-        return mr
+        rapport_maximal = _art_6_5_3.rapport_hauteur_largeur_maximal(
+            lateral_support, tie_rods_support, compressive_edge_support, blocking_support,
+            tensile_edge_support,
+        )
+        kl = _art_6_5_3.K_L(b, self.d, rapport_maximal)
+        f_b = _art_6_5_3.F_b(fb, self.kd, self.kh, ksb, self.kt)
+        return _art_6_5_3.M_r(f_b, _art_6_5_3.S(b, self.d), kzb, kl)
 
     def shear(
         self,
@@ -414,58 +378,29 @@ class Resistances:
         e: int | None = None,
     ):
         """
-        6.5.4 Résistance au cisaillement.
-
-        Args:
-            fv (float): Résistance prévue en cisaillement, MPa.
-            ksv (float, optional): Coefficient de conditions d'utilisation pour le cisaillement.
-            ksf (float, optional): Coefficient de conditions d'utilisation pour le cisaillement par fissuration.
-            kzv (float, optional): Coefficient de dimensions en cisaillement.
-            dn (int | None, optional): Profondeur de l'entaille, mm. Default to None.
-            e (int | None, optional): Longueur de l'entaille, mm. Default to None.
+        6.5.4 Résistance au cisaillement. Déplacé dans le nouveau moteur
+        (art_6_5_4_resistance_au_cisaillement : F_v, V_r, F_f, F_r, alpha, eta, K_N).
 
         Returns:
             float: Vr = Résistance pondérée au cisaillement, N.
-            float: Fr = Résistance pondérée au cisaillement par fissuration, N.
+            float: Fr = Résistance pondérée au cisaillement par fissuration, N (0 sans entaille).
 
         Raises:
             ValueError: Lorsque dn > 0.25d.
-
         """
-        phi = 0.9
-
-        kd = self.kd
-        kh = self.kh
-        kt = self.kt
-        f_v = fv * (kd * kh * ksv * kt)
-        ff = 0.5
-        f_f = ff * (kd * kh * ksf * kt)
-
         b = self.b * self.ply
         d = self.d
-        ag = b * d
-        an = ag
+        a_g = b * d
+        a_n = a_g
+        k_n = 0
+        if dn and e and dn > 0 and e > 0:
+            a = _art_6_5_4.alpha(dn, d)
+            k_n = _art_6_5_4.K_N(d, a, _art_6_5_4.eta(e, d))
+            a_n = b * (d - dn)
 
-        if dn and e:
-            if dn > 0 and e > 0:
-                if dn > 0.25 * d:
-                    raise ValueError(
-                        f"""La profondeur de l'entaille (dn = {dn} mm) ne doit pas dépasser 0,25d
-                        = {0.25 * d} mm."""
-                    )
-                an = b * (d - dn)
-                a = 1 - (dn / d)
-                n = e / d
-                kn = (
-                    0.006 * d * (1.6 * ((1 / a) - 1) + n**2 * ((1 / a**3) - 1))
-                ) ** (-1 / 2)
-        else:
-            kn = 0
-
-        vr = phi * f_v * ((2 * an) / 3) * kzv
-        fr = phi * f_f * ag * kn
-
-        return vr, fr
+        f_v = _art_6_5_4.F_v(fv, self.kd, self.kh, ksv, self.kt)
+        f_f = _art_6_5_4.F_f(self.kd, self.kh, ksf, self.kt)
+        return _art_6_5_4.V_r(f_v, a_n, kzv), _art_6_5_4.F_r(f_f, a_g, k_n)
 
     def comp_parallel(
         self,
