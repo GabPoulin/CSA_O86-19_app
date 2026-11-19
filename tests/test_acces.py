@@ -207,7 +207,7 @@ def test_note_avec_compression_perpendiculaire():
 def test_aucune_mention_de_le_repere_avant_la_connexion():
     at = _accueil(MOTS_DE_PASSE)
     textes = [e.value for e in at.title] + [e.value for e in at.caption] + [e.value for e in at.markdown]
-    assert "Datum" in textes
+    assert "Datum - Calculatrice Structurale" in textes
     assert not any("Repère" in t for t in textes)
 
 

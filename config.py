@@ -11,7 +11,8 @@ import acces
 import retours
 from moteur.commun.note_de_calcul import Apparence
 
-TITLE = "Datum"  # nom du logiciel : seul nom affiché, sans marque (chaque compte a la sienne)
+TITLE = "Datum - Calculatrice Structurale"  # nom du logiciel : seul nom affiché, sans marque
+NOM_COURT = "Datum"  # onglet du navigateur
 ICONE_PAR_DEFAUT = ":material/architecture:"  # onglet du navigateur avant la connexion
 # Thème global de l'interface (.streamlit/config.toml) : couleurs remplacées par celles du compte
 THEME = tomllib.loads(
@@ -118,7 +119,7 @@ def configurer_page(titre_page: str) -> None:
     compte = st.session_state.get("compte", "")
     symbole = fichier_du_compte(compte, "symbole.svg")
     st.set_page_config(
-        page_title=f"{titre_page} | {TITLE}", page_icon=str(symbole) if symbole else ICONE_PAR_DEFAUT
+        page_title=f"{titre_page} | {NOM_COURT}", page_icon=str(symbole) if symbole else ICONE_PAR_DEFAUT
     )
     compte = acces.exiger_connexion()
     logo = fichier_du_compte(compte, "logo_renverse.svg")  # barre latérale foncée

@@ -133,7 +133,7 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
   son merge. Rappeler à l'utilisateur les PR à merger.
 - Les décisions d'interprétation de la norme et les changements de structure restent **toujours
   soumis à l'utilisateur** avant d'être appliqués.
-- **Image de marque** : seul le nom du logiciel, **Datum**, est affiché (application et note PDF), jamais
+- **Image de marque** : seul le nom du logiciel, **Datum - Calculatrice Structurale**, est affiché (application et note PDF), jamais
   « Le Repère ». L'interface et la note prennent l'image du compte connecté (`marque/comptes/<compte>/`).
 - **Compte Groupe Lantier** (`ACCES_GROUPE_LANTIER.md`, lu par l'application, issue #56) : quand une
   fonction est intégrée au nouveau moteur, l'ajouter dans les deux listes **non cochée**. Seul
