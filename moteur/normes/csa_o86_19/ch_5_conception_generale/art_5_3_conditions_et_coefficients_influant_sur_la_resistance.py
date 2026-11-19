@@ -40,6 +40,24 @@ def K_D(duree: str) -> float:
         raise ValueError(f"Durée d'application de la charge invalide : {duree!r} (tableau 5.1).") from None
 
 
+def P_s(S: float = 0.0, L: float = 0.0) -> float:
+    """
+    5.3.2.2 Charge spécifiée de durée d'application normale P_s, à partir des charges de neige et des
+    surcharges spécifiées (coefficients de risque égaux à 1,0).
+
+    P_s = max(S ; L ; S + 0,5 L ; 0,5 S + L) : la plus grande des quatre combinaisons de 5.3.2.2
+    (décision de l'utilisateur, issue #58).
+
+    Args:
+        S (float, optional): Charge de neige spécifiée. Default to 0.
+        L (float, optional): Surcharge spécifiée (même unité que S). Default to 0.
+
+    Returns:
+        float: P_s (même unité que S et L).
+    """
+    return max(S, L, S + 0.5 * L, 0.5 * S + L)
+
+
 def K_D_charge_continue(P_L: float, P_s: float) -> float:
     """
     5.3.2.2 Coefficient de durée d'application continue de la charge.

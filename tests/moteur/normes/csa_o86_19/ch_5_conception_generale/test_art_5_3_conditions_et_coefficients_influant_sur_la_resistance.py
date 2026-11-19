@@ -7,6 +7,7 @@ import pytest
 from moteur.normes.csa_o86_19.ch_5_conception_generale.art_5_3_conditions_et_coefficients_influant_sur_la_resistance import (  # noqa: E501
     K_D,
     K_D_charge_continue,
+    P_s,
 )
 
 
@@ -44,3 +45,19 @@ def test_K_D_charge_continue_conditions():
 def test_K_D_charge_continue_presque_egal():
     # P_L à peine plus grand que P_s : K_D tend vers 1.0
     assert math.isclose(K_D_charge_continue(1.000001, 1.0), 1.0, abs_tol=1e-6)
+
+
+def test_P_s_maximum_des_quatre_combinaisons():
+    # S = 2 kPa, L = 1 kPa : S 2, L 1, S + 0.5L = 2.5, 0.5S + L = 2.0 kPa -> 2.5 kPa
+    assert P_s(2.0, 1.0) == pytest.approx(2.5)
+    # S = 1 kPa, L = 2 kPa : 0.5S + L = 2.5 kPa
+    assert P_s(1.0, 2.0) == pytest.approx(2.5)
+    # Neige seule, surcharge seule, aucune charge
+    assert P_s(S=3.0) == pytest.approx(3.0)
+    assert P_s(L=4.0) == pytest.approx(4.0)
+    assert P_s() == 0.0
+
+
+def test_K_D_avec_P_s_calcule():
+    # P_L = 3 kPa, S = 2 kPa, L = 1 kPa : P_s = 2.5 kPa ; K_D = 1 - 0.5 log(1.2) = 0.96041
+    assert K_D_charge_continue(3.0, P_s(2.0, 1.0)) == pytest.approx(0.96041, abs=1e-5)

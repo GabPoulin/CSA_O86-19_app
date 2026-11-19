@@ -110,7 +110,7 @@ def load_duration(
     """
     kd = _art_5_3.K_D(duration)
     if duration == "continue":
-        ps = max(snow, live, snow + 0.5 * live, 0.5 * snow + live)
+        ps = _art_5_3.P_s(snow, live)
         if ps > 0:
             kd = _art_5_3.K_D_charge_continue(dead, ps) if dead > ps else 1
     return kd
