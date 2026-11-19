@@ -15,6 +15,18 @@ import acces
 
 API_GITHUB = "https://api.github.com"
 ETIQUETTE = "retour"
+# Champs du formulaire dans la barre latérale : fond pâle et texte foncé (le thème de la barre latérale
+# donnait du texte pâle sur fond pâle, ou foncé sur fond foncé).
+STYLE_DES_CHAMPS = """<style>
+[data-testid="stSidebar"] [data-testid="stExpander"] :is(input, textarea),
+[data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stSelectbox"] [role="group"],
+[data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stSelectbox"] [role="group"] button,
+[data-testid="stSidebar"] [data-testid="stExpander"] :is([data-baseweb="textarea"], [data-baseweb="input"]) {
+    background-color: #FFFFFF !important; color: #333333 !important;
+    -webkit-text-fill-color: #333333 !important; caret-color: #333333 !important;
+    border-color: #FFFFFF !important;
+}
+</style>"""
 
 
 def corps_de_l_issue(page: str, fonction: str, commentaire: str, nom: str, compte: str) -> str:
@@ -50,16 +62,21 @@ def creer_issue(titre: str, corps: str, jeton: str, depot: str) -> str:
 
 
 def formulaire(page: str) -> None:
-    """Bouton « Commentaire » dans la barre latérale, avec le formulaire d'envoi."""
+    """
+    Formulaire « Commentaire » dans la barre latérale : l'utilisateur voit la page (et l'erreur) à
+    droite pendant qu'il écrit. Les champs ont un fond pâle et un texte foncé, lisibles sur la barre
+    latérale foncée de tous les comptes.
+    """
     try:
         secrets = st.secrets["retours"]
         jeton, depot = secrets["jeton"], secrets["depot"]
     except (KeyError, FileNotFoundError):
-        return  # commentaires non configurés : pas de bouton
+        return  # commentaires non configurés : pas de formulaire
     compte = st.session_state.get("compte", "")
     fonctions = [f.nom for cle, f in acces.FONCTIONS.items() if acces.permis(cle, compte)]
-    with st.sidebar.popover("Commentaire", icon=":material/chat:", use_container_width=True):
-        with st.form("commentaire", clear_on_submit=True):
+    st.sidebar.html(STYLE_DES_CHAMPS)
+    with st.sidebar.expander("Commentaire", icon=":material/chat:"):
+        with st.form("commentaire", clear_on_submit=True, border=False):
             fonction = st.selectbox("Fonction", ["Général"] + fonctions)
             commentaire = st.text_area("Commentaire, erreur ou suggestion")
             nom = st.text_input("Votre nom (facultatif)")
@@ -69,8 +86,9 @@ def formulaire(page: str) -> None:
                     return
                 titre = f"[{fonction}] {commentaire.strip().splitlines()[0][:60]}"
                 try:
-                    creer_issue(titre, corps_de_l_issue(page, fonction, commentaire, nom, compte),
-                                jeton, depot)
+                    creer_issue(
+                        titre, corps_de_l_issue(page, fonction, commentaire, nom, compte), jeton, depot
+                    )
                 except OSError:
                     st.error("L'envoi a échoué. Réessayez plus tard.")
                 else:
