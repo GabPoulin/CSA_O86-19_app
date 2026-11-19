@@ -304,8 +304,14 @@ Cette trace est la **source unique** pour :
 5. la vérification finale (ratio en %, respecté ou dépassé).
 
 Les **formules sont écrites en LaTeX** dans la trace. Elles sont affichées avec KaTeX dans l'interface,
-et rendues proprement dans le PDF. La façon de produire le PDF (gabarit HTML ou moteur LaTeX) sera
-choisie à la phase 3.
+et rendues proprement dans le PDF.
+
+**Production du PDF** (décision de l'utilisateur, issue #50) : **Typst** (paquet Python `typst`), avec
+l'extension **mitex** pour rendre les formules LaTeX de la trace. Le module est
+`moteur/commun/note_de_calcul/` : `produire_pdf()` reçoit des `Resultat` et l'en-tête, et le gabarit
+`gabarit.typ` fait la mise en page. Format **Lettre (8.5 × 11 po)**. Les vérifications à inclure sont
+choisies par cases à cocher. mitex 0.2.7 (licence Apache-2.0) est inclus dans le dépôt
+(`note_de_calcul/mitex/`), pour ne dépendre d'aucun téléchargement.
 
 ### Figures schématiques
 

@@ -37,6 +37,35 @@ class ResistancesPrevues:
     E_05: float
 
 
+TABLEAUX_DES_RESISTANCES = {
+    "Lumber": "Tableau 6.4",
+    "Light": "Tableau 6.5",
+    "Beam": "Tableau 6.6",
+    "Post": "Tableau 6.7",
+    "MSR": "Tableau 6.8",
+    "MEL": "Tableau 6.9",
+}
+
+
+def tableau_des_resistances(categorie: str) -> str:
+    """
+    6.3.1.1 et 6.3.2 : tableau des résistances prévues d'une catégorie (référence pour la note de calcul).
+
+    Args:
+        categorie (str): Code de la catégorie (voir art_6_2_materiaux).
+
+    Returns:
+        str: Ex. « Tableau 6.4 ».
+
+    Raises:
+        ValueError: Si la catégorie est inconnue.
+    """
+    try:
+        return TABLEAUX_DES_RESISTANCES[categorie]
+    except KeyError:
+        raise ValueError(f"Catégorie inconnue : {categorie!r}.") from None
+
+
 def classes(categorie: str, essence: str) -> list[str]:
     """
     Classes offertes pour une catégorie et un groupe d'essences, dans l'ordre des tableaux.
