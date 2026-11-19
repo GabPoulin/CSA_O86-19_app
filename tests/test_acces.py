@@ -86,6 +86,7 @@ def test_formulaire_de_commentaire():
     at.secrets["retours"] = {"jeton": "faux-jeton", "depot": "LeRepere-GP/datum-retours"}
     at.text_input[0].input("mot-lantier")
     at.button[0].click().run()
+    [b for b in at.button if b.label == "Commentaire"][0].click().run()  # ouvre la fenêtre de dialogue
     with mock.patch.object(retours, "creer_issue", return_value="https://exemple") as envoi:
         at.text_area[0].input("Le ratio devrait être arrondi.")
         [b for b in at.button if b.label == "Envoyer"][0].click().run()
