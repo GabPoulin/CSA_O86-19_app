@@ -37,6 +37,10 @@ ________________________________________________________________________________
 
 # IMPORTS
 import math
+
+from moteur.normes.csa_o86_19.ch_5_conception_generale import (
+    art_5_3_conditions_et_coefficients_influant_sur_la_resistance as _art_5_3,
+)
 from dataclasses import dataclass
 from sqlalchemy import orm, create_engine, Column, TEXT, REAL, INTEGER
 from moteur.normes.csa_o86_19.base_de_donnees import CHEMIN as _CHEMIN_BD
@@ -97,39 +101,18 @@ def load_duration(
     duration: str, dead: float = 0, live: float = 0, snow: float = 0
 ) -> float:
     """
-    5.3.2 Coefficient de durée d'application de la charge, Kd.
-
-    Args:
-        duration (str): Durée d'application de la charge. "courte", "normale" ou "continue".
-        dead (float, optional): Charge de durée d'application continue. Defaults to 0.
-        live (float, optional): Surcharge de durée d'application normale. Defaults to 0.
-        snow (float, optional): Surcharge de neige. Defaults to 0.
-
-    Returns:
-        float: Kd = Coefficient de durée d'application de la charge.
+    5.3.2 Coefficient de durée d'application de la charge, Kd. Déplacé dans le nouveau moteur
+    (art_5_3 : K_D, K_D_charge_continue). Comportement conservé : P_s = max(S, L, S + 0.5L, 0.5S + L) ;
+    « continue » avec P_L <= P_s donne 1.00 (issue #58).
 
     Raises:
         ValueError: Si la durée d'application de la charge n'est pas reconnue.
-
     """
-    if duration == "courte":
-        kd = 1.15
-    elif duration == "continue":
-        kd = 0.65
-        ps = max(snow, live, snow + 0.5 * live, 0.5 * snow + live)
+    kd = _art_5_3.K_D(duration)
+    if duration == "continue":
+        ps = _art_5_3.P_s(snow, live)
         if ps > 0:
-            pl = dead
-            if pl > ps:
-                kd = max(1 - 0.5 * math.log(pl / ps, 10), 0.65)
-            else:
-                kd = 1
-    elif duration == "normale":
-        kd = 1
-    else:
-        raise ValueError(f"Durée d'application de la charge invalide: {duration}")
-
-    kd = min(kd, 1.15)
-
+            kd = _art_5_3.K_D_charge_continue(dead, ps) if dead > ps else 1
     return kd
 
 

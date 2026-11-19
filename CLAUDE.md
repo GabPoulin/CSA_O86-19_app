@@ -87,6 +87,10 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
   catégories, y compris la charpente légère (6.4.5.2) et le MSR/MEL (6.4.5.3).
 - **KT dans KC (6.5.5.2.5)** : KT des « autres propriétés » (tableau 6.11), le même que dans Fc. Le KT
   du module d'élasticité ne sert qu'au calcul du module d'élasticité.
+- **KD (5.3.2)** (issue #58) : KD vient du **tableau 5.1** la plupart du temps ; il peut être calculé
+  par 5.3.2.2 si l'utilisateur entre les charges. **P_s = max(S ; L ; S + 0,5 L ; 0,5 S + L)**, calculée
+  à partir de la neige S et des surcharges L entrées. Si P_L <= P_s, KD = 1,00 (KD va de 0,65 quand
+  P_L domine à 1,00 quand P_s domine).
 - **KH (6.4.4, tableau 6.12)** (issue #7) : un élément composé de 2 plis ou plus prend **toujours** la
   colonne « Poutres composées » (cas 1, cas 2, MSR compris). La colonne MSR (1,20) est une sous-colonne
   du **cas 2** ; au cas 1, le MSR prend 1,10. Traction au cas 2 (« — » au tableau) : KH = 1,00.

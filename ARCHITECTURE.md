@@ -420,7 +420,7 @@ vrais comptes :
 | Code actuel | Nouvel emplacement (dans `moteur/normes/csa_o86_19/`) | Nouveau nom |
 |---|---|---|
 | `general_design.limit_states_design` | `ch_5/art_5_1` (règle de 5.1.2) + `Verification` dans `commun/resultat.py` | `verifier_etat_limite_ultime()` |
-| `general_design.load_duration` | `ch_5/art_5_3` | `K_D()` (5.3.2) |
+| `general_design.load_duration` | `ch_5/art_5_3` | `K_D()` (tableau 5.1) et `K_D_charge_continue()` (5.3.2.2) ; déplacé (questions : #58) |
 | `general_design.cross_section` | `ch_5/art_5_3` | 5.3.8 |
 | `general_design.elasticity`, `elastic_deflection`, `permanent_deformation`, `ponding`, `moisture` | `ch_5/art_5_4_…/` | `E_S()`, 5.4.2, 5.4.3, 5.4.4, 5.4.6 |
 | `general_design.Vibration` | `ch_5/art_5_4_…/art_5_4_5_vibration.py` + `annexe_A` (A.5.4.5, A.8.5.3, tableaux A.1 et A.2) | |
