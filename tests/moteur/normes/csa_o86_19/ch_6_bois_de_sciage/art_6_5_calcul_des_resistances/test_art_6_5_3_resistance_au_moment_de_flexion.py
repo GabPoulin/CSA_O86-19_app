@@ -5,6 +5,8 @@ import pytest
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances.art_6_5_3_resistance_au_moment_de_flexion import (  # noqa: E501
     F_b,
     K_L,
+    K_L_poutre_composee,
+    espacement_maximal_des_fixations,
     M_r,
     S,
     rapport_hauteur_largeur_maximal,
@@ -88,9 +90,47 @@ def test_verifier_flexion_ratio_depasse():
 
 def test_verifier_flexion_poutre_composee():
     # 3 plis de 38 x 235 mm : largeur totale 114 mm, d/b = 235 mm / 114 mm = 2.06 <= 2.5
-    r = verifier_flexion(38, 235, 11.8, plis=3)
+    r = verifier_flexion(38, 235, 11.8, plis=3, plis_fixes_a_au_plus_4d=True)
     assert r.etape("S").valeur == pytest.approx(114 * 235**2 / 6)  # 1 049 275 mm³
     assert r.etape("K_L").valeur == 1.0
     # 0.9 x 11.8 MPa x 1 049 275 mm³ = 11 143 300.5 N·mm
     assert r.etape("M_r").valeur == pytest.approx(11_143_300.5)
     assert r.verification is None
+
+
+# 6.5.3.2.4 Poutres composées (issue #48, lecture stricte)
+def test_espacement_maximal_des_fixations():
+    assert espacement_maximal_des_fixations(286) == 1144  # 4 x 286 mm = 1144 mm
+
+
+def test_K_L_poutre_composee_au_seuil():
+    # 2 plis de 38 mm : largeur totale 76 mm ; d = 2.5 x 76 mm = 190 mm -> d/(n b) = 2.5 : K_L = 1
+    assert K_L_poutre_composee(76, 190, True) == 1.0
+    # 191 mm / 76 mm = 2.51 > 2.5 -> K_L selon 7.5.6.4
+    with pytest.raises(ValueError, match="2.51 > 2.5"):
+        K_L_poutre_composee(76, 191, True)
+
+
+def test_K_L_poutre_composee_plis_non_fixes():
+    # 3 plis de 38 x 140 mm : 140 mm / 114 mm = 1.23 <= 2.5, mais plis non fixés à 4 d = 560 mm
+    with pytest.raises(ValueError, match="4 d = 560 mm"):
+        K_L_poutre_composee(114, 140, False)
+
+
+def test_poutre_composee_sans_les_rapports_de_6_5_3_2_3():
+    # Exemple de #48 : 3 plis de 38 x 286 mm, 286 mm / 114 mm = 2.51 > 2.5. Avant : K_L = 1 avec la
+    # rive comprimée maintenue (6.5:1). Maintenant : K_L selon 7.5.6.4, même avec tous les supports.
+    with pytest.raises(ValueError, match="2.51 > 2.5"):
+        verifier_flexion(
+            38, 286, 11.8, plis=3, plis_fixes_a_au_plus_4d=True, support_lateral_aux_appuis=True,
+            rive_comprimee_maintenue=True, rive_tendue_maintenue=True,
+        )
+
+
+def test_element_simple_inchange():
+    # Un pli : les rapports de 6.5.3.2.3 s'appliquent toujours (38 x 286 mm, 7.53 <= 9)
+    r = verifier_flexion(
+        38, 286, 11.8, support_lateral_aux_appuis=True, rive_comprimee_maintenue=True,
+        rive_tendue_maintenue=True,
+    )
+    assert r.etape("K_L").valeur == 1.0
