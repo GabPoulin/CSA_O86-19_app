@@ -13,8 +13,12 @@ Interprétations validées avec l'utilisateur (CLAUDE.md, issue #7) :
     - K_H : un élément composé de 2 plis ou plus prend toujours la colonne « Poutres composées ».
       La colonne MSR (1,20) est une sous-colonne du cas 2 ; au cas 1, le MSR prend 1,10.
       Traction au cas 2 (« — » au tableau 6.12) : K_H = 1,00.
-    - K_Z pour une dimension absente du tableau 6.13 (ex. 165 ou 216 mm) : ligne de la dimension
-      supérieure (conservateur).
+    - K_Z (issue #45) : la dimension réelle (sèche, verte ou brute) choisit la ligne du tableau 6.13 ;
+      une grande face absente du tableau prend la ligne de la dimension supérieure (conservateur, ex.
+      143 mm -> ligne « 184 à 191 ») ; une face étroite entre deux colonnes (65 à 88 mm, 103 à 113 mm)
+      prend la plus petite valeur des deux colonnes voisines (conservateur).
+    - K_T (issue #45) : bois traité et incisé de plus de 89 mm d'épaisseur, absent du tableau 6.11 :
+      K_T = 1,00.
 """
 
 import math
@@ -76,23 +80,24 @@ TABLEAU_6_12: dict[str, tuple[float, float, float, float]] = {
 AUTRE_PROPRIETE_K_H = (1.00, 1.00, 1.00, 1.00)
 
 # 6.4.5 Tableau 6.13 Coefficient de dimensions, K_Z, bois classé visuellement (p. 63)
-# (borne supérieure exclue de la grande face en mm, ligne du tableau,
+# (borne supérieure incluse de la grande face en mm, ligne du tableau,
 #  K_Zb et K_Zv selon la face étroite (38 à 64, 89 à 102, 114 ou plus), K_Zt)
 # None = « — » au tableau : combinaison impossible (la face étroite ne dépasse pas la grande face).
-# Bornes du code existant conservées pendant la migration (issue #45 : dimensions vertes et
-# brutes absentes du tableau).
+# Issue #45 : une grande face absente du tableau prend la ligne supérieure (ex. 143 mm -> « 184 à 191 »).
 TABLEAU_6_13: tuple[tuple[float, str, tuple[float | None, float | None, float | None], float], ...] = (
-    (64, "38", (1.7, None, None), 1.5),
-    (89, "64", (1.7, None, None), 1.5),
-    (114, "89", (1.7, 1.7, None), 1.5),
-    (140, "114", (1.5, 1.6, 1.3), 1.4),
-    (159, "140", (1.4, 1.5, 1.3), 1.3),
-    (210, "184 à 191", (1.2, 1.3, 1.3), 1.2),
-    (286, "235 à 241", (1.1, 1.2, 1.2), 1.1),
-    (337, "286 à 292", (1.0, 1.1, 1.1), 1.0),
-    (362, "337 à 343", (0.9, 1.0, 1.0), 0.9),
+    (38, "38", (1.7, None, None), 1.5),
+    (64, "64", (1.7, None, None), 1.5),
+    (89, "89", (1.7, 1.7, None), 1.5),
+    (114, "114", (1.5, 1.6, 1.3), 1.4),
+    (140, "140", (1.4, 1.5, 1.3), 1.3),
+    (191, "184 à 191", (1.2, 1.3, 1.3), 1.2),
+    (241, "235 à 241", (1.1, 1.2, 1.2), 1.1),
+    (292, "286 à 292", (1.0, 1.1, 1.1), 1.0),
+    (343, "337 à 343", (0.9, 1.0, 1.0), 0.9),
     (math.inf, "387 ou plus", (0.8, 0.9, 0.9), 0.8),
 )
+# Colonnes de la face étroite du tableau 6.13, mm (bornes incluses)
+COLONNES_6_13: tuple[tuple[float, float], ...] = ((38, 64), (89, 102), (114, math.inf))
 
 
 def K_S(propriete: str, milieu_humide: bool = False, face_etroite: float = 38) -> float:
@@ -207,12 +212,35 @@ def K_H(propriete: str, cas: str | None = None, msr: bool = False) -> float:
     raise ValueError(f"Cas de système inconnu : {cas!r} (tableau 6.12).")
 
 
-def ligne_du_tableau_6_13(grande_face: float) -> str:
-    """Tableau 6.13 : ligne (grande face, mm) utilisée pour une grande face donnée, mm."""
-    for borne, ligne, _, _ in TABLEAU_6_13:
-        if grande_face < borne:
+def _ligne(grande_face: float) -> tuple[float, str, tuple[float | None, ...], float]:
+    for ligne in TABLEAU_6_13:
+        if grande_face <= ligne[0]:
             return ligne
     raise AssertionError("TABLEAU_6_13 se termine par une borne infinie.")
+
+
+def ligne_du_tableau_6_13(grande_face: float) -> str:
+    """
+    Tableau 6.13 : ligne utilisée pour une grande face réelle, mm.
+
+    Grande face absente du tableau : ligne de la dimension supérieure (issue #45).
+    """
+    return _ligne(grande_face)[1]
+
+
+def colonnes_du_tableau_6_13(face_etroite: float) -> tuple[int, ...]:
+    """
+    Tableau 6.13 : colonne(s) de la face étroite réelle, mm (0 : 38 à 64 ; 1 : 89 à 102 ; 2 : 114 ou plus).
+
+    Face étroite entre deux colonnes (65 à 88 mm, 103 à 113 mm) : les deux colonnes voisines ; K_Z prend
+    la plus petite des deux valeurs (issue #45).
+    """
+    for i, (minimum, maximum) in enumerate(COLONNES_6_13):
+        if minimum <= face_etroite <= maximum:
+            return (i,)
+        if face_etroite < minimum:
+            return (i - 1, i) if i > 0 else (i,)
+    raise AssertionError("COLONNES_6_13 se termine par une borne infinie.")
 
 
 def K_Z(propriete: str, b: float, d: float, categorie: str) -> float:
@@ -222,6 +250,8 @@ def K_Z(propriete: str, b: float, d: float, categorie: str) -> float:
     6.4.5.1 Bois classé visuellement : K_Zb, K_Zv et K_Zt du tableau 6.13 ; autres propriétés 1,0.
     6.4.5.2 Charpente légère : K_Z = 1,00.
     6.4.5.3 MSR et MEL : K_Z = 1,00, sauf K_Zv selon le tableau 6.13.
+    Dimensions réelles absentes du tableau : ligne supérieure, et plus petite des deux colonnes voisines
+    (issue #45).
     K_Zc (6.5.5.2.4) et K_Zcp (6.5.6.4) sont calculés à leurs articles.
 
     Args:
@@ -249,13 +279,11 @@ def K_Z(propriete: str, b: float, d: float, categorie: str) -> float:
         return 1.0  # 6.4.5.3
 
     face_etroite, grande_face = min(b, d), max(b, d)
-    for borne, _, flexion_cisaillement, traction in TABLEAU_6_13:
-        if grande_face < borne:
-            if propriete == TRACTION_PARALLELE:
-                return traction
-            colonne = 0 if face_etroite < 89 else 1 if face_etroite < 114 else 2
-            valeur = flexion_cisaillement[colonne]
-            if valeur is None:  # « — » : face étroite plus grande que la grande face
-                raise AssertionError("Combinaison absente du tableau 6.13 (« — »).")
-            return valeur
-    raise AssertionError("TABLEAU_6_13 se termine par une borne infinie.")
+    _, _, flexion_cisaillement, traction = _ligne(grande_face)
+    if propriete == TRACTION_PARALLELE:
+        return traction
+    valeurs = [flexion_cisaillement[c] for c in colonnes_du_tableau_6_13(face_etroite)]
+    valeurs = [v for v in valeurs if v is not None]  # « — » : combinaison impossible
+    if not valeurs:
+        raise AssertionError("Combinaison absente du tableau 6.13 (« — »).")
+    return min(valeurs)
