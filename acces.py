@@ -171,7 +171,6 @@ def exiger_connexion() -> str:
 
     mots_de_passe = _mots_de_passe()
     st.title("Datum", anchor=False)
-    st.caption("par Le Repère Ingénierie")
     if not mots_de_passe:
         st.error(
             "Connexion non configurée : ajoutez la section [mots_de_passe] aux secrets de "
