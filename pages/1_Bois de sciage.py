@@ -19,6 +19,7 @@ from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances
     art_6_5_3_resistance_au_moment_de_flexion as art_6_5_3,
     art_6_5_4_resistance_au_cisaillement as art_6_5_4,
     art_6_5_5_resistance_a_la_compression_parallele_au_fil as art_6_5_5,
+    art_6_5_6_resistance_a_la_compression_perpendiculaire_au_fil as art_6_5_6,
 )
 import sawn_lumber
 import general_design
@@ -850,6 +851,7 @@ if "compression_perpendiculaire" in ONGLETS:
                         icon=":material/warning:",
                     )
             fcp_modified = sawn_lumber.bearing_strength(fcp, kd=kd, kscp=kscp, kt=kt)
+            SOURCE_FCP = "A.6.5.6 (densité G)" if use_density else SOURCE
 
             col1, col2 = st.columns(2, width=550)
             with col1:
@@ -948,6 +950,16 @@ if "compression_perpendiculaire" in ONGLETS:
                     )
                     st.write(f"$Qr = {qr:.2f} kN$")
                     show_verification(general_design.limit_states_design(rf, qr))
+                    NOTE["Compression perpendiculaire au fil (6.5.6.2)"] = (
+                        art_6_5_6.verifier_compression_perpendiculaire_au_fil(
+                            b=bearing_width, d=depth, L_b=support_length, f_cp=fcp,
+                            K_D=kd, K_Scp=kscp, K_T=kt,
+                            loin_de_l_extremite=support_far,
+                            hors_fortes_contraintes_de_flexion=support_low_bending,
+                            R_f=rf, largeur_element=member_width,
+                            source_resistances=SOURCE_FCP,
+                        )
+                    )
                     details.append(
                         f"Appui : $A_b = {bearing_width:g} \\cdot {support_length:g} = {area:.0f}$ mm², "
                         f"$K_B = {kb_support:.4f}$, "
@@ -987,6 +999,18 @@ if "compression_perpendiculaire" in ONGLETS:
                         )
                         st.write(f"$Q'r = {qr_near:.2f} kN$")
                         show_verification(general_design.limit_states_design(pf_near, qr_near))
+                        NOTE["Compression perpendiculaire près d'un appui (6.5.6.3)"] = (
+                            art_6_5_6.verifier_compression_perpendiculaire_pres_d_un_appui(
+                                b=bearing_width, d=depth, L_b_appui=support_length,
+                                L_b_charge=load_length, f_cp=fcp, K_D=kd, K_Scp=kscp, K_T=kt,
+                                appui_loin_de_l_extremite=support_far,
+                                appui_hors_fortes_contraintes_de_flexion=support_low_bending,
+                                charge_loin_de_l_extremite=load_far,
+                                charge_hors_fortes_contraintes_de_flexion=load_low_bending,
+                                P_f=pf_near, largeur_element=member_width,
+                                source_resistances=SOURCE_FCP,
+                            )
+                        )
                         details.append(
                             f"Charge près de l'appui : $A'_b = {average_area:.0f}$ mm², "
                             f"$K_B = \\min({kb_support:.4f}, {kb_load:.4f}) = {kb_near:.4f}$, "
@@ -1028,6 +1052,8 @@ FONCTION_DE_LA_VERIFICATION = {
     "Cisaillement (6.5.4.3)": "cisaillement",
     "Cisaillement par fissuration à l'entaille (6.5.4.4)": "cisaillement",
     "Compression parallèle au fil (6.5.5)": "compression_parallele",
+    "Compression perpendiculaire au fil (6.5.6.2)": "compression_perpendiculaire",
+    "Compression perpendiculaire près d'un appui (6.5.6.3)": "compression_perpendiculaire",
 }
 if acces.permis("note_pdf"):
     st.divider()
@@ -1035,8 +1061,7 @@ if acces.permis("note_pdf"):
     with st.container(horizontal_alignment="center"):
         if not NOTE:
             st.info(
-                "Faites au moins une vérification (flexion, cisaillement ou compression parallèle) "
-                "pour produire la note de calcul.",
+                "Faites au moins une vérification pour produire la note de calcul.",
                 width=650,
                 icon=":material/info:",
             )

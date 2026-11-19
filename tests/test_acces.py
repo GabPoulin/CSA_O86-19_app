@@ -180,3 +180,27 @@ def test_fonction_testee_sans_avertissement():
 def test_admin_voit_tout():
     at = _connecte("admin", "mot-admin")
     assert len(at.tabs) == 7
+
+
+def test_note_avec_compression_perpendiculaire():
+    with mock.patch.dict(acces.ACCES, {acces.LANTIER: frozenset({"compression_perpendiculaire", "note_pdf"})}):
+        at = _connecte("lantier", "mot-lantier")
+
+        def ni(cle):
+            return [n for n in at.number_input if n.key == cle][0]
+
+        ni("cp_support_length").set_value(89.0)
+        ni("cp_rf").set_value(5.0)
+        at.run()
+        [c for c in at.checkbox if c.key == "cp_near_load"][0].check()
+        at.run()
+        ni("cp_load_length").set_value(140.0)
+        ni("cp_pf").set_value(3.0)
+        at.run()
+    assert not at.exception
+    cases = [c.label for c in at.checkbox if c.key and c.key.startswith("note_")]
+    assert cases == [
+        "Compression perpendiculaire au fil (6.5.6.2)",
+        "Compression perpendiculaire près d'un appui (6.5.6.3)",
+    ]
+    assert any(b.label.startswith("Télécharger") for b in at.get("download_button"))

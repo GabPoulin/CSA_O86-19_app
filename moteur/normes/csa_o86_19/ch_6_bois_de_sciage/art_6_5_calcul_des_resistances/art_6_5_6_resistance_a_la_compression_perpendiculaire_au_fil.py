@@ -171,7 +171,7 @@ def K_B(
 
 # VÉRIFICATIONS
 def _donnees_communes(
-    r: Resultat, b, largeur_element, d, f_cp, K_D, K_Scp, K_T
+    r: Resultat, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances="Tableaux 6.4 à 6.9"
 ) -> tuple[float, float]:
     """Ajoute les données et les étapes F_cp et K_Zcp communes aux deux vérifications."""
     for donnee in (
@@ -179,11 +179,11 @@ def _donnees_communes(
         Donnee("b_{élément}", "Largeur de l'élément", largeur_element, "mm", "dimension"),
         Donnee("d", "Hauteur de l'élément", d, "mm", "dimension"),
         Donnee("f_{cp}", "Résistance prévue en compression perpendiculaire au fil", f_cp, "MPa",
-               "contrainte"),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D),
+               "contrainte", source_resistances),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
         Donnee("K_{Scp}", "Coefficient de conditions d'utilisation (compression perpendiculaire)",
-               K_Scp),
-        Donnee("K_T", "Coefficient de traitement", K_T),
+               K_Scp, source="Tableau 6.10"),
+        Donnee("K_T", "Coefficient de traitement", K_T, source="Tableau 6.11"),
     ):
         r.ajouter_donnee(donnee)
 
@@ -215,6 +215,7 @@ def verifier_compression_perpendiculaire_au_fil(
     hors_fortes_contraintes_de_flexion: bool = False,
     R_f: float | None = None,
     largeur_element: float | None = None,
+    source_resistances: str = "Tableaux 6.4 à 6.9",
 ) -> Resultat:
     """
     6.5.6.2 Résistance pondérée à la compression perpendiculaire au fil à un appui, Q_r.
@@ -230,13 +231,17 @@ def verifier_compression_perpendiculaire_au_fil(
         R_f (float | None, optional): Réaction pondérée à l'appui, kN. Default to None.
         largeur_element (float | None, optional): Largeur de l'élément pour K_Zcp, mm. Par défaut,
             la largeur d'appui b.
+        source_resistances (str, optional): Source de f_cp pour la note de calcul (ex. « Tableau 6.4 »,
+            ou « A.6.5.6 » si f_cp vient de la densité G). Default to "Tableaux 6.4 à 6.9".
 
     Returns:
         Resultat: Trace du calcul. Q_r en N ; vérification en kN.
     """
     r = Resultat(NORME, "6.5.6.2", "Compression perpendiculaire au fil à l'appui", "appui")
     largeur_element = b if largeur_element is None else largeur_element
-    f_cp_corrige, k_zcp = _donnees_communes(r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T)
+    f_cp_corrige, k_zcp = _donnees_communes(
+        r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances
+    )
     r.ajouter_donnee(Donnee("L_b", "Longueur d'appui", L_b, "mm", "dimension"))
 
     k_b = r.ajouter_etape(Etape(
@@ -275,6 +280,7 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
     charge_hors_fortes_contraintes_de_flexion: bool = False,
     P_f: float | None = None,
     largeur_element: float | None = None,
+    source_resistances: str = "Tableaux 6.4 à 6.9",
 ) -> Resultat:
     """
     6.5.6.3 Résistance pondérée Q'_r sous les seules charges appliquées à une distance du centre de
@@ -291,13 +297,17 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
         P_f (float | None, optional): Charge pondérée près de l'appui, kN. Default to None.
         largeur_element (float | None, optional): Largeur de l'élément pour K_Zcp, mm. Par défaut,
             la largeur d'appui b.
+        source_resistances (str, optional): Source de f_cp pour la note de calcul (ex. « Tableau 6.4 »,
+            ou « A.6.5.6 » si f_cp vient de la densité G). Default to "Tableaux 6.4 à 6.9".
 
     Returns:
         Resultat: Trace du calcul. Q'_r en N ; vérification en kN.
     """
     r = Resultat(NORME, "6.5.6.3", "Compression perpendiculaire au fil près d'un appui", "appui")
     largeur_element = b if largeur_element is None else largeur_element
-    f_cp_corrige, k_zcp = _donnees_communes(r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T)
+    f_cp_corrige, k_zcp = _donnees_communes(
+        r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances
+    )
     r.ajouter_donnee(Donnee("L_{b,appui}", "Longueur d'appui à l'appui", L_b_appui, "mm", "dimension"))
     r.ajouter_donnee(Donnee("L_{b,charge}", "Longueur d'appui de la charge", L_b_charge, "mm",
                             "dimension"))
