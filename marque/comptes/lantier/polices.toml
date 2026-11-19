@@ -1,0 +1,4 @@
+# Charte graphique Groupe Lantier 2021, p. 7 : Rift Bold (titres, majuscules), DIN 2014 Regular (texte)
+# Fichiers .otf dans polices/ (ignoré par git : polices sous licence, dépôt public)
+titres = "Rift"
+texte = "DIN 2014"

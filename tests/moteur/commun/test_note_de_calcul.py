@@ -92,12 +92,24 @@ def test_apparence_par_defaut_et_personnalisee():
     from moteur.commun.note_de_calcul import Apparence
 
     defaut = donnees_de_la_note([("S-1", flexion())], ENTETE)["apparence"]
-    assert defaut == {"logo": None, "principale": "#233614", "accent": "#9E5A00"}
+    assert defaut == {
+        "logo": None,
+        "principale": "#233614",
+        "accent": "#9E5A00",
+        "police_titres": None,
+        "police_texte": None,
+    }
     logo = bytes([137, 80, 78, 71])  # début d'un fichier PNG
     perso = donnees_de_la_note(
         [("S-1", flexion())], ENTETE, Apparence(logo, "#003366", "#CC0000")
     )["apparence"]
-    assert perso == {"logo": [137, 80, 78, 71], "principale": "#003366", "accent": "#CC0000"}
+    assert perso == {
+        "logo": [137, 80, 78, 71],
+        "principale": "#003366",
+        "accent": "#CC0000",
+        "police_titres": None,
+        "police_texte": None,
+    }
 
 
 def test_produire_pdf_couleurs_personnalisees():
@@ -145,3 +157,11 @@ def test_avertissement_en_test_dans_la_note():
     note = donnees_de_la_note([("S-1", flexion(), True), ("S-1", flexion())], ENTETE)
     assert [r["en_test"] for r in note["resultats"]] == [True, False]
     assert produire_pdf([("S-1", flexion(), True)], ENTETE).startswith(b"%PDF")
+
+
+def test_produire_pdf_polices_absentes(tmp_path):
+    # Polices introuvables (dossier vide) : Typst prend la police par défaut, sans erreur
+    from moteur.commun.note_de_calcul import Apparence
+
+    ap = Apparence(police_titres="Rift", police_texte="DIN 2014", dossier_polices=tmp_path)
+    assert produire_pdf([("S-1", flexion())], ENTETE, ap).startswith(b"%PDF")

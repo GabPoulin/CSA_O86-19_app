@@ -43,8 +43,10 @@ def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparen
     Logo et couleurs de la note de calcul d'un compte (marque/comptes/<compte>/, voir son README).
 
     Le premier fichier trouvé parmi logo.svg, logo.png, logo.jpg et logo.jpeg sert de logo. Les
-    couleurs viennent de couleurs.toml (clés « principale » et « accent », ex. "#233614"). Ce qui
-    manque garde la valeur par défaut (Le Repère).
+    couleurs viennent de couleurs.toml (clés « principale » et « accent », ex. "#233614"). Les polices
+    viennent de polices.toml (clés « titres » et « texte », noms de familles) et du dossier polices/
+    (fichiers .otf ou .ttf, ignoré par git : polices sous licence). Ce qui manque garde la valeur par
+    défaut (Le Repère).
 
     Args:
         compte (str): Identifiant du compte (ex. « lantier »).
@@ -70,8 +72,15 @@ def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparen
         for cle in ("principale", "accent"):
             if cle in couleurs and not _COULEUR.match(str(couleurs[cle])):
                 raise ValueError(f"{fichier_couleurs} : couleur « {cle} » invalide (format #RRGGBB).")
+    polices = {}
+    fichier_polices = dossier_du_compte / "polices.toml"
+    if fichier_polices.is_file():
+        polices = tomllib.loads(fichier_polices.read_text(encoding="utf-8"))
     return Apparence(
         logo,
         couleurs.get("principale", defaut.principale),
         couleurs.get("accent", defaut.accent),
+        polices.get("titres"),
+        polices.get("texte"),
+        dossier_du_compte / "polices",
     )

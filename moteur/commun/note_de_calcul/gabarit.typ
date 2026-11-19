@@ -22,37 +22,48 @@
   image(bytes(apparence.logo), height: hauteur)
 }
 
+// Polices : celles du compte (ex. charte de Groupe Lantier), sinon celles de Typst par défaut
+#let police-texte = if apparence.at("police_texte", default: none) == none { () } else { (apparence.police_texte,) }
+#let police-titres = apparence.at("police_titres", default: none)
+// Titre : police des titres en majuscules (charte du compte), sinon gras dans la police du texte
+#let titre(taille, couleur, corps) = if police-titres == none {
+  text(size: taille, fill: couleur, weight: "bold")[#corps]
+} else {
+  text(font: police-titres, size: taille * 1.15, fill: couleur, weight: "bold")[#upper(corps)]
+}
+
 #set document(title: "Note de calcul — " + entete.projet, author: entete.ingenieur)
-#set text(lang: "fr", size: 9pt, fill: charbon)
+#set text(lang: "fr", size: 9pt, fill: charbon, font: police-texte + ("Libertinus Serif",))
 #set par(justify: false)
 
-#let champ(nom, valeur) = [#text(fill: gris, size: 7pt)[#nom] \ #valeur]
+#let champ(nom, valeur) = [#text(fill: gris, size: 6.5pt)[#upper(nom)] \ #text(size: 8pt)[#valeur]]
 
+// En-tête : logo et titre, puis les champs du dossier dans un bandeau gris pâle
 #let en-tete = context {
   grid(
-    columns: (4.2cm, 1fr),
-    column-gutter: 0.4cm,
-    align: (left + horizon, left + top),
+    columns: (1fr, auto),
+    align: (left + horizon, right + horizon),
+    logo(1.0cm),
     [
-      #logo(1.0cm)
-      #v(-0.15cm)
-      #text(size: 7pt, fill: principale, weight: "bold")[Datum, par Le Repère Ingénierie]
+      #titre(12pt, principale, [Note de calcul]) \
+      #text(size: 7pt, fill: gris)[Datum, par Le Repère Ingénierie]
     ],
-    grid(
-      columns: (1fr, 1fr, 1fr, 1fr),
-      row-gutter: 0.15cm,
-      column-gutter: 0.3cm,
-      champ("Client", entete.client),
-      champ("Projet", entete.projet),
-      champ("Adresse du projet", entete.adresse),
-      champ("N° de dossier", entete.dossier),
-      champ("Norme et édition", entete.norme),
-      champ("Date", entete.date),
-      champ("Ingénieur", entete.ingenieur + " — OIQ " + entete.oiq),
-      champ("Page", [#counter(page).display() de #counter(page).final().first()]),
-    ),
   )
-  v(0.05cm)
+  v(0.2cm)
+  block(width: 100%, fill: gris-pale, inset: (x: 6pt, y: 5pt), radius: 2pt, grid(
+    columns: (1.1fr, 1.1fr, 1.4fr, 0.8fr),
+    row-gutter: 0.18cm,
+    column-gutter: 0.3cm,
+    champ("Client", entete.client),
+    champ("Projet", entete.projet),
+    champ("Adresse du projet", entete.adresse),
+    champ("N° de dossier", entete.dossier),
+    champ("Norme et édition", entete.norme),
+    champ("Ingénieur", entete.ingenieur + " — OIQ " + entete.oiq),
+    champ("Date", entete.date),
+    champ("Page", [#counter(page).display() de #counter(page).final().first()]),
+  ))
+  v(-0.1cm)
   line(length: 100%, stroke: 1.2pt + principale)
 }
 
@@ -66,11 +77,12 @@
   ],
 )
 
+// Marge du haut : l'en-tête commence à 1.2 cm du bord de la feuille
 #set page(
   paper: "us-letter",
-  margin: (top: 3.0cm, bottom: 3.3cm, x: 1.5cm),
+  margin: (top: 4.3cm, bottom: 3.3cm, x: 1.5cm),
   header: en-tete,
-  header-ascent: 0.35cm,
+  header-ascent: 0.4cm,
   footer: pied,
   footer-descent: 0.3cm,
 )
@@ -120,7 +132,7 @@
 #for (i, r) in donnees.resultats.enumerate() {
   if i > 0 { pagebreak() }
   block(below: 0.2cm)[
-    #text(size: 11.5pt, fill: principale, weight: "bold")[#r.titre #if r.element != "" [— #r.element]]
+    #titre(11.5pt, principale, [#r.titre #if r.element != "" [— #r.element]])
     #h(1fr) #text(size: 8.5pt, fill: accent, weight: "bold")[#r.norme, article #r.article]
   ]
 
@@ -140,7 +152,7 @@
   )
 
   v(0.15cm)
-  text(size: 9.5pt, fill: principale, weight: "bold")[Calcul]
+  titre(9.5pt, principale, [Calcul])
   // Vérification ancrée en bas à droite, juste au-dessus du sceau (revue de la PR #55). Placée avant
   // les étapes pour réserver l'espace : les calculs ne passent jamais dessous.
   if r.verification != none {

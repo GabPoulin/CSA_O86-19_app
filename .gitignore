@@ -4,3 +4,6 @@ __pycache__/
 
 # Secrets locaux de Streamlit (mots de passe, jetons) : jamais dans git
 .streamlit/secrets.toml
+
+# Polices sous licence des comptes (dépôt public) : jamais dans git
+marque/comptes/*/polices/
