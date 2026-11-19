@@ -129,6 +129,9 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
   son merge. Rappeler à l'utilisateur les PR à merger.
 - Les décisions d'interprétation de la norme et les changements de structure restent **toujours
   soumis à l'utilisateur** avant d'être appliqués.
+- **Compte Groupe Lantier** (`ACCES_GROUPE_LANTIER.md`, lu par l'application, issue #56) : quand une
+  fonction est intégrée au nouveau moteur, l'ajouter dans les deux listes **non cochée**. Seul
+  l'utilisateur coche les cases (offerte à Groupe Lantier ; testée, sans avertissement « en test »).
 
 ## Tests : tester et retester
 
@@ -138,7 +141,10 @@ Chaque changement de calcul doit être vérifié dans **plusieurs scénarios** a
 - toutes les branches de la logique (chaque `if` de la norme : catégories, coefficients, conditions) ;
 - les valeurs attendues sont calculées à la main à partir de la norme, pas recopiées de la sortie du code ;
 - la page Streamlit est testée (pas d'exception, bon affichage) avec `streamlit.testing.v1.AppTest`
-  en partant d'`Accueil.py`, puis `switch_page(...)`.
+  en partant d'`Accueil.py`, puis `switch_page(...)`. La connexion est exigée (`acces.py`) : dans les
+  tests, définir `at.secrets["mots_de_passe"]` et se connecter (voir `tests/test_acces.py`).
+- **Secrets** (mots de passe, jetons) : dans les secrets de Streamlit Cloud ou dans
+  `.streamlit/secrets.toml` en local (ignoré par git). Jamais dans le code, une issue ou un commentaire.
 
 Commandes :
 

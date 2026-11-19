@@ -1,3 +1,6 @@
 __pycache__/
 .DS_Store
 .pytest_cache/
+
+# Secrets locaux de Streamlit (mots de passe, jetons) : jamais dans git
+.streamlit/secrets.toml

@@ -2,6 +2,9 @@
 
 import streamlit as st
 
+import acces
+import retours
+
 TITLE = "Datum"
 SOUS_TITRE = "par Le Repère Ingénierie"
 
@@ -16,7 +19,10 @@ def configurer_page(titre_page: str) -> None:
     """
     Configure la page (titre de l'onglet, icône) et affiche le logo dans la barre latérale.
 
-    Doit être appelée en premier dans chaque page Streamlit.
+    Doit être appelée en premier dans chaque page Streamlit. Exige la connexion (acces.py) et ajoute
+    le bouton « Commentaire » (retours.py) dans la barre latérale (issue #56).
     """
     st.set_page_config(page_title=f"{titre_page} | {TITLE}", page_icon=ICONE)
     st.logo(LOGO_BARRE_LATERALE, size="large", icon_image=SYMBOLE_BARRE_LATERALE)
+    acces.exiger_connexion()
+    retours.formulaire(titre_page)
