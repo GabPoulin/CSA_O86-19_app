@@ -99,3 +99,17 @@ def test_registre():
     # Ordre de la norme (les autres articles peuvent s'intercaler selon les modules importés)
     identifiants = [c.identifiant for c in registre.calculs("csa_o86_19")]
     assert identifiants.index("6.5.5") < identifiants.index("6.5.6.2") < identifiants.index("6.5.6.3")
+
+
+def test_sources_des_donnees():
+    # Références à la norme dans les données, pour la note de calcul (PR #55)
+    r = art.verifier_compression_perpendiculaire_au_fil(
+        38, 140, 89, 5.3, largeur_element=38, source_resistances="Tableau 6.4"
+    )
+    sources = {d.symbole: d.source for d in r.donnees}
+    assert sources["f_{cp}"] == "Tableau 6.4"
+    assert sources["K_D"] == "Tableau 5.1"
+    assert sources["K_{Scp}"] == "Tableau 6.10"
+    assert sources["K_T"] == "Tableau 6.11"
+    # 0.8 x 5.3 MPa x (38 mm x 89 mm = 3382 mm²) x K_B 1.00 x K_Zcp 1.00 = 14 339.68 N
+    assert r.etape("Q_r").valeur == pytest.approx(14339.68)
