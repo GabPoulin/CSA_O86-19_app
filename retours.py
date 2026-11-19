@@ -26,6 +26,10 @@ STYLE_DES_CHAMPS = """<style>
     -webkit-text-fill-color: #333333 !important; caret-color: #333333 !important;
     border-color: #FFFFFF !important;
 }
+/* Liste déroulante de « Fonction » : affichée hors de la barre latérale, mais avec son texte pâle */
+[data-testid="stSelectboxVirtualDropdown"] [role="option"] {
+    color: #333333 !important;
+}
 </style>"""
 
 
