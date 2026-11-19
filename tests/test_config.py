@@ -48,3 +48,20 @@ def test_dossier_lantier_du_depot():
     # Le dossier existe (README seulement tant que les fichiers ne sont pas déposés)
     assert (config.DOSSIER_COMPTES / "lantier").is_dir()
     config.apparence_du_compte("lantier")
+
+
+def test_polices(tmp_path):
+    d = tmp_path / "lantier"
+    d.mkdir()
+    (d / "polices.toml").write_text('titres = "Rift"\ntexte = "DIN 2014"\n', encoding="utf-8")
+    a = config.apparence_du_compte("lantier", tmp_path)
+    assert (a.police_titres, a.police_texte) == ("Rift", "DIN 2014")
+    assert a.dossier_polices == d / "polices"
+
+
+def test_charte_groupe_lantier():
+    # Charte graphique Groupe Lantier 2021, p. 6 : vert foncé #273c3c, sarcelle #47aeaa
+    a = config.apparence_du_compte("lantier")
+    assert (a.principale, a.accent) == ("#273c3c", "#47aeaa")
+    assert a.logo.startswith(b"<svg")
+    assert (a.police_titres, a.police_texte) == ("Rift", "DIN 2014")

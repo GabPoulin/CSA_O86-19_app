@@ -63,11 +63,20 @@ class Apparence:
         logo (bytes | None): Image du logo (PNG, JPG ou SVG). None : logo de Le Repère.
         principale (str): Couleur principale, hexadécimale (titres, lignes, en-têtes de tableau).
         accent (str): Couleur d'accent, hexadécimale (articles, sources).
+        police_titres (str | None): Famille de police des titres, en majuscules (ex. « Rift »). None :
+            police par défaut.
+        police_texte (str | None): Famille de police du texte courant (ex. « DIN 2014 »). None :
+            police par défaut.
+        dossier_polices (Path | None): Dossier des fichiers de polices (.otf, .ttf). Une police absente
+            est remplacée par la police par défaut.
     """
 
     logo: bytes | None = None
     principale: str = COULEUR_PRINCIPALE
     accent: str = COULEUR_ACCENT
+    police_titres: str | None = None
+    police_texte: str | None = None
+    dossier_polices: Path | None = None
 
 
 def formater_nombre(valeur: float) -> str:
@@ -168,6 +177,8 @@ def donnees_de_la_note(
             "logo": list(apparence.logo) if apparence.logo else None,  # octets, pour Typst
             "principale": apparence.principale,
             "accent": apparence.accent,
+            "police_titres": apparence.police_titres,
+            "police_texte": apparence.police_texte,
         },
         "resultats": [],
     }
@@ -227,4 +238,11 @@ def produire_pdf(
     if not resultats:
         raise ValueError("Aucune vérification à mettre dans la note de calcul.")
     donnees = json.dumps(donnees_de_la_note(resultats, entete, apparence), ensure_ascii=False)
-    return typst.compile(str(GABARIT), root=str(RACINE), sys_inputs={"donnees": donnees})
+    polices = (
+        [str(apparence.dossier_polices)]
+        if apparence.dossier_polices and apparence.dossier_polices.is_dir()
+        else []
+    )
+    return typst.compile(
+        str(GABARIT), root=str(RACINE), font_paths=polices, sys_inputs={"donnees": donnees}
+    )
