@@ -52,3 +52,28 @@ def test_sans_charges_tableau_5_1():
     assert any("tableau 5.1" in i.value for i in at.info)
     # Q_r = 0.8 x 5.3 MPa x 0.65 x 3382 mm² = 9 321 N = 9.32 kN
     assert _qr(at) == ["$Qr = 9.32 kN$"]
+
+
+
+def _images(noeud) -> int:
+    """Nombre d'images (st.image) dans la page."""
+    enfants = getattr(noeud, "children", {}).values()
+    return sum((getattr(e, "type", None) == "image") + _images(e) for e in enfants)
+
+
+def test_figure_de_la_compression_perpendiculaire():
+    """Issue #62 : la figure de 6.5.6.2 s'affiche dans l'onglet une fois L_b entrée."""
+    at = _connecte("admin", "mot-admin")
+    avant = _images(at._tree)
+    [n for n in at.number_input if n.key == "cp_support_length"][0].set_value(89.0).run()  # mm
+    assert not at.exception
+    assert _images(at._tree) == avant + 1
+
+
+def test_figure_d_un_element_compose():
+    """Issue #62 : avec 3 plis, la page passe le nombre de plis à la trace (figure)."""
+    at = _connecte("admin", "mot-admin")
+    [r for r in at.radio if r.label.startswith("Élément composé")][0].set_value(3).run()
+    [n for n in at.number_input if n.key == "cp_support_length"][0].set_value(89.0).run()  # mm
+    assert not at.exception
+    assert _images(at._tree) >= 1

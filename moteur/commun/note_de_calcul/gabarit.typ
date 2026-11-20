@@ -157,11 +157,16 @@
     ]
   }
   grid(
-    columns: (4.2cm, 1fr),
+    columns: (6cm, 1fr),
     column-gutter: 0.35cm,
-    rect(width: 100%, height: 3.4cm, stroke: (dash: "dashed", paint: gris, thickness: 0.6pt), radius: 2pt)[
-      #align(center + horizon)[#text(fill: gris, size: 7pt)[Figure schématique \ (à venir) \ #r.figure]]
-    ],
+    // Figure schématique de la vérification (issue #62), sinon un encadré « à venir »
+    if r.figure_svg != none {
+      align(center + horizon, image(bytes(r.figure_svg), format: "svg", width: 100%))
+    } else {
+      rect(width: 100%, height: 3.4cm, stroke: (dash: "dashed", paint: gris, thickness: 0.6pt), radius: 2pt)[
+        #align(center + horizon)[#text(fill: gris, size: 7pt)[Figure schématique \ (à venir) \ #r.figure]]
+      ]
+    },
     tableau-donnees(r.donnees),
   )
 

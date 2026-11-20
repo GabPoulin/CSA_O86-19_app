@@ -218,6 +218,7 @@ def verifier_compression_perpendiculaire_au_fil(
     largeur_element: float | None = None,
     source_resistances: str = "Tableaux 6.4 à 6.9",
     source_K_D: str = "Tableau 5.1",
+    plis: int = 1,
 ) -> Resultat:
     """
     6.5.6.2 Résistance pondérée à la compression perpendiculaire au fil à un appui, Q_r.
@@ -237,6 +238,8 @@ def verifier_compression_perpendiculaire_au_fil(
             ou « A.6.5.6 » si f_cp vient de la densité G). Default to "Tableaux 6.4 à 6.9".
         source_K_D (str, optional): Source de K_D pour la note de calcul : « Tableau 5.1 », ou
             « 5.3.2.2 » si K_D est calculé à partir des charges. Default to "Tableau 5.1".
+        plis (int, optional): Nombre de plis de l'élément composé, pour la note et la figure seulement
+            (largeur_element est la largeur totale). Default to 1.
 
     Returns:
         Resultat: Trace du calcul. Q_r en N ; vérification en kN.
@@ -246,6 +249,8 @@ def verifier_compression_perpendiculaire_au_fil(
     f_cp_corrige, k_zcp = _donnees_communes(
         r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances, source_K_D
     )
+    if plis > 1:
+        r.ajouter_donnee(Donnee("n_{plis}", "Nombre de plis de l'élément composé", plis))
     r.ajouter_donnee(Donnee("L_b", "Longueur d'appui", L_b, "mm", "dimension"))
 
     k_b = r.ajouter_etape(Etape(

@@ -17,6 +17,7 @@ from pathlib import Path
 
 import typst
 
+from moteur.commun.figures import figure
 from moteur.commun.resultat import Resultat, Verification
 from moteur.commun.nombres import cs
 from moteur.commun.unites import deux_unites, grandeur, vers_imperial
@@ -195,6 +196,8 @@ def donnees_de_la_note(
             "titre": r.titre,
             "element": element,
             "figure": r.figure or "",
+            # Figure schématique dans les couleurs du compte (issue #62) ; None : pas encore de figure
+            "figure_svg": figure(r, apparence.principale, apparence.accent),
             "donnees": [
                 {
                     "symbole": d.symbole,

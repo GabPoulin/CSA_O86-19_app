@@ -5,6 +5,7 @@ import re
 import pytest
 
 from moteur.commun.note_de_calcul import (
+    Apparence,
     EnTete,
     donnees_de_la_note,
     formater_nombre,
@@ -208,3 +209,18 @@ def test_produire_pdf_avec_commentaires():
     # sur la première page, à côté de la vérification : pas de page de plus
     pages = re.compile(rb"/Type\s*/Page(?!s)")
     assert len(pages.findall(avec)) == len(pages.findall(sans)) == 1
+
+
+def test_figure_schematique_dans_la_note():
+    """Issue #62 : la figure de 6.5.6.2 est dans les données de la note et le PDF se produit."""
+    from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (
+        art_6_5_6_resistance_a_la_compression_perpendiculaire_au_fil as art_6_5_6,
+    )
+
+    r = art_6_5_6.verifier_compression_perpendiculaire_au_fil(
+        b=38, d=184, L_b=89, f_cp=5.3, R_f=12  # mm ; MPa ; kN
+    )
+    note = donnees_de_la_note([("2x8", r)], EnTete(), Apparence(principale="#112233"))
+    assert note["resultats"][0]["figure_svg"].startswith("<svg")
+    assert "#112233" in note["resultats"][0]["figure_svg"]
+    assert produire_pdf([("2x8", r)], EnTete()).startswith(b"%PDF")
