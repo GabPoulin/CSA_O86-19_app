@@ -61,8 +61,8 @@ def test_verification_sans_figure():
 
 
 def test_bois_de_bout_avec_un_x():
-    """Convention de dessin : une pièce vue en bout porte un X (figure 6.1 de la norme)."""
+    """Convention de dessin : l'élément vu en bout porte un X (figure 6.1) ; les appuis sont hachurés."""
     svg = figure(_appui(R_f=12))
-    # Deux X : l'appui en élévation (x 14 à 60, y 66 à 90) et l'élément en section (x 196 à 236, y 20 à 66)
-    assert "M14 66 L60 90 M60 66 L14 90" in svg
+    # X sur l'élément en section (x 196 à 236 ; y 20 à 66) seulement
     assert "M196 20 L236 66 M236 20 L196 66" in svg
+    assert "M14 66 L60 90" not in svg  # l'appui en élévation n'a pas de X

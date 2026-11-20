@@ -326,7 +326,8 @@ la charge P_f, la longueur L et la section b × d.
   encore de figure). Les cotes donnent les variables du calcul dans les deux unités (issue #62).
 - Petites icônes des types de calcul (sans texte) : `marque/icones/`.
 - Convention de dessin : une pièce de bois **vue en bout** (fil d'extrémité) porte un **X** (figure 6.1 de
-  la norme) ; vue de côté, un rectangle simple.
+  la norme) ; vue de côté, un rectangle simple. Les **appuis** sont hachurés (appui quelconque, pas
+  nécessairement une pièce de bois).
 
 ### Unités : métriques et impériales
 

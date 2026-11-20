@@ -83,10 +83,18 @@ def _bois_de_bout(x: float, y: float, largeur: float, hauteur: float, couleur: s
             f"stroke='{couleur}' stroke-width='0.8'/>")
 
 
-def _bois_de_fil(x: float, y: float, largeur: float, hauteur: float, couleur: str) -> str:
-    """Pièce de bois vue de côté (dans le sens du fil) : rectangle simple."""
+def _hachures(x: float, y: float, largeur: float, hauteur: float, couleur: str) -> str:
+    """Appui quelconque, hachuré (rectangle et traits à 45°), comme les icônes de marque/icones/."""
+    traits = []
+    pas = 7
+    for k in range(int((largeur + hauteur) / pas) + 1):
+        d = k * pas
+        x1, y1 = x + max(0, d - hauteur), y + min(d, hauteur)
+        x2, y2 = x + min(d, largeur), y + max(0, d - largeur)
+        if d > 0 and (x1, y1) != (x2, y2):
+            traits.append(f"M{x1:g} {y1:g} L{x2:g} {y2:g}")
     return (f"<rect x='{x}' y='{y}' width='{largeur}' height='{hauteur}' stroke='{couleur}' "
-            f"stroke-width='2'/>")
+            f"stroke-width='2'/><path d='{' '.join(traits)}' stroke='{couleur}' stroke-width='0.8'/>")
 
 
 def _cote_horizontale(x1: float, x2: float, y: float, couleur: str) -> str:
@@ -108,7 +116,7 @@ def compression_perpendiculaire(
     Figure de 6.5.6.2 (compression perpendiculaire au fil à un appui) : la réaction de l'appui
     seulement, par-dessous (figure 6.2 de la norme : R_f ≤ Q_r).
 
-    À gauche, l'élévation : l'élément sur l'appui (appui vu en bout, avec un X), la longueur d'appui L_b et la réaction R_f. À droite,
+    À gauche, l'élévation : l'élément sur l'appui (hachuré), la longueur d'appui L_b et la réaction R_f. À droite,
     la section (élément vu en bout, avec un X) : la hauteur d de l'élément et la largeur d'appui b.
 
     Args:
@@ -128,7 +136,7 @@ def compression_perpendiculaire(
     elevation = (
         f"<path d='M6 20 H150 L145 32 L155 43 L145 55 L150 66 H6 Z' stroke='{principale}' "
         f"stroke-width='2.5' stroke-linejoin='round'/>"
-        + _bois_de_bout(14, 66, 46, 24, principale)
+        + _hachures(14, 66, 46, 24, principale)
         # Réaction R_f, par-dessous
         + f"<path d='M37 128 V94 M31 101 L37 94 L43 101 M30 128 H44' stroke='{accent}' "
           f"stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>"
@@ -146,7 +154,7 @@ def compression_perpendiculaire(
     x_cote_d = x_section + largeur_section + 12
     section = (
         _bois_de_bout(x_section, 20, largeur_section, 46, principale, epaisseur=2.5)
-        + _bois_de_fil(x_appui, 66, largeur_appui, 24, principale)
+        + _hachures(x_appui, 66, largeur_appui, 24, principale)
         + f"<path d='M{x_appui} 92 V142 M{x_appui + largeur_appui} 92 V142' {pointille}/>"
         + _cote_horizontale(x_appui, x_appui + largeur_appui, 138, accent)
         + _etiquette(x_section + largeur_section / 2, 160, "b", b, "dimension")

@@ -7,7 +7,7 @@
 <path d="M10 8 H58" stroke="#9E5A00" stroke-width="2"/>
 <path d="M6 22 H58 V36 H24 V31 H6 Z" stroke="#233614" stroke-width="2.5"/>
 <rect x="7" y="31" width="14" height="7" stroke="#233614" stroke-width="2"/>
-<path d="M7 31 L21 38 M21 31 L7 38" stroke="#233614" stroke-width="1"/>
+<path d="M7 36 L9 38 M10 31 L15 38 M15 31 L20 38" stroke="#233614" stroke-width="1"/>
 <path d="M25 31 H40" stroke="#9E5A00" stroke-width="1.5" stroke-dasharray="2 2"/>
 <path d="M14 46 H24 M14 43 V49 M24 43 V49" stroke="#9E5A00" stroke-width="1.5"/>
 <path d="M24 38 V42" stroke="#233614" stroke-width="1" stroke-dasharray="2 2"/>
