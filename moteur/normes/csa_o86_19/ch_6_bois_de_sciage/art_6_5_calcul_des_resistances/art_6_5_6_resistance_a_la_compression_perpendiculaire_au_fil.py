@@ -291,6 +291,7 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
     largeur_element: float | None = None,
     source_resistances: str = "Tableaux 6.4 à 6.9",
     source_K_D: str = "Tableau 5.1",
+    plis: int = 1,
 ) -> Resultat:
     """
     6.5.6.3 Résistance pondérée Q'_r sous les seules charges appliquées à une distance du centre de
@@ -311,6 +312,8 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
             ou « A.6.5.6 » si f_cp vient de la densité G). Default to "Tableaux 6.4 à 6.9".
         source_K_D (str, optional): Source de K_D pour la note de calcul : « Tableau 5.1 », ou
             « 5.3.2.2 » si K_D est calculé à partir des charges. Default to "Tableau 5.1".
+        plis (int, optional): Nombre de plis de l'élément composé, pour la note et la figure seulement
+            (largeur_element est la largeur totale). Default to 1.
 
     Returns:
         Resultat: Trace du calcul. Q'_r en N ; vérification en kN.
@@ -320,8 +323,17 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
     f_cp_corrige, k_zcp = _donnees_communes(
         r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances, source_K_D
     )
-    r.ajouter_donnee(Donnee("L_{b,appui}", "Longueur d'appui à l'appui", L_b_appui, "mm", "dimension"))
-    r.ajouter_donnee(Donnee("L_{b,charge}", "Longueur d'appui de la charge", L_b_charge, "mm",
+    if plis > 1:
+        r.ajouter_donnee(Donnee("n_{plis}", "Nombre de plis de l'élément composé", plis))
+    # Symboles de 6.5.6.3.2 : L_b1 = longueur d'appui la plus petite, L_b2 = la plus grande. À longueurs
+    # égales, L_b1 est celle de la charge (sur le dessus), comme à la figure 6.2.
+    if L_b_charge <= L_b_appui:
+        (L_b1, ou_1), (L_b2, ou_2) = (L_b_charge, "charge"), (L_b_appui, "appui")
+    else:
+        (L_b1, ou_1), (L_b2, ou_2) = (L_b_appui, "appui"), (L_b_charge, "charge")
+    r.ajouter_donnee(Donnee("L_{b1}", f"Longueur d'appui la plus petite ({ou_1})", L_b1, "mm",
+                            "dimension"))
+    r.ajouter_donnee(Donnee("L_{b2}", f"Longueur d'appui la plus grande ({ou_2})", L_b2, "mm",
                             "dimension"))
 
     k_b_appui = K_B(L_b_appui, appui_loin_de_l_extremite, appui_hors_fortes_contraintes_de_flexion)
@@ -334,8 +346,8 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
     ))
     a_b_prime = r.ajouter_etape(Etape(
         "6.5.6.3.2", "Surface d'appui moyenne", "A'_b",
-        r"A'_b = b \, (L_{b1} + L_{b2}) / 2 \leq 1.5 \, b \, L_{b1}",
-        rf"{cs(b)} \times ({cs(min(L_b_appui, L_b_charge))} + {cs(max(L_b_appui, L_b_charge))}) / 2",
+        r"A'_b = \min(b \, (L_{b1} + L_{b2}) / 2 \, ; \, 1.5 \, b \, L_{b1})",
+        rf"\min({cs(b)} \times ({cs(L_b1)} + {cs(L_b2)}) / 2 \, ; \, 1.5 \times {cs(b)} \times {cs(L_b1)})",
         A_b_prime(b, L_b_appui, L_b_charge), "mm²", "aire",
     ))
     q_r_prime = r.ajouter_etape(Etape(

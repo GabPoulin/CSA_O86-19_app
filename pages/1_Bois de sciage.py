@@ -1062,6 +1062,7 @@ if "compression_perpendiculaire" in ONGLETS:
                                 charge_hors_fortes_contraintes_de_flexion=load_low_bending,
                                 P_f=pf_near, largeur_element=member_width,
                                 source_resistances=SOURCE_FCP, source_K_D=SOURCE_KD,
+                                plis=built_up,
                             )
                         )
                         details.append(
@@ -1070,17 +1071,14 @@ if "compression_perpendiculaire" in ONGLETS:
                             f"$Q'r = {qr_near:.2f} kN$"
                         )
 
-            # Figure schématique de 6.5.6.2, dans les couleurs du compte (issue #62)
-            if "Compression perpendiculaire au fil (6.5.6.2)" in NOTE:
-                APPARENCE = config.apparence_du_compte(st.session_state.get("compte", ""))
-                st.image(
-                    figure(
-                        NOTE["Compression perpendiculaire au fil (6.5.6.2)"],
-                        APPARENCE.principale,
-                        APPARENCE.accent,
-                    ),
-                    width=420,
-                )
+            # Figures schématiques de 6.5.6.2 et 6.5.6.3, dans les couleurs du compte (issue #62)
+            APPARENCE = config.apparence_du_compte(st.session_state.get("compte", ""))
+            for nom, largeur in (
+                ("Compression perpendiculaire au fil (6.5.6.2)", 420),
+                ("Compression perpendiculaire près d'un appui (6.5.6.3)", 480),
+            ):
+                if nom in NOTE:
+                    st.image(figure(NOTE[nom], APPARENCE.principale, APPARENCE.accent), width=largeur)
 
             if details:
                 with st.expander("Voir plus:", width=650):
