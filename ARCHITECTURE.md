@@ -298,7 +298,8 @@ Cette trace est la **source unique** pour :
 
 1. le titre (ex. « Compression parallèle au fil — Poteau P-1 ») ;
 2. une **figure schématique** de l'élément (pas à l'échelle) ;
-3. un tableau des **données** (section, dimensions, résistances prévues, coefficients, charges) ;
+3. un tableau des **données** (section, dimensions, résistances prévues, coefficients, charges), en
+   colonnes : symbole, valeur, description, source ;
 4. **toutes les étapes de calcul**, chacune avec : l'article, la description, **la formule**, **la formule
    avec les valeurs**, puis **le résultat** ;
 5. la vérification finale (ratio en %, respecté ou dépassé).
