@@ -468,7 +468,15 @@ les tests le prouvent. L'application en ligne doit fonctionner après chaque PR.
 10. Note de calcul PDF.
 11. Retrait de Streamlit.
 
-**Plus tard** : sélecteur d'édition, nouveaux chapitres et nouvelles normes, 3D interactive, projets
+**Après le chapitre 6** (issue #61), écrit directement dans la nouvelle structure
+(`ch_12_assemblages/...`), avant la phase 2 :
+- 12.9 Clous et pointes ;
+- 12.11 Vis à bois ;
+- 12.4 Boulons et goujons (avec 12.2.2) ;
+- 12.6 Tire-fond ;
+- puis le reste du chapitre 12.
+
+**Plus tard** : sélecteur d'édition, autres chapitres et nouvelles normes, 3D interactive, projets
 sauvegardés, comptes et abonnements, version de démonstration.
 
 Les nouvelles fonctionnalités de calcul (6.5.7, 6.5.8, 6.5.9…) sont écrites directement dans la nouvelle
