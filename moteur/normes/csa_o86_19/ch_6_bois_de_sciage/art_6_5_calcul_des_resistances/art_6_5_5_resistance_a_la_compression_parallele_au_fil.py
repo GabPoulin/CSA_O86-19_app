@@ -182,6 +182,7 @@ def verifier_compression_parallele_au_fil(
     K_SE: float = 1,
     P_f: float | None = None,
     source_resistances: str = "Tableaux 6.4 à 6.9",
+    source_K_D: str = "Tableau 5.1",
 ) -> Resultat:
     """
     6.5.5.2 Résistance pondérée à la compression parallèle au fil d'un élément simple, selon les
@@ -201,6 +202,8 @@ def verifier_compression_parallele_au_fil(
         P_f (float | None, optional): Charge de compression axiale pondérée, kN. Default to None.
         source_resistances (str, optional): Tableau des résistances prévues (6.3), pour la note de
             calcul (voir art_6_3.tableau_des_resistances()). Default to "Tableaux 6.4 à 6.9".
+        source_K_D (str, optional): Source de K_D pour la note de calcul : « Tableau 5.1 », ou
+            « 5.3.2.2 » si K_D est calculé à partir des charges. Default to "Tableau 5.1".
 
     Returns:
         Resultat: Trace du calcul. P_r de chaque axe en N ; vérification en kN.
@@ -221,7 +224,7 @@ def verifier_compression_parallele_au_fil(
                source_resistances),
         Donnee("E_{05}", "Module d'élasticité pour les éléments en compression", E_05, "MPa",
                "contrainte", source_resistances),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source=source_K_D),
         Donnee("K_H", "Coefficient de système", K_H, source="Tableau 6.12"),
         Donnee("K_{Sc}", "Coefficient de conditions d'utilisation (compression)", K_Sc,
                source="Tableau 6.10"),
