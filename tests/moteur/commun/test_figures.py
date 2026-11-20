@@ -66,3 +66,18 @@ def test_bois_de_bout_avec_un_x():
     # X sur l'élément en section (x 196 à 236 ; y 20 à 66) seulement
     assert "M196 20 L236 66 M236 20 L196 66" in svg
     assert "M14 66 L60 90" not in svg  # l'appui en élévation n'a pas de X
+
+
+def test_element_compose_chaque_pli_avec_son_x():
+    """Poutre composée : chaque pli est dessiné vu en bout, avec son X (demande de l'utilisateur)."""
+    # 3-2x10 : 3 plis de 38 mm = 114 mm ; largeur d'un pli dans la figure = 76 / 3
+    r = _appui(b=114, d=235, largeur_element=114, plis=3)
+    svg = figure(r)
+    assert svg.count("stroke-width='2.5'/><path") == 3  # 3 rectangles vus en bout, chacun avec un X
+    assert any(d.symbole == "n_{plis}" and d.valeur == 3 for d in r.donnees)
+
+
+def test_un_seul_pli_sans_donnee_de_plis():
+    r = _appui()
+    assert figure(r).count("stroke-width='2.5'/><path") == 1
+    assert all(d.symbole != "n_{plis}" for d in r.donnees)  # pas de ligne inutile dans la note

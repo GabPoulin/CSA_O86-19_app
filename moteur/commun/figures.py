@@ -117,7 +117,7 @@ def compression_perpendiculaire(
     seulement, par-dessous (figure 6.2 de la norme : R_f ≤ Q_r).
 
     À gauche, l'élévation : l'élément sur l'appui (hachuré), la longueur d'appui L_b et la réaction R_f. À droite,
-    la section (élément vu en bout, avec un X) : la hauteur d de l'élément et la largeur d'appui b.
+    la section (élément vu en bout, chaque pli avec son X) : la hauteur d de l'élément et la largeur d'appui b.
 
     Args:
         resultat (Resultat): Trace de verifier_compression_perpendiculaire_au_fil().
@@ -129,6 +129,7 @@ def compression_perpendiculaire(
     """
     b, d, L_b = (_donnee(resultat, s) for s in ("b", "d", "L_b"))
     b_element = _donnee(resultat, "b_{élément}")
+    plis = int(_donnee(resultat, "n_{plis}") or 1)
     R_f = resultat.verification.charge if resultat.verification else None
     pointille = f"stroke='{principale}' stroke-width='0.8' stroke-dasharray='3 3'"
 
@@ -148,12 +149,18 @@ def compression_perpendiculaire(
     )
 
     # Section : élément (largeur b_élément) sur l'appui (largeur b, au plus celle de l'élément)
-    x_section, largeur_section = 196, 40
-    largeur_appui = 28 if b is not None and b_element and b < b_element else largeur_section
+    # Chaque pli est dessiné vu en bout, avec son X ; la section s'élargit avec le nombre de plis
+    x_section, largeur_pli = 196, 40 if plis == 1 else max(16, 76 / plis)
+    largeur_section = largeur_pli * plis
+    largeur_appui = (
+        round(largeur_section * 0.7) if b is not None and b_element and b < b_element
+        else largeur_section
+    )
     x_appui = x_section + (largeur_section - largeur_appui) / 2
     x_cote_d = x_section + largeur_section + 12
     section = (
-        _bois_de_bout(x_section, 20, largeur_section, 46, principale, epaisseur=2.5)
+        "".join(_bois_de_bout(x_section + i * largeur_pli, 20, largeur_pli, 46, principale,
+                              epaisseur=2.5) for i in range(plis))
         + _hachures(x_appui, 66, largeur_appui, 24, principale)
         + f"<path d='M{x_appui} 92 V142 M{x_appui + largeur_appui} 92 V142' {pointille}/>"
         + _cote_horizontale(x_appui, x_appui + largeur_appui, 138, accent)
@@ -165,7 +172,7 @@ def compression_perpendiculaire(
     )
 
     return (
-        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 182' fill='none'>"
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 426 182' fill='none'>"
         f"<g transform='translate(16 0)'>{elevation}{section}</g></svg>"
     )
 

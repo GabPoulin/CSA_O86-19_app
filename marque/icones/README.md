@@ -9,7 +9,9 @@ en traction, longueur e jusqu'au centre de l'appui, fissure en pointillé au coi
 compression perpendiculaire (6.5.6.2 : réaction de l'appui seulement, par-dessous), compression près
 d'un appui (6.5.6.3, figure 6.2 : réaction de l'appui et charge d'un autre élément appuyé sur le dessus), traction, flexion et charge axiale.
 
-Une pièce de bois vue en bout porte un X (figure 6.1 de la norme) ; les appuis sont hachurés.
+Petites icônes : appuis en triangles ; l'élément appuyé sur le dessus (compression près d'un appui)
+est hachuré. Grandes figures : une pièce de bois vue en bout porte un X (figure 6.1 de la norme) et les
+appuis sont hachurés.
 
 Aperçu : `apercu.png`. Pas encore utilisées dans l'application : style à valider d'abord.
 

@@ -1010,6 +1010,7 @@ if "compression_perpendiculaire" in ONGLETS:
                             hors_fortes_contraintes_de_flexion=support_low_bending,
                             R_f=rf, largeur_element=member_width,
                             source_resistances=SOURCE_FCP, source_K_D=SOURCE_KD,
+                            plis=built_up,
                         )
                     )
                     details.append(

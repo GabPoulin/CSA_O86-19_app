@@ -68,3 +68,12 @@ def test_figure_de_la_compression_perpendiculaire():
     [n for n in at.number_input if n.key == "cp_support_length"][0].set_value(89.0).run()  # mm
     assert not at.exception
     assert _images(at._tree) == avant + 1
+
+
+def test_figure_d_un_element_compose():
+    """Issue #62 : avec 3 plis, la page passe le nombre de plis à la trace (figure)."""
+    at = _connecte("admin", "mot-admin")
+    [r for r in at.radio if r.label.startswith("Élément composé")][0].set_value(3).run()
+    [n for n in at.number_input if n.key == "cp_support_length"][0].set_value(89.0).run()  # mm
+    assert not at.exception
+    assert _images(at._tree) >= 1
