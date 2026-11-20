@@ -462,6 +462,15 @@ st.subheader("Calcul des résistances", anchor=False)
 NOTE = {}
 SOURCE = tableau_des_resistances(CATEGORY)  # tableau des résistances prévues (6.3)
 
+
+def afficher_figures(*noms: str, largeur: int = 440) -> None:
+    """Figures schématiques des vérifications faites (issue #62), dans les couleurs du compte."""
+    apparence = config.apparence_du_compte(st.session_state.get("compte", ""))
+    for nom in noms:
+        if nom in NOTE:
+            st.image(figure(NOTE[nom], apparence.principale, apparence.accent), width=largeur)
+
+
 # Onglets offerts au compte connecté (acces.py, ACCES_GROUPE_LANTIER.md ; issue #56)
 ONGLETS_POSSIBLES = {
     "flexion": "Moment de flexion",
@@ -586,6 +595,8 @@ if "flexion" in ONGLETS:
                         rive_tendue_maintenue=TEN_EDGE, plis_fixes_a_au_plus_4d=PLIES_FASTENED,
                         M_f=mf, source_resistances=SOURCE, source_K_D=SOURCE_KD,
                     )
+        with st.container(horizontal_alignment="center"):
+            afficher_figures("Flexion (6.5.3)")
 
 if "cisaillement" in ONGLETS:
     with ONGLETS["cisaillement"]:
@@ -693,6 +704,10 @@ if "cisaillement" in ONGLETS:
                             K_D=kd, K_H=kh, K_Sf=ksf, K_T=kt, V_f=vf, source_K_D=SOURCE_KD,
                         )
                     )
+        with st.container(horizontal_alignment="center"):
+            afficher_figures(
+                "Cisaillement (6.5.4.3)", "Cisaillement par fissuration à l'entaille (6.5.4.4)"
+            )
 
 if "compression_parallele" in ONGLETS:
     with ONGLETS["compression_parallele"]:
@@ -841,6 +856,8 @@ if "compression_parallele" in ONGLETS:
                                 f"**{label}** : $C_c = {cc:.2f}$, $K_{{Zc}} = {kzc:.4f}$, "
                                 f"$K_C = {kc:.4f}$, $Pr = {pr_axis / 1000:.2f} kN$"
                             )
+        with st.container(horizontal_alignment="center"):
+            afficher_figures("Compression parallèle au fil (6.5.5)")
 
 if "compression_perpendiculaire" in ONGLETS:
     with ONGLETS["compression_perpendiculaire"]:
@@ -1071,14 +1088,10 @@ if "compression_perpendiculaire" in ONGLETS:
                             f"$Q'r = {qr_near:.2f} kN$"
                         )
 
-            # Figures schématiques de 6.5.6.2 et 6.5.6.3, dans les couleurs du compte (issue #62)
-            APPARENCE = config.apparence_du_compte(st.session_state.get("compte", ""))
-            for nom, largeur in (
-                ("Compression perpendiculaire au fil (6.5.6.2)", 420),
-                ("Compression perpendiculaire près d'un appui (6.5.6.3)", 480),
-            ):
-                if nom in NOTE:
-                    st.image(figure(NOTE[nom], APPARENCE.principale, APPARENCE.accent), width=largeur)
+            afficher_figures(
+                "Compression perpendiculaire au fil (6.5.6.2)",
+                "Compression perpendiculaire près d'un appui (6.5.6.3)",
+            )
 
             if details:
                 with st.expander("Voir plus:", width=650):

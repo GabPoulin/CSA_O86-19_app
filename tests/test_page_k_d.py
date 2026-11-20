@@ -88,3 +88,28 @@ def test_figure_de_la_compression_pres_d_un_appui():
     [n for n in at.number_input if n.key == "cp_load_length"][0].set_value(38.0).run()  # mm
     assert not at.exception
     assert _images(at._tree) == avant + 1
+
+
+def _figures_svg(noeud) -> list[str]:
+    """Figures schématiques (SVG) affichées dans la page, décodées."""
+    import base64
+    import re
+
+    figures = []
+    for e in getattr(noeud, "children", {}).values():
+        if getattr(e, "type", None) == "image":
+            for image in e.proto.imgs:
+                if image.url.startswith("data:image/svg+xml;base64,"):
+                    svg = base64.b64decode(image.url.split(",", 1)[1]).decode()
+                    figures.append(re.sub(r"<[^>]+>", "", svg).replace("​", ""))
+        figures += _figures_svg(e)
+    return figures
+
+
+def test_figures_de_la_flexion_et_du_cisaillement():
+    """Issue #62 : les onglets Flexion et Cisaillement affichent leur figure (symboles seulement)."""
+    at = _connecte("admin", "mot-admin")
+    assert not at.exception
+    textes = _figures_svg(at._tree)
+    assert any("Mf" in t for t in textes)  # 6.5.3
+    assert any("Vf" in t and "dn" not in t for t in textes)  # 6.5.4.3
