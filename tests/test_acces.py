@@ -318,3 +318,13 @@ def test_en_tete_de_la_note():
         assert [t for t in at.text_area if t.label == "Commentaires"]
     assert not at.exception
     assert any(b.label.startswith("Télécharger") for b in at.get("download_button"))
+
+
+def test_selecteur_de_norme_dans_la_barre_laterale():
+    # Issue #72 : « Norme et édition » dans la barre latérale ; une seule option pour l'instant
+    at = _connecte("admin", "mot-admin")
+    choix = [s for s in at.sidebar.selectbox if s.label == "Norme et édition"]
+    assert len(choix) == 1
+    assert choix[0].options == ["CSA O86:19"]
+    assert choix[0].value == "csa_o86_19"
+    assert at.session_state["edition"] == "csa_o86_19"
