@@ -225,11 +225,11 @@ def nom_du_pdf(titre: str, date: str = "", dossier: str = "") -> str:
     """
     Nom du fichier PDF (datum-retours #4) : « AAAAMMJJ_NUMERO-AA-XXX_titre.pdf », soit la date, le
     numéro de dossier et le titre de la note, séparés par « _ ». Une partie vide est omise, avec son
-    « _ ». Dans chaque partie, les espaces et les caractères interdits dans un nom de fichier
-    (/ \\ : * ? " < > |) deviennent « - ».
+    « _ ». Les caractères interdits dans un nom de fichier (/ \\ : * ? " < > |) deviennent « - ».
+    Les espaces du titre deviennent « _ » ; ceux du numéro de dossier, « - ».
 
     Exemple : nom_du_pdf("Poutre P-1 : 3-2x10", "2026-11-20", "LR-26-012")
-    -> « 20261120_LR-26-012_Poutre-P-1-3-2x10.pdf ».
+    -> « 20261120_LR-26-012_Poutre_P-1-3-2x10.pdf ».
 
     Args:
         titre (str): Titre de la note.
@@ -240,10 +240,12 @@ def nom_du_pdf(titre: str, date: str = "", dossier: str = "") -> str:
         str: Nom du fichier, avec l'extension .pdf ; « note_de_calcul.pdf » si tout est vide.
     """
 
-    def nettoyer(partie: str) -> str:
-        return re.sub(r'[\s/\\:*?"<>|-]+', "-", partie).strip(" .-")
+    def nettoyer(partie: str, espace: str) -> str:
+        partie = re.sub(r'\s*[/\\:*?"<>|-]+\s*', "-", partie.strip())  # interdits -> « - »
+        partie = re.sub(r"\s+", espace, partie)
+        return re.sub(r"([-_])\1+", r"\1", partie).strip(" .-_")
 
-    parties = [nettoyer(date.replace("-", "")), nettoyer(dossier), nettoyer(titre)]
+    parties = [nettoyer(date.replace("-", ""), "-"), nettoyer(dossier, "-"), nettoyer(titre, "_")]
     nom = "_".join(p for p in parties if p)
     return f"{nom or 'note_de_calcul'}.pdf"
 

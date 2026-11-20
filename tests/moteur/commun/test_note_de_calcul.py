@@ -175,12 +175,13 @@ def test_produire_pdf_polices_absentes(tmp_path):
     [
         ("2x6", "2026-11-20", "LR-26-012", "20261120_LR-26-012_2x6.pdf"),
         ("3-2x10", "2026-11-20", "LR-26-012", "20261120_LR-26-012_3-2x10.pdf"),
-        # espaces et caractères interdits -> « - », sans « - » répétés
-        ("Poutre P-1 : 3-2x10", "2026-11-20", "LR-26-012", "20261120_LR-26-012_Poutre-P-1-3-2x10.pdf"),
+        # espaces du titre -> « _ », caractères interdits -> « - », sans répétitions
+        ("Poutre P-1 : 3-2x10", "2026-11-20", "LR-26-012", "20261120_LR-26-012_Poutre_P-1-3-2x10.pdf"),
         ('a/b\\c*?"<>|d', "2026-11-20", "", "20261120_a-b-c-d.pdf"),
-        ("  Solive   S-1  ", "2026-11-20", " LR 26/012 ", "20261120_LR-26-012_Solive-S-1.pdf"),
-        ("3.5x11.25 brut", "2026-01-05", "LR-26-001", "20260105_LR-26-001_3.5x11.25-brut.pdf"),
+        ("  Solive   S-1  ", "2026-11-20", " LR 26/012 ", "20261120_LR-26-012_Solive_S-1.pdf"),
+        ("3.5x11.25 brut", "2026-01-05", "LR-26-001", "20260105_LR-26-001_3.5x11.25_brut.pdf"),
         # parties vides omises, avec leur « _ »
+        ("Poutre  P-1 / S-2", "2026-11-20", "", "20261120_Poutre_P-1-S-2.pdf"),
         ("2x6", "2026-11-20", "", "20261120_2x6.pdf"),
         ("", "2026-11-20", "LR-26-012", "20261120_LR-26-012.pdf"),
         ("2x6", "", "", "2x6.pdf"),
