@@ -50,3 +50,11 @@ def test_calcul_absent():
     with pytest.raises(KeyError):
         registre.calcul(EDITION, "9.9.9")
     assert registre.calculs("edition_inexistante") == []
+
+
+def test_nom_de_l_edition():
+    assert registre.nom_de_l_edition("csa_o86_19") == "CSA O86:19"
+    with pytest.raises(KeyError):
+        registre.nom_de_l_edition("csa_o86_99")  # dossier absent
+    with pytest.raises(KeyError):
+        registre.nom_de_l_edition("commun")  # pas une édition (pas de NORME)

@@ -40,6 +40,7 @@ def show_verification(message: str) -> None:
 
 # ---- en-tête ----
 config.configurer_page("Bois de sciage")
+EDITION = config.choisir_edition()  # une seule pour l'instant : CSA O86:19 (issue #72)
 st.title(config.TITLE, anchor=False)
 st.caption(config.SOUS_TITRE)
 st.header(
