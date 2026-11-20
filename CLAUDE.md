@@ -97,6 +97,9 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 - **KH (6.4.4, tableau 6.12)** (issue #7) : un élément composé de 2 plis ou plus prend **toujours** la
   colonne « Poutres composées » (cas 1, cas 2, MSR compris). La colonne MSR (1,20) est une sous-colonne
   du **cas 2** ; au cas 1, le MSR prend 1,10. Traction au cas 2 (« — » au tableau) : KH = 1,00.
+- **L_b1 et L_b2 (6.5.6.3.2, p. 72)** (PR #80) : L_b1 = longueur d'appui **la plus petite**, L_b2 = **la
+  plus grande**, selon le texte, peu importe la position (dessus ou dessous). La figure 6.2 (L_b1 sur le
+  dessus) est un exemple. À longueurs égales, L_b1 est celle de la charge (sur le dessus).
 - **Ke** : une fonction simple reçoit Le (ou Ke) en chiffre. Une fonction séparée déduira Ke des
   conditions d'appui (annexe A, informative).
 

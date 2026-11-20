@@ -113,3 +113,15 @@ def test_sources_des_donnees():
     assert sources["K_T"] == "Tableau 6.11"
     # 0.8 x 5.3 MPa x (38 mm x 89 mm = 3382 mm²) x K_B 1.00 x K_Zcp 1.00 = 14 339.68 N
     assert r.etape("Q_r").valeur == pytest.approx(14339.68)
+
+
+def test_a_b_prime_montre_la_limite_de_6_5_6_3_2():
+    """La substitution de A'_b montre les deux termes du min : la limite 1.5 b L_b1 peut gouverner."""
+    r = art.verifier_compression_perpendiculaire_pres_d_un_appui(
+        b=38, d=184, L_b_appui=89, L_b_charge=38, f_cp=5.3  # mm ; MPa
+    )
+    etape = r.etape("A'_b")
+    # 38 mm x (38 mm + 89 mm) / 2 = 2413 mm² ; 1.5 x 38 mm x 38 mm = 2166 mm² -> 2166 mm²
+    assert r"1.5 \times 38.0 \times 38.0" in etape.substitution
+    assert r"(38.0 + 89.0) / 2" in etape.substitution
+    assert etape.valeur == 2166

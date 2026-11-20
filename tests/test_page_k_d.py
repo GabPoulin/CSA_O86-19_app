@@ -77,3 +77,14 @@ def test_figure_d_un_element_compose():
     [n for n in at.number_input if n.key == "cp_support_length"][0].set_value(89.0).run()  # mm
     assert not at.exception
     assert _images(at._tree) >= 1
+
+
+def test_figure_de_la_compression_pres_d_un_appui():
+    """Issue #62 : la figure de 6.5.6.3 s'ajoute une fois les deux longueurs d'appui entrées."""
+    at = _connecte("admin", "mot-admin")
+    [n for n in at.number_input if n.key == "cp_support_length"][0].set_value(89.0).run()  # mm
+    avant = _images(at._tree)
+    [c for c in at.checkbox if c.key == "cp_near_load"][0].check().run()
+    [n for n in at.number_input if n.key == "cp_load_length"][0].set_value(38.0).run()  # mm
+    assert not at.exception
+    assert _images(at._tree) == avant + 1
