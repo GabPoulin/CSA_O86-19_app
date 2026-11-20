@@ -323,7 +323,8 @@ la charge P_f, la longueur L et la section b × d.
 - La même figure sert dans l'interface et dans la note de calcul PDF.
 - Module : `moteur/commun/figures.py`. `figure(resultat, principale, accent)` lit les valeurs dans la
   trace (`Resultat`) et retourne le SVG dans les couleurs du compte (None si la vérification n'a pas
-  encore de figure). Les cotes donnent les variables du calcul dans les deux unités (issue #62).
+  encore de figure). Les cotes donnent les **symboles** des variables du calcul, **sans valeurs** :
+  les valeurs sont dans le tableau des données (issue #62).
 - Petites icônes des types de calcul (sans texte) : `marque/icones/`.
 - Convention de dessin : une pièce de bois **vue en bout** (fil d'extrémité) porte un **X** (figure 6.1 de
   la norme) ; vue de côté, un rectangle simple. Les **appuis** sont hachurés (appui quelconque, pas

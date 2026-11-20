@@ -20,23 +20,15 @@ def _appui(**kwargs) -> Resultat:
     return art_6_5_6.verifier_compression_perpendiculaire_au_fil(**donnees)
 
 
-def test_compression_perpendiculaire_cotes_dans_les_deux_unites():
+def test_compression_perpendiculaire_symboles_sans_valeurs():
+    """Symboles seulement : les valeurs sont dans le tableau des données (demande de l'utilisateur)."""
     svg = figure(_appui(R_f=12))  # kN
     assert svg.startswith("<svg")
     texte = _texte(svg)
-    # Données comme dans le tableau de la note : 89 mm / 25.4 mm/po = 3.50 po ;
-    # 38 mm / 25.4 = 1.50 po ; 184 mm / 25.4 = 7.24 po
-    assert "Lb = 89 mm" in texte and "(3.50 po)" in texte
-    assert "b = 38 mm" in texte and "(1.50 po)" in texte
-    assert "d = 184 mm" in texte and "(7.24 po)" in texte
-    # Charge comme dans la vérification (3 chiffres significatifs) :
-    # 12 000 N / 4.448 N/lb = 2698 lb -> 2700 lb
-    assert "Rf = 12.0 kN" in texte and "(2700 lb)" in texte
-
-
-def test_sans_charge_ponderee_symbole_seulement():
-    texte = _texte(figure(_appui()))
-    assert "Rf" in texte and "kN" not in texte and "lb" not in texte
+    for symbole in ("Lb", "Rf", "b", "d"):
+        assert symbole in texte
+    assert not any(c.isdigit() for c in texte)  # aucun chiffre dans l'image
+    assert "mm" not in texte and "kN" not in texte
 
 
 def test_appui_plus_etroit_que_l_element():
@@ -84,21 +76,15 @@ def _pres_d_un_appui(**kwargs) -> Resultat:
     return art_6_5_6.verifier_compression_perpendiculaire_pres_d_un_appui(**donnees)
 
 
-def test_compression_pres_d_un_appui_cotes_dans_les_deux_unites():
+def test_compression_pres_d_un_appui_symboles_sans_valeurs():
     texte = _texte(figure(_pres_d_un_appui(P_f=5)))  # kN
-    # 89 mm / 25.4 mm/po = 3.50 po ; 38 mm / 25.4 = 1.50 po ; 184 mm / 25.4 = 7.24 po
-    assert "Lb,appui = 89 mm" in texte and "(3.50 po)" in texte
-    assert "Lb,charge = 38 mm" in texte and "(1.50 po)" in texte
-    assert "b = 38 mm" in texte and "d = 184 mm" in texte
-    # 5 000 N / 4.448 N/lb = 1124 lb -> 1120 lb (3 chiffres significatifs)
-    assert "Pf = 5.00 kN" in texte and "(1120 lb)" in texte
-    assert "≤ d" in texte  # charge à au plus d du centre de l'appui (6.5.6.3.1)
+    for symbole in ("Lb,appui", "Lb,charge", "Pf", "≤ d", "b"):
+        assert symbole in texte
+    assert not any(c.isdigit() for c in texte)  # aucun chiffre dans l'image
 
 
-def test_compression_pres_d_un_appui_sans_charge_et_plis():
+def test_compression_pres_d_un_appui_plis():
     r = _pres_d_un_appui(b=114, d=235, largeur_element=114, plis=3)
     svg = figure(r)
-    texte = _texte(svg)
-    assert "Pf" in texte and "kN" not in texte
     assert svg.count("stroke-width='2.5'/><path") == 3  # 3 plis vus en bout, chacun avec un X
     assert any(d.symbole == "n_{plis}" and d.valeur == 3 for d in r.donnees)
