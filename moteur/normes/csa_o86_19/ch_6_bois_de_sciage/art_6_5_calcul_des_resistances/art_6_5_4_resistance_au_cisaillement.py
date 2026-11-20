@@ -170,6 +170,7 @@ def verifier_cisaillement(
     K_Zv: float = 1,
     V_f: float | None = None,
     source_resistances: str = "Tableaux 6.4 à 6.9",
+    source_K_D: str = "Tableau 5.1",
 ) -> Resultat:
     """
     6.5.4.3 Résistance pondérée au cisaillement d'un élément en bois de sciage.
@@ -184,6 +185,8 @@ def verifier_cisaillement(
         V_f (float | None, optional): Effort tranchant pondéré, kN. Default to None.
         source_resistances (str, optional): Tableau des résistances prévues (6.3), pour la note de
             calcul (voir art_6_3.tableau_des_resistances()). Default to "Tableaux 6.4 à 6.9".
+        source_K_D (str, optional): Source de K_D pour la note de calcul : « Tableau 5.1 », ou
+            « 5.3.2.2 » si K_D est calculé à partir des charges. Default to "Tableau 5.1".
 
     Returns:
         Resultat: Trace du calcul. V_r en N ; vérification en kN.
@@ -195,7 +198,7 @@ def verifier_cisaillement(
         Donnee("n", "Nombre de plis", plis),
         Donnee("d_n", "Profondeur de l'entaille", d_n, "mm", "dimension"),
         Donnee("f_v", "Résistance prévue en cisaillement", f_v, "MPa", "contrainte", source_resistances),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source=source_K_D),
         Donnee("K_H", "Coefficient de système", K_H, source="Tableau 6.12"),
         Donnee("K_{Sv}", "Coefficient de conditions d'utilisation (cisaillement)", K_Sv,
                source="Tableau 6.10"),
@@ -240,6 +243,7 @@ def verifier_cisaillement_par_fissuration(
     K_Sf: float = 1,
     K_T: float = 1,
     V_f: float | None = None,
+    source_K_D: str = "Tableau 5.1",
 ) -> Resultat:
     """
     6.5.4.4 Résistance pondérée au cisaillement par fissuration d'un élément entaillé à l'appui, à
@@ -254,6 +258,8 @@ def verifier_cisaillement_par_fissuration(
         K_D, K_H, K_Sf, K_T (float, optional): Coefficients de correction. Default to 1.
         V_f (float | None, optional): Effort tranchant pondéré à l'appui, kN (6.5.4.4.3).
             Default to None.
+        source_K_D (str, optional): Source de K_D pour la note de calcul : « Tableau 5.1 », ou
+            « 5.3.2.2 » si K_D est calculé à partir des charges. Default to "Tableau 5.1".
 
     Returns:
         Resultat: Trace du calcul. F_r en N ; vérification en kN.
@@ -268,7 +274,7 @@ def verifier_cisaillement_par_fissuration(
         Donnee("n", "Nombre de plis", plis),
         Donnee("d_n", "Profondeur de l'entaille", d_n, "mm", "dimension"),
         Donnee("e", "Longueur de l'entaille", e, "mm", "dimension"),
-        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source="Tableau 5.1"),
+        Donnee("K_D", "Coefficient de durée d'application de la charge", K_D, source=source_K_D),
         Donnee("K_H", "Coefficient de système", K_H, source="Tableau 6.12"),
         Donnee("K_{Sf}", "Coefficient de conditions d'utilisation (cisaillement par fissuration)",
                K_Sf, source="Tableau 6.10"),
