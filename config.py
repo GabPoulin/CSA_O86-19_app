@@ -9,6 +9,7 @@ import streamlit as st
 
 import acces
 import retours
+from moteur.commun import registre
 from moteur.commun.note_de_calcul import Apparence
 
 TITLE = "Datum"  # nom du logiciel : seul nom affiché, sans marque
@@ -151,6 +152,31 @@ def configurer_page(titre_page: str) -> None:
     if paires:
         st.html(_SCRIPT_COULEURS % json.dumps(paires), unsafe_allow_javascript=True)
     retours.formulaire(titre_page)
+
+
+def choisir_edition() -> str:
+    """
+    Sélecteur « Norme et édition » dans la barre latérale (issue #72). Les options viennent du
+    registre (moteur/commun/registre.py) : une nouvelle édition (ex. csa_o86_24/) y apparaît d'elle-même
+    dès qu'elle inscrit un calcul. Le choix est gardé pour la séance (st.session_state["edition"]).
+
+    Returns:
+        str: Dossier de l'édition choisie (ex. « csa_o86_19 »).
+    """
+    editions = []
+    for edition in registre.editions():
+        try:
+            registre.nom_de_l_edition(edition)
+        except KeyError:  # calculs inscrits hors d'un dossier de norme (ex. tests du registre)
+            continue
+        editions.append(edition)
+    return st.sidebar.selectbox(
+        "Norme et édition",
+        options=editions,
+        format_func=registre.nom_de_l_edition,
+        key="edition",
+        help="Seuls les calculs de cette édition sont offerts.",
+    )
 
 
 def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparence:

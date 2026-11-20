@@ -289,3 +289,13 @@ def test_fond_invalide(tmp_path):
     (tmp_path / "x" / "couleurs.toml").write_text('fond = "blanc"\n', encoding="utf-8")
     with pytest.raises(ValueError):
         config.fond_du_compte("x", tmp_path)
+
+
+def test_selecteur_de_norme_dans_la_barre_laterale():
+    # Issue #72 : « Norme et édition » dans la barre latérale ; une seule option pour l'instant
+    at = _connecte("admin", "mot-admin")
+    choix = [s for s in at.sidebar.selectbox if s.label == "Norme et édition"]
+    assert len(choix) == 1
+    assert choix[0].options == ["CSA O86:19"]
+    assert choix[0].value == "csa_o86_19"
+    assert at.session_state["edition"] == "csa_o86_19"
