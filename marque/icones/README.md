@@ -9,6 +9,8 @@ en traction, longueur e jusqu'au centre de l'appui, fissure en pointillé au coi
 compression perpendiculaire (6.5.6.2 : réaction de l'appui seulement, par-dessous), compression près
 d'un appui (6.5.6.3, figure 6.2 : réaction de l'appui et charge d'un autre élément appuyé sur le dessus), traction, flexion et charge axiale.
 
+Une pièce de bois vue en bout (appui) porte un X, comme à la figure 6.1 de la norme.
+
 Aperçu : `apercu.png`. Pas encore utilisées dans l'application : style à valider d'abord.
 
 Petites icônes : onglets. Grandes figures détaillées (variables du calcul, ex. longueur d'appui) :
