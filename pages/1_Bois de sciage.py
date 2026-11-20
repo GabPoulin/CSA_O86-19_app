@@ -1143,17 +1143,21 @@ if acces.permis("note_pdf"):
                     key=f"note_oiq_{ingenieur}",  # se remplit quand l'ingénieur change
                 )
                 date = col1.date_input("Date", value=datetime.date.today(), format="YYYY-MM-DD")
-                # Titre par défaut : la pièce calculée, ex. « 2x6 » ou « 3-2x6 » (datum-retours #7)
+                # Titre par défaut : la pièce calculée, ex. « 2x6 » ou « 3-2x6 » (datum-retours #7).
+                # Il suit la pièce choisie, sauf s'il a été modifié à la main.
                 piece = f"{width_input:g}x{depth_input:g}" + (" brut" if BRUT else "")
+                titre_par_defaut = piece if built_up == 1 else f"{built_up}-{piece}"
+                if st.session_state.get("note_titre") in (None, st.session_state.get("note_titre_defaut")):
+                    st.session_state["note_titre"] = titre_par_defaut
+                st.session_state["note_titre_defaut"] = titre_par_defaut
                 titre = col2.text_input(
                     "Titre",
-                    value=piece if built_up == 1 else f"{built_up}-{piece}",
-                    key=f"note_titre_{built_up}_{piece}",  # suit la pièce choisie
-                    help="Titre de chaque page et nom du fichier PDF",
+                    key="note_titre",
+                    help="Titre de chaque page ; aussi dans le nom du fichier PDF",
                 )
                 commentaires = st.text_area(
                     "Commentaires",
-                    help="Ajoutés à la fin de la note, sur une page à part (datum-retours #3)",
+                    help="En bas à gauche de la première page, à côté de la vérification et du sceau",
                 )
             with st.container(width=650):
                 acces.avertir_si_en_test("note_pdf")
@@ -1173,7 +1177,7 @@ if acces.permis("note_pdf"):
                     st.download_button(
                         "Télécharger la note de calcul (PDF)",
                         data=pdf,
-                        file_name=nom_du_pdf(titre),
+                        file_name=nom_du_pdf(titre, str(date), dossier),  # AAAAMMJJ_dossier_titre.pdf
                         mime="application/pdf",
                         icon=":material/download:",
                         type="primary",

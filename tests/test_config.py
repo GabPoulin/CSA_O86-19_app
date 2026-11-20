@@ -88,10 +88,10 @@ def test_ingenieur_incomplet(tmp_path):
         config.ingenieurs_du_compte("x", tmp_path)
 
 
-@pytest.mark.parametrize("compte", ["admin", "lantier"])
-def test_ingenieurs_du_depot(compte):
-    # datum-retours #6 : liste donnée par l'utilisateur
-    assert config.ingenieurs_du_compte(compte) == [
+def test_ingenieurs_du_depot():
+    # datum-retours #6 : listes données par l'utilisateur ; compte admin : seulement Gabriel Poulin
+    assert config.ingenieurs_du_compte("admin") == [("Gabriel Poulin", "5088827")]
+    assert config.ingenieurs_du_compte("lantier") == [
         ("Gabriel Poulin", "5088827"),
         ("Olivier Lantier", "5024123"),
         ("Simon Boucher", "5025799"),

@@ -1,5 +1,7 @@
 """Tests de la note de calcul PDF (moteur/commun/note_de_calcul, issue #50)."""
 
+import re
+
 import pytest
 
 from moteur.commun.note_de_calcul import (
@@ -169,24 +171,30 @@ def test_produire_pdf_polices_absentes(tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("titre", "attendu"),
+    ("titre", "date", "dossier", "attendu"),
     [
-        ("2x6", "2x6.pdf"),
-        ("3-2x10", "3-2x10.pdf"),
-        ("Poutre P-1 : 3-2x10", "Poutre P-1 - 3-2x10.pdf"),
-        ('a/b\\c*?"<>|d', "a - b - c - d.pdf"),
-        ("  Solive   S-1  ", "Solive S-1.pdf"),
-        ("", "note_de_calcul.pdf"),
-        (" / ", "note_de_calcul.pdf"),
+        ("2x6", "2026-11-20", "LR-26-012", "20261120_LR-26-012_2x6.pdf"),
+        ("3-2x10", "2026-11-20", "LR-26-012", "20261120_LR-26-012_3-2x10.pdf"),
+        # espaces et caractères interdits -> « - », sans « - » répétés
+        ("Poutre P-1 : 3-2x10", "2026-11-20", "LR-26-012", "20261120_LR-26-012_Poutre-P-1-3-2x10.pdf"),
+        ('a/b\\c*?"<>|d', "2026-11-20", "", "20261120_a-b-c-d.pdf"),
+        ("  Solive   S-1  ", "2026-11-20", " LR 26/012 ", "20261120_LR-26-012_Solive-S-1.pdf"),
+        ("3.5x11.25 brut", "2026-01-05", "LR-26-001", "20260105_LR-26-001_3.5x11.25-brut.pdf"),
+        # parties vides omises, avec leur « _ »
+        ("2x6", "2026-11-20", "", "20261120_2x6.pdf"),
+        ("", "2026-11-20", "LR-26-012", "20261120_LR-26-012.pdf"),
+        ("2x6", "", "", "2x6.pdf"),
+        ("", "", "", "note_de_calcul.pdf"),
+        (" / ", "", " ", "note_de_calcul.pdf"),
     ],
 )
-def test_nom_du_pdf(titre, attendu):
-    # datum-retours #4 : le PDF porte le titre de la note
-    assert nom_du_pdf(titre) == attendu
+def test_nom_du_pdf(titre, date, dossier, attendu):
+    # datum-retours #4 : AAAAMMJJ_NUMERO-AA-XXX_titre.pdf
+    assert nom_du_pdf(titre, date, dossier) == attendu
 
 
 def test_commentaires():
-    # datum-retours #3 : commentaires à la fin de la note, sans espaces inutiles autour
+    # datum-retours #3 : commentaires sur la première page, sans espaces inutiles autour
     assert donnees_de_la_note([("2x6", flexion())], ENTETE)["commentaires"] == ""
     note = donnees_de_la_note([("2x6", flexion())], ENTETE, commentaires="  Ligne 1\nLigne 2 \n")
     assert note["commentaires"] == "Ligne 1\nLigne 2"
@@ -195,4 +203,7 @@ def test_commentaires():
 def test_produire_pdf_avec_commentaires():
     sans = produire_pdf([("2x6", flexion())], ENTETE)
     avec = produire_pdf([("2x6", flexion())], ENTETE, commentaires="Vérifier l'appui.\nVoir plan S-2.")
-    assert avec.startswith(b"%PDF") and len(avec) > len(sans)  # une page de plus
+    assert avec.startswith(b"%PDF") and len(avec) > len(sans)
+    # sur la première page, à côté de la vérification : pas de page de plus
+    pages = re.compile(rb"/Type\s*/Page(?!s)")
+    assert len(pages.findall(avec)) == len(pages.findall(sans)) == 1

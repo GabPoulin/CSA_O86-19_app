@@ -309,8 +309,12 @@ def test_en_tete_de_la_note():
         assert ingenieur.options[:2] == ["Gabriel Poulin", "Olivier Lantier"]
         ingenieur.set_value("Simon Boucher").run()
         assert [t for t in at.text_input if t.label == "Numéro OIQ"][0].value == "5025799"
-        at.radio[0].set_value(3).run()  # 3 plis
+        at.radio[0].set_value(3).run()  # 3 plis : le titre suit la pièce
         assert [t for t in at.text_input if t.label == "Titre"][0].value == "3-2x6"
+        # un titre tapé à la main reste, même si la pièce change
+        [t for t in at.text_input if t.label == "Titre"][0].set_value("Poutre P-1").run()
+        at.radio[0].set_value(2).run()  # 2 plis
+        assert [t for t in at.text_input if t.label == "Titre"][0].value == "Poutre P-1"
         assert [t for t in at.text_area if t.label == "Commentaires"]
     assert not at.exception
     assert any(b.label.startswith("Télécharger") for b in at.get("download_button"))

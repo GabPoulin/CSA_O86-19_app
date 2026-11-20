@@ -168,8 +168,8 @@ def donnees_de_la_note(
             (acces.py, issue #56).
         entete (EnTete): Champs de l'en-tête.
         apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
-        commentaires (str, optional): Commentaires de l'ingénieur, ajoutés à la fin de la note
-            (datum-retours #3). Default to "" (pas de section).
+        commentaires (str, optional): Commentaires de l'ingénieur, en bas à gauche de la première
+            page, à côté de la vérification et du sceau (datum-retours #3). Default to "" (aucun).
 
     Returns:
         dict: Données sérialisables en JSON.
@@ -221,21 +221,30 @@ def donnees_de_la_note(
     return note
 
 
-def nom_du_pdf(titre: str) -> str:
+def nom_du_pdf(titre: str, date: str = "", dossier: str = "") -> str:
     """
-    Nom du fichier PDF : le titre de la note (datum-retours #4), sans les caractères interdits dans un
-    nom de fichier (/ \\ : * ? " < > |), remplacés par « - ».
+    Nom du fichier PDF (datum-retours #4) : « AAAAMMJJ_NUMERO-AA-XXX_titre.pdf », soit la date, le
+    numéro de dossier et le titre de la note, séparés par « _ ». Une partie vide est omise, avec son
+    « _ ». Dans chaque partie, les espaces et les caractères interdits dans un nom de fichier
+    (/ \\ : * ? " < > |) deviennent « - ».
 
-    Exemple : nom_du_pdf("Poutre P-1 : 3-2x10") -> « Poutre P-1 - 3-2x10.pdf ».
+    Exemple : nom_du_pdf("Poutre P-1 : 3-2x10", "2026-11-20", "LR-26-012")
+    -> « 20261120_LR-26-012_Poutre-P-1-3-2x10.pdf ».
 
     Args:
-        titre (str): Titre de la note. Vide : « note_de_calcul.pdf ».
+        titre (str): Titre de la note.
+        date (str, optional): Date de la note, AAAA-MM-JJ. Default to "" (omise).
+        dossier (str, optional): Numéro de dossier. Default to "" (omis).
 
     Returns:
-        str: Nom du fichier, avec l'extension .pdf.
+        str: Nom du fichier, avec l'extension .pdf ; « note_de_calcul.pdf » si tout est vide.
     """
-    nom = re.sub(r'\s*[/\\:*?"<>|]+\s*', " - ", titre)
-    nom = re.sub(r"\s+", " ", nom).strip(" .-")
+
+    def nettoyer(partie: str) -> str:
+        return re.sub(r'[\s/\\:*?"<>|-]+', "-", partie).strip(" .-")
+
+    parties = [nettoyer(date.replace("-", "")), nettoyer(dossier), nettoyer(titre)]
+    nom = "_".join(p for p in parties if p)
     return f"{nom or 'note_de_calcul'}.pdf"
 
 

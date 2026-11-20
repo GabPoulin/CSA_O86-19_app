@@ -132,6 +132,17 @@
   ])
 }
 
+// Commentaires de l'ingénieur (datum-retours #3), lignes conservées
+#let commentaires = donnees.at("commentaires", default: "")
+#let bloc-commentaires = block(breakable: false, width: 100%, stroke: 0.6pt + gris, inset: 7pt, radius: 3pt)[
+  #set align(left)
+  #text(weight: "bold", fill: principale)[Commentaires] \
+  #for (i, ligne) in commentaires.split("\n").enumerate() {
+    if i > 0 { linebreak() }
+    ligne
+  }
+]
+
 #for (i, r) in donnees.resultats.enumerate() {
   if i > 0 { pagebreak() }
   block(below: 0.2cm)[
@@ -158,24 +169,19 @@
   titre(9.5pt, principale, [Calcul])
   // Vérification ancrée en bas à droite, juste au-dessus du sceau (revue de la PR #55). Placée avant
   // les étapes pour réserver l'espace : les calculs ne passent jamais dessous.
-  if r.verification != none {
-    place(bottom + right, float: true, clearance: 0.3cm, block(width: 50% - 0.3cm, verification(r.verification)))
+  // Commentaires de l'ingénieur en bas à gauche de la première page, à côté de la vérification et
+  // du sceau (datum-retours #3) : la note tient le plus possible sur une seule page.
+  let avec-commentaires = i == 0 and commentaires != ""
+  if r.verification != none or avec-commentaires {
+    place(bottom, float: true, clearance: 0.3cm, grid(
+      columns: (1fr, 1fr),
+      column-gutter: 0.6cm,
+      align: bottom,
+      if avec-commentaires { bloc-commentaires },
+      if r.verification != none { verification(r.verification) },
+    ))
   }
   columns(2, gutter: 0.6cm)[
     #for e in r.etapes { etape(e) }
-  ]
-}
-
-// Commentaires de l'ingénieur (datum-retours #3) : à la fin de la note, seulement s'il y en a
-#if donnees.at("commentaires", default: "") != "" {
-  pagebreak()
-  titre(11.5pt, principale, [Commentaires])
-  v(0.2cm)
-  block(width: 100%, stroke: 0.6pt + gris, inset: 8pt, radius: 2pt)[
-    #set par(justify: false)
-    #for (i, ligne) in donnees.commentaires.split("\n").enumerate() {
-      if i > 0 { linebreak() }
-      ligne
-    }
   ]
 }
