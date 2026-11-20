@@ -178,7 +178,8 @@ def compression_pres_d_un_appui(
     l'appui inférieure ou égale à la hauteur d de l'élément (figure 6.2 de la norme : P_f ≤ Q'_r).
 
     À gauche, l'élévation : l'élément appuyé sur le dessus (hachuré) avec la charge P_f et sa longueur
-    d'appui L_b,charge, l'appui (hachuré) avec sa longueur L_b,appui, et la distance ≤ d entre les deux.
+    d'appui, l'appui (hachuré) avec la sienne, et la distance ≤ d entre les deux. Les longueurs d'appui
+    portent les symboles de 6.5.6.3.2 : L_b1 pour la plus petite, L_b2 pour la plus grande.
     À droite, la section (chaque pli avec son X) : la hauteur d et la largeur d'appui b.
 
     Args:
@@ -193,6 +194,10 @@ def compression_pres_d_un_appui(
     b_element = _donnee(resultat, "b_{élément}")
     plis = int(_donnee(resultat, "n_{plis}") or 1)
     pointille = f"stroke='{principale}' stroke-width='0.8' stroke-dasharray='3 3'"
+    # 6.5.6.3.2 : L_b1 est la plus petite longueur d'appui, L_b2 la plus grande ; la trace indique
+    # laquelle est celle de la charge (sur le dessus)
+    description_1 = next((d.description for d in resultat.donnees if d.symbole == "L_{b1}"), "")
+    L_b_charge, L_b_appui = ("L_b1", "L_b2") if "(charge)" in description_1 else ("L_b2", "L_b1")
 
     # Élévation : élément (y 82 à 128) coupé à gauche, appui sous l'extrémité droite (x 214 à 260),
     # élément appuyé sur le dessus (x 170 à 206) près de l'appui
@@ -208,7 +213,7 @@ def compression_pres_d_un_appui(
         # Longueur d'appui de la charge (au-dessus de l'élément du dessus)
         + f"<path d='M170 58 V42 M206 58 V42' {pointille}/>"
         + _cote_horizontale(170, 206, 46, accent)
-        + _etiquette(164, 52, "L_b,charge", ancre="end")
+        + _etiquette(164, 52, L_b_charge, ancre="end")
         # Distance entre la charge et le centre de l'appui : au plus d (6.5.6.3.1)
         + f"<path d='M188 130 V176 M237 154 V176' {pointille}/>"
         + _cote_horizontale(188, 237, 172, accent)
@@ -217,7 +222,7 @@ def compression_pres_d_un_appui(
         # Longueur d'appui à l'appui
         + f"<path d='M214 154 V196 M260 154 V196' {pointille}/>"
         + _cote_horizontale(214, 260, 192, accent)
-        + _etiquette(237, 212, "L_b,appui")
+        + _etiquette(237, 212, L_b_appui)
     )
     section = _section(296, 82, b, b_element, plis, principale, accent)
 

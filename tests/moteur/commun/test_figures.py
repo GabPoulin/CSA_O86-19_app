@@ -78,9 +78,36 @@ def _pres_d_un_appui(**kwargs) -> Resultat:
 
 def test_compression_pres_d_un_appui_symboles_sans_valeurs():
     texte = _texte(figure(_pres_d_un_appui(P_f=5)))  # kN
-    for symbole in ("Lb,appui", "Lb,charge", "Pf", "≤ d", "b"):
+    for symbole in ("Pf", "≤ d", "b"):
         assert symbole in texte
-    assert not any(c.isdigit() for c in texte)  # aucun chiffre dans l'image
+    # Aucun chiffre dans l'image, sauf les indices de L_b1 et L_b2 (symboles de 6.5.6.3.2)
+    assert not any(c.isdigit() for c in texte.replace("Lb1", "").replace("Lb2", ""))
+
+
+def test_l_b1_est_la_plus_petite_longueur_d_appui():
+    """6.5.6.3.2 (p. 72) : L_b1 = longueur d'appui la plus petite, L_b2 = la plus grande."""
+    # Charge 38 mm < appui 89 mm : L_b1 sur le dessus (charge), L_b2 à l'appui
+    r = _pres_d_un_appui(L_b_appui=89, L_b_charge=38)  # mm
+    donnees = {d.symbole: (d.valeur, d.description) for d in r.donnees}
+    assert donnees["L_{b1}"] == (38, "Longueur d'appui la plus petite (charge)")
+    assert donnees["L_{b2}"] == (89, "Longueur d'appui la plus grande (appui)")
+    svg = figure(r)
+    assert svg.index(">L<tspan dy='4' font-size='75%'>b1<") < svg.index(">L<tspan dy='4' font-size='75%'>b2<")
+    # Appui 38 mm < charge 89 mm : les symboles s'inversent
+    r = _pres_d_un_appui(L_b_appui=38, L_b_charge=89)  # mm
+    donnees = {d.symbole: (d.valeur, d.description) for d in r.donnees}
+    assert donnees["L_{b1}"] == (38, "Longueur d'appui la plus petite (appui)")
+    assert donnees["L_{b2}"] == (89, "Longueur d'appui la plus grande (charge)")
+    svg = figure(r)
+    assert svg.index(">L<tspan dy='4' font-size='75%'>b2<") < svg.index(">L<tspan dy='4' font-size='75%'>b1<")
+    # Longueurs égales : L_b1 est celle de la charge, comme à la figure 6.2 (p. 71)
+    r = _pres_d_un_appui(L_b_appui=89, L_b_charge=89)  # mm
+    assert dict((d.symbole, d.description) for d in r.donnees)["L_{b1}"].endswith("(charge)")
+    # A'_b inchangé : 38 mm x (38 mm + 89 mm) / 2 = 2413 mm² <= 1.5 x 38 mm x 38 mm = 2166 mm²
+    # -> A'_b = 2166 mm² dans les deux cas
+    for appui, charge in ((89, 38), (38, 89)):
+        r = _pres_d_un_appui(L_b_appui=appui, L_b_charge=charge)
+        assert r.etape("A'_b").valeur == 2166
 
 
 def test_compression_pres_d_un_appui_plis():
@@ -88,3 +115,4 @@ def test_compression_pres_d_un_appui_plis():
     svg = figure(r)
     assert svg.count("stroke-width='2.5'/><path") == 3  # 3 plis vus en bout, chacun avec un X
     assert any(d.symbole == "n_{plis}" and d.valeur == 3 for d in r.donnees)
+
