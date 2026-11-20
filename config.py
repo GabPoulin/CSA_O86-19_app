@@ -9,6 +9,7 @@ import streamlit as st
 
 import acces
 import retours
+from moteur.commun import registre
 from moteur.commun.note_de_calcul import Apparence
 
 TITLE = "Datum"  # nom du logiciel : seul nom affiché, sans marque
@@ -153,6 +154,31 @@ def configurer_page(titre_page: str) -> None:
     retours.formulaire(titre_page)
 
 
+def choisir_edition() -> str:
+    """
+    Sélecteur « Norme et édition » dans la barre latérale (issue #72). Les options viennent du
+    registre (moteur/commun/registre.py) : une nouvelle édition (ex. csa_o86_24/) y apparaît d'elle-même
+    dès qu'elle inscrit un calcul. Le choix est gardé pour la séance (st.session_state["edition"]).
+
+    Returns:
+        str: Dossier de l'édition choisie (ex. « csa_o86_19 »).
+    """
+    editions = []
+    for edition in registre.editions():
+        try:
+            registre.nom_de_l_edition(edition)
+        except KeyError:  # calculs inscrits hors d'un dossier de norme (ex. tests du registre)
+            continue
+        editions.append(edition)
+    return st.sidebar.selectbox(
+        "Norme et édition",
+        options=editions,
+        format_func=registre.nom_de_l_edition,
+        key="edition",
+        help="Seuls les calculs de cette édition sont offerts.",
+    )
+
+
 def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparence:
     """
     Logo et couleurs de la note de calcul d'un compte (marque/comptes/<compte>/, voir son README).
@@ -199,3 +225,31 @@ def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparen
         polices.get("texte"),
         dossier_du_compte / "polices",
     )
+
+
+def ingenieurs_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> list[tuple[str, str]]:
+    """
+    Ingénieurs proposés dans l'en-tête de la note (datum-retours #6) : marque/comptes/<compte>/
+    ingenieurs.toml, une table [[ingenieur]] par personne (clés « nom » et « oiq »).
+
+    Args:
+        compte (str): Identifiant du compte (ex. « lantier »).
+        dossier (Path, optional): Dossier des comptes. Default to marque/comptes/.
+
+    Returns:
+        list[tuple[str, str]]: (nom, numéro OIQ), dans l'ordre du fichier ; liste vide si le fichier
+            est absent.
+
+    Raises:
+        ValueError: Si un ingénieur n'a pas de nom ou de numéro OIQ.
+    """
+    fichier = fichier_du_compte(compte, "ingenieurs.toml", dossier)
+    if fichier is None:
+        return []
+    ingenieurs = []
+    for i in tomllib.loads(fichier.read_text(encoding="utf-8")).get("ingenieur", []):
+        nom, oiq = str(i.get("nom", "")).strip(), str(i.get("oiq", "")).strip()
+        if not nom or not oiq:
+            raise ValueError(f"{fichier} : chaque ingénieur doit avoir un « nom » et un « oiq ».")
+        ingenieurs.append((nom, oiq))
+    return ingenieurs

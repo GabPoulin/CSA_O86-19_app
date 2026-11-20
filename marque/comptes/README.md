@@ -2,7 +2,6 @@
 
 Un dossier par compte, nommé avec l'identifiant du compte (`acces.py`) : `lantier/` pour Groupe Lantier.
 Quand ce compte est connecté, la note de calcul PDF prend ce logo et ces couleurs par défaut.
-Il peut encore les changer pour la séance, dans « Apparence de la note ».
 
 | Fichier | Contenu |
 |---|---|
@@ -12,6 +11,7 @@ Il peut encore les changer pour la séance, dans « Apparence de la note ».
 | `logo_vertical*.svg` | Autres versions du logo, gardées pour plus tard. |
 | `polices.toml` | Familles de polices : `titres` (en majuscules) et `texte`. Ex. `titres = "Rift"`, `texte = "DIN 2014"`. |
 | `polices/` | Fichiers de polices (`.otf`, `.ttf`). **Jamais dans git** (`.gitignore`) : ce sont des polices sous licence et le dépôt est public. Une police absente est remplacée par la police par défaut. |
+| `ingenieurs.toml` | Ingénieurs proposés dans l'en-tête de la note (nom et numéro OIQ), une table `[[ingenieur]]` par personne, avec les clés `nom` et `oiq`. Un autre nom peut toujours être tapé dans la liste. |
 | `couleurs.toml` | Deux couleurs hexadécimales : `principale` (titres, lignes, en-têtes de tableau ; fond de la barre latérale) et `accent` (articles, sources ; boutons principaux et accents de l'interface). Facultatif : `fond`, couleur de fond de l'interface. Exemple ci-dessous. |
 
 ```toml

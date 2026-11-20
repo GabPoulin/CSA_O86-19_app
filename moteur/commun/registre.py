@@ -6,6 +6,7 @@ n'affiche que les calculs de l'édition choisie (ARCHITECTURE.md, section 9). Le
 la future version de démonstration (ARCHITECTURE.md, section 11).
 """
 
+import importlib
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -84,6 +85,25 @@ def enregistrer(
 def editions() -> list[str]:
     """Éditions qui ont au moins un calcul inscrit."""
     return sorted(_REGISTRE)
+
+
+def nom_de_l_edition(edition: str) -> str:
+    """
+    Nom affiché d'une édition : constante NORME de son dossier (ex. "csa_o86_19" -> "CSA O86:19").
+
+    Args:
+        edition (str): Dossier de l'édition (ex. "csa_o86_19").
+
+    Returns:
+        str: Norme et édition.
+
+    Raises:
+        KeyError: Si l'édition n'existe pas ou n'a pas de constante NORME.
+    """
+    try:
+        return importlib.import_module(f"moteur.normes.{edition}").NORME
+    except (ImportError, AttributeError) as erreur:
+        raise KeyError(f"L'édition {edition!r} n'existe pas ou n'a pas de NORME.") from erreur
 
 
 def calculs(edition: str) -> list[Calcul]:

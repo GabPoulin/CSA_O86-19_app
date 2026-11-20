@@ -1,5 +1,7 @@
 """Tests de la note de calcul PDF (moteur/commun/note_de_calcul, issue #50)."""
 
+import re
+
 import pytest
 
 from moteur.commun.note_de_calcul import (
@@ -7,6 +9,7 @@ from moteur.commun.note_de_calcul import (
     donnees_de_la_note,
     formater_nombre,
     formater_valeur,
+    nom_du_pdf,
     produire_pdf,
 )
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (
@@ -165,3 +168,43 @@ def test_produire_pdf_polices_absentes(tmp_path):
 
     ap = Apparence(police_titres="Rift", police_texte="DIN 2014", dossier_polices=tmp_path)
     assert produire_pdf([("S-1", flexion())], ENTETE, ap).startswith(b"%PDF")
+
+
+@pytest.mark.parametrize(
+    ("titre", "date", "dossier", "attendu"),
+    [
+        ("2x6", "2026-11-20", "LR-26-012", "20261120_LR-26-012_2x6.pdf"),
+        ("3-2x10", "2026-11-20", "LR-26-012", "20261120_LR-26-012_3-2x10.pdf"),
+        # espaces du titre -> « _ », caractères interdits -> « - », sans répétitions
+        ("Poutre P-1 : 3-2x10", "2026-11-20", "LR-26-012", "20261120_LR-26-012_Poutre_P-1-3-2x10.pdf"),
+        ('a/b\\c*?"<>|d', "2026-11-20", "", "20261120_a-b-c-d.pdf"),
+        ("  Solive   S-1  ", "2026-11-20", " LR 26/012 ", "20261120_LR-26-012_Solive_S-1.pdf"),
+        ("3.5x11.25 brut", "2026-01-05", "LR-26-001", "20260105_LR-26-001_3.5x11.25_brut.pdf"),
+        # parties vides omises, avec leur « _ »
+        ("Poutre  P-1 / S-2", "2026-11-20", "", "20261120_Poutre_P-1-S-2.pdf"),
+        ("2x6", "2026-11-20", "", "20261120_2x6.pdf"),
+        ("", "2026-11-20", "LR-26-012", "20261120_LR-26-012.pdf"),
+        ("2x6", "", "", "2x6.pdf"),
+        ("", "", "", "note_de_calcul.pdf"),
+        (" / ", "", " ", "note_de_calcul.pdf"),
+    ],
+)
+def test_nom_du_pdf(titre, date, dossier, attendu):
+    # datum-retours #4 : AAAAMMJJ_NUMERO-AA-XXX_titre.pdf
+    assert nom_du_pdf(titre, date, dossier) == attendu
+
+
+def test_commentaires():
+    # datum-retours #3 : commentaires sur la première page, sans espaces inutiles autour
+    assert donnees_de_la_note([("2x6", flexion())], ENTETE)["commentaires"] == ""
+    note = donnees_de_la_note([("2x6", flexion())], ENTETE, commentaires="  Ligne 1\nLigne 2 \n")
+    assert note["commentaires"] == "Ligne 1\nLigne 2"
+
+
+def test_produire_pdf_avec_commentaires():
+    sans = produire_pdf([("2x6", flexion())], ENTETE)
+    avec = produire_pdf([("2x6", flexion())], ENTETE, commentaires="Vérifier l'appui.\nVoir plan S-2.")
+    assert avec.startswith(b"%PDF") and len(avec) > len(sans)
+    # sur la première page, à côté de la vérification : pas de page de plus
+    pages = re.compile(rb"/Type\s*/Page(?!s)")
+    assert len(pages.findall(avec)) == len(pages.findall(sans)) == 1
