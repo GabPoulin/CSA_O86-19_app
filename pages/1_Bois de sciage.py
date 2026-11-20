@@ -5,6 +5,7 @@ import streamlit as st
 import acces
 import config
 import datetime
+from moteur.commun.figures import figure
 from moteur.commun.note_de_calcul import (
     EnTete,
     nom_du_pdf,
@@ -1067,6 +1068,18 @@ if "compression_perpendiculaire" in ONGLETS:
                             f"$K_B = \\min({kb_support:.4f}, {kb_load:.4f}) = {kb_near:.4f}$, "
                             f"$Q'r = {qr_near:.2f} kN$"
                         )
+
+            # Figure schématique de 6.5.6.2, dans les couleurs du compte (issue #62)
+            if "Compression perpendiculaire au fil (6.5.6.2)" in NOTE:
+                APPARENCE = config.apparence_du_compte(st.session_state.get("compte", ""))
+                st.image(
+                    figure(
+                        NOTE["Compression perpendiculaire au fil (6.5.6.2)"],
+                        APPARENCE.principale,
+                        APPARENCE.accent,
+                    ),
+                    width=420,
+                )
 
             if details:
                 with st.expander("Voir plus:", width=650):
