@@ -291,6 +291,35 @@ def test_fond_invalide(tmp_path):
         config.fond_du_compte("x", tmp_path)
 
 
+def test_en_tete_de_la_note():
+    # datum-retours #3 à #8 : en-tête toujours visible, liste des ingénieurs, titre = la pièce,
+    # commentaires, pas d'options d'apparence
+    with mock.patch.dict(acces.ACCES, {acces.LANTIER: frozenset({"compression_perpendiculaire", "note_pdf"})}):
+        at = _connecte("lantier", "mot-lantier")
+        [n for n in at.number_input if n.key == "cp_support_length"][0].set_value(89.0)
+        [n for n in at.number_input if n.key == "cp_rf"][0].set_value(5.0)  # kN
+        at.run()
+        etiquettes = [e.label for e in at.expander]  # plus de sections repliables dans la note
+        assert "En-tête de la note" not in etiquettes
+        assert not any(e.startswith("Apparence") for e in etiquettes)
+        assert not at.get("color_picker") and not at.get("file_uploader")
+        titre = [t for t in at.text_input if t.label == "Titre"][0]
+        assert titre.value == "2x6"  # 2 po x 6 po nominal, 1 pli (valeurs par défaut)
+        ingenieur = [s for s in at.selectbox if s.label == "Ingénieur"][0]
+        assert ingenieur.options[:2] == ["Gabriel Poulin", "Olivier Lantier"]
+        ingenieur.set_value("Simon Boucher").run()
+        assert [t for t in at.text_input if t.label == "Numéro OIQ"][0].value == "5025799"
+        at.radio[0].set_value(3).run()  # 3 plis : le titre suit la pièce
+        assert [t for t in at.text_input if t.label == "Titre"][0].value == "3-2x6"
+        # un titre tapé à la main reste, même si la pièce change
+        [t for t in at.text_input if t.label == "Titre"][0].set_value("Poutre P-1").run()
+        at.radio[0].set_value(2).run()  # 2 plis
+        assert [t for t in at.text_input if t.label == "Titre"][0].value == "Poutre P-1"
+        assert [t for t in at.text_area if t.label == "Commentaires"]
+    assert not at.exception
+    assert any(b.label.startswith("Télécharger") for b in at.get("download_button"))
+
+
 def test_selecteur_de_norme_dans_la_barre_laterale():
     # Issue #72 : « Norme et édition » dans la barre latérale ; une seule option pour l'instant
     at = _connecte("admin", "mot-admin")

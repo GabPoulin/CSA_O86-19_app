@@ -11,6 +11,7 @@ incluse dans le dossier mitex/ pour ne dépendre d'aucun téléchargement.
 """
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -156,6 +157,7 @@ def donnees_de_la_note(
     resultats: list[tuple],
     entete: EnTete,
     apparence: Apparence = Apparence(),
+    commentaires: str = "",
 ) -> dict:
     """
     Données transmises au gabarit Typst (aussi utilisées par les tests).
@@ -166,6 +168,8 @@ def donnees_de_la_note(
             (acces.py, issue #56).
         entete (EnTete): Champs de l'en-tête.
         apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
+        commentaires (str, optional): Commentaires de l'ingénieur, en bas à gauche de la première
+            page, à côté de la vérification et du sceau (datum-retours #3). Default to "" (aucun).
 
     Returns:
         dict: Données sérialisables en JSON.
@@ -180,6 +184,7 @@ def donnees_de_la_note(
             "police_titres": apparence.police_titres,
             "police_texte": apparence.police_texte,
         },
+        "commentaires": commentaires.strip(),
         "resultats": [],
     }
     for element, r, *option in resultats:
@@ -216,10 +221,40 @@ def donnees_de_la_note(
     return note
 
 
+def nom_du_pdf(titre: str, date: str = "", dossier: str = "") -> str:
+    """
+    Nom du fichier PDF (datum-retours #4) : « AAAAMMJJ_NUMERO-AA-XXX_titre.pdf », soit la date, le
+    numéro de dossier et le titre de la note, séparés par « _ ». Une partie vide est omise, avec son
+    « _ ». Les caractères interdits dans un nom de fichier (/ \\ : * ? " < > |) deviennent « - ».
+    Les espaces du titre deviennent « _ » ; ceux du numéro de dossier, « - ».
+
+    Exemple : nom_du_pdf("Poutre P-1 : 3-2x10", "2026-11-20", "LR-26-012")
+    -> « 20261120_LR-26-012_Poutre_P-1-3-2x10.pdf ».
+
+    Args:
+        titre (str): Titre de la note.
+        date (str, optional): Date de la note, AAAA-MM-JJ. Default to "" (omise).
+        dossier (str, optional): Numéro de dossier. Default to "" (omis).
+
+    Returns:
+        str: Nom du fichier, avec l'extension .pdf ; « note_de_calcul.pdf » si tout est vide.
+    """
+
+    def nettoyer(partie: str, espace: str) -> str:
+        partie = re.sub(r'\s*[/\\:*?"<>|-]+\s*', "-", partie.strip())  # interdits -> « - »
+        partie = re.sub(r"\s+", espace, partie)
+        return re.sub(r"([-_])\1+", r"\1", partie).strip(" .-_")
+
+    parties = [nettoyer(date.replace("-", ""), "-"), nettoyer(dossier, "-"), nettoyer(titre, "_")]
+    nom = "_".join(p for p in parties if p)
+    return f"{nom or 'note_de_calcul'}.pdf"
+
+
 def produire_pdf(
     resultats: list[tuple],
     entete: EnTete,
     apparence: Apparence = Apparence(),
+    commentaires: str = "",
 ) -> bytes:
     """
     Produit la note de calcul PDF.
@@ -228,6 +263,7 @@ def produire_pdf(
         resultats (list[tuple]): Voir donnees_de_la_note().
         entete (EnTete): Champs de l'en-tête.
         apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
+        commentaires (str, optional): Voir donnees_de_la_note().
 
     Returns:
         bytes: Contenu du fichier PDF.
@@ -237,7 +273,7 @@ def produire_pdf(
     """
     if not resultats:
         raise ValueError("Aucune vérification à mettre dans la note de calcul.")
-    donnees = json.dumps(donnees_de_la_note(resultats, entete, apparence), ensure_ascii=False)
+    donnees = json.dumps(donnees_de_la_note(resultats, entete, apparence, commentaires), ensure_ascii=False)
     polices = (
         [str(apparence.dossier_polices)]
         if apparence.dossier_polices and apparence.dossier_polices.is_dir()

@@ -225,3 +225,31 @@ def apparence_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> Apparen
         polices.get("texte"),
         dossier_du_compte / "polices",
     )
+
+
+def ingenieurs_du_compte(compte: str, dossier: Path = DOSSIER_COMPTES) -> list[tuple[str, str]]:
+    """
+    Ingénieurs proposés dans l'en-tête de la note (datum-retours #6) : marque/comptes/<compte>/
+    ingenieurs.toml, une table [[ingenieur]] par personne (clés « nom » et « oiq »).
+
+    Args:
+        compte (str): Identifiant du compte (ex. « lantier »).
+        dossier (Path, optional): Dossier des comptes. Default to marque/comptes/.
+
+    Returns:
+        list[tuple[str, str]]: (nom, numéro OIQ), dans l'ordre du fichier ; liste vide si le fichier
+            est absent.
+
+    Raises:
+        ValueError: Si un ingénieur n'a pas de nom ou de numéro OIQ.
+    """
+    fichier = fichier_du_compte(compte, "ingenieurs.toml", dossier)
+    if fichier is None:
+        return []
+    ingenieurs = []
+    for i in tomllib.loads(fichier.read_text(encoding="utf-8")).get("ingenieur", []):
+        nom, oiq = str(i.get("nom", "")).strip(), str(i.get("oiq", "")).strip()
+        if not nom or not oiq:
+            raise ValueError(f"{fichier} : chaque ingénieur doit avoir un « nom » et un « oiq ».")
+        ingenieurs.append((nom, oiq))
+    return ingenieurs

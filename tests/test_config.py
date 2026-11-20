@@ -65,3 +65,35 @@ def test_charte_groupe_lantier():
     assert (a.principale, a.accent) == ("#273c3c", "#47aeaa")
     assert a.logo.startswith(b"<svg")
     assert (a.police_titres, a.police_texte) == ("Rift", "DIN 2014")
+
+
+def test_ingenieurs_absents(tmp_path):
+    assert config.ingenieurs_du_compte("lantier", tmp_path) == []
+    assert config.ingenieurs_du_compte("", tmp_path) == []
+
+
+def test_ingenieurs_du_fichier(tmp_path):
+    (tmp_path / "x").mkdir()
+    (tmp_path / "x" / "ingenieurs.toml").write_text(
+        '[[ingenieur]]\nnom = "A B"\noiq = "123"\n[[ingenieur]]\nnom = " C D "\noiq = 456\n',
+        encoding="utf-8",
+    )
+    assert config.ingenieurs_du_compte("x", tmp_path) == [("A B", "123"), ("C D", "456")]
+
+
+def test_ingenieur_incomplet(tmp_path):
+    (tmp_path / "x").mkdir()
+    (tmp_path / "x" / "ingenieurs.toml").write_text('[[ingenieur]]\nnom = "A B"\n', encoding="utf-8")
+    with pytest.raises(ValueError):
+        config.ingenieurs_du_compte("x", tmp_path)
+
+
+def test_ingenieurs_du_depot():
+    # datum-retours #6 : listes données par l'utilisateur ; compte admin : seulement Gabriel Poulin
+    assert config.ingenieurs_du_compte("admin") == [("Gabriel Poulin", "5088827")]
+    assert config.ingenieurs_du_compte("lantier") == [
+        ("Gabriel Poulin", "5088827"),
+        ("Olivier Lantier", "5024123"),
+        ("Simon Boucher", "5025799"),
+        ("Loïc Blais", "6044886"),
+    ]
