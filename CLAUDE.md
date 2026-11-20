@@ -51,8 +51,11 @@ L'utilisateur est ingénieur en structure de bâtiment et utilisera ce logiciel 
 - **KT (tableau 6.11)** (issue #45) : bois traité et incisé de plus de 89 mm d'épaisseur (absent du
   tableau) : KT = 1,00.
 - **Mode « dimensions brutes »** : convention de l'utilisateur (hors tableau A.3), à conserver telle quelle.
-- **Traction du MSR de plus de 184 mm (tableau 6.8)** : pour les classes sans valeur dans la colonne
-  « > 184 mm », bloquer la traction avec un message (à faire lors de l'ajout de l'onglet de traction).
+- **Traction du MSR de plus de 184 mm (tableau 6.8)** (issue #31) : pour les classes sans valeur dans la
+  colonne « > 184 mm », utiliser le f_t de la colonne « 64 à 184 mm ». Note * du tableau 6.8 (p. 58) : les
+  valeurs des petites hauteurs « peuvent être attribuées à ces dimensions si le bois est classé au niveau
+  de qualification approprié et fait l'objet de contrôles de la qualité quotidiens » ; le bois utilisé
+  dans l'industrie suit ces contrôles (décision de l'utilisateur).
 
 ## Architecture du code : suivre la norme
 
