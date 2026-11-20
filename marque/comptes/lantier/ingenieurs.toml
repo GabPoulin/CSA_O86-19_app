@@ -1,0 +1,18 @@
+# Ingénieurs proposés dans l'en-tête de la note de calcul (datum-retours #6), dans cet ordre.
+# Un autre nom peut toujours être tapé dans la liste.
+
+[[ingenieur]]
+nom = "Gabriel Poulin"
+oiq = "5088827"
+
+[[ingenieur]]
+nom = "Olivier Lantier"
+oiq = "5024123"
+
+[[ingenieur]]
+nom = "Simon Boucher"
+oiq = "5025799"
+
+[[ingenieur]]
+nom = "Loïc Blais"
+oiq = "6044886"

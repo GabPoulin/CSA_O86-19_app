@@ -11,6 +11,7 @@ incluse dans le dossier mitex/ pour ne dépendre d'aucun téléchargement.
 """
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -156,6 +157,7 @@ def donnees_de_la_note(
     resultats: list[tuple],
     entete: EnTete,
     apparence: Apparence = Apparence(),
+    commentaires: str = "",
 ) -> dict:
     """
     Données transmises au gabarit Typst (aussi utilisées par les tests).
@@ -166,6 +168,8 @@ def donnees_de_la_note(
             (acces.py, issue #56).
         entete (EnTete): Champs de l'en-tête.
         apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
+        commentaires (str, optional): Commentaires de l'ingénieur, ajoutés à la fin de la note
+            (datum-retours #3). Default to "" (pas de section).
 
     Returns:
         dict: Données sérialisables en JSON.
@@ -180,6 +184,7 @@ def donnees_de_la_note(
             "police_titres": apparence.police_titres,
             "police_texte": apparence.police_texte,
         },
+        "commentaires": commentaires.strip(),
         "resultats": [],
     }
     for element, r, *option in resultats:
@@ -216,10 +221,29 @@ def donnees_de_la_note(
     return note
 
 
+def nom_du_pdf(titre: str) -> str:
+    """
+    Nom du fichier PDF : le titre de la note (datum-retours #4), sans les caractères interdits dans un
+    nom de fichier (/ \\ : * ? " < > |), remplacés par « - ».
+
+    Exemple : nom_du_pdf("Poutre P-1 : 3-2x10") -> « Poutre P-1 - 3-2x10.pdf ».
+
+    Args:
+        titre (str): Titre de la note. Vide : « note_de_calcul.pdf ».
+
+    Returns:
+        str: Nom du fichier, avec l'extension .pdf.
+    """
+    nom = re.sub(r'\s*[/\\:*?"<>|]+\s*', " - ", titre)
+    nom = re.sub(r"\s+", " ", nom).strip(" .-")
+    return f"{nom or 'note_de_calcul'}.pdf"
+
+
 def produire_pdf(
     resultats: list[tuple],
     entete: EnTete,
     apparence: Apparence = Apparence(),
+    commentaires: str = "",
 ) -> bytes:
     """
     Produit la note de calcul PDF.
@@ -228,6 +252,7 @@ def produire_pdf(
         resultats (list[tuple]): Voir donnees_de_la_note().
         entete (EnTete): Champs de l'en-tête.
         apparence (Apparence, optional): Logo et couleurs. Default to ceux de la marque.
+        commentaires (str, optional): Voir donnees_de_la_note().
 
     Returns:
         bytes: Contenu du fichier PDF.
@@ -237,7 +262,7 @@ def produire_pdf(
     """
     if not resultats:
         raise ValueError("Aucune vérification à mettre dans la note de calcul.")
-    donnees = json.dumps(donnees_de_la_note(resultats, entete, apparence), ensure_ascii=False)
+    donnees = json.dumps(donnees_de_la_note(resultats, entete, apparence, commentaires), ensure_ascii=False)
     polices = (
         [str(apparence.dossier_polices)]
         if apparence.dossier_polices and apparence.dossier_polices.is_dir()

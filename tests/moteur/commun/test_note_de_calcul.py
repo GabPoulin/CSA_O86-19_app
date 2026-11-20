@@ -7,6 +7,7 @@ from moteur.commun.note_de_calcul import (
     donnees_de_la_note,
     formater_nombre,
     formater_valeur,
+    nom_du_pdf,
     produire_pdf,
 )
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (
@@ -165,3 +166,33 @@ def test_produire_pdf_polices_absentes(tmp_path):
 
     ap = Apparence(police_titres="Rift", police_texte="DIN 2014", dossier_polices=tmp_path)
     assert produire_pdf([("S-1", flexion())], ENTETE, ap).startswith(b"%PDF")
+
+
+@pytest.mark.parametrize(
+    ("titre", "attendu"),
+    [
+        ("2x6", "2x6.pdf"),
+        ("3-2x10", "3-2x10.pdf"),
+        ("Poutre P-1 : 3-2x10", "Poutre P-1 - 3-2x10.pdf"),
+        ('a/b\\c*?"<>|d', "a - b - c - d.pdf"),
+        ("  Solive   S-1  ", "Solive S-1.pdf"),
+        ("", "note_de_calcul.pdf"),
+        (" / ", "note_de_calcul.pdf"),
+    ],
+)
+def test_nom_du_pdf(titre, attendu):
+    # datum-retours #4 : le PDF porte le titre de la note
+    assert nom_du_pdf(titre) == attendu
+
+
+def test_commentaires():
+    # datum-retours #3 : commentaires à la fin de la note, sans espaces inutiles autour
+    assert donnees_de_la_note([("2x6", flexion())], ENTETE)["commentaires"] == ""
+    note = donnees_de_la_note([("2x6", flexion())], ENTETE, commentaires="  Ligne 1\nLigne 2 \n")
+    assert note["commentaires"] == "Ligne 1\nLigne 2"
+
+
+def test_produire_pdf_avec_commentaires():
+    sans = produire_pdf([("2x6", flexion())], ENTETE)
+    avec = produire_pdf([("2x6", flexion())], ENTETE, commentaires="Vérifier l'appui.\nVoir plan S-2.")
+    assert avec.startswith(b"%PDF") and len(avec) > len(sans)  # une page de plus

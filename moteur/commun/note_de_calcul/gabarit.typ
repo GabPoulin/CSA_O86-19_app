@@ -165,3 +165,17 @@
     #for e in r.etapes { etape(e) }
   ]
 }
+
+// Commentaires de l'ingénieur (datum-retours #3) : à la fin de la note, seulement s'il y en a
+#if donnees.at("commentaires", default: "") != "" {
+  pagebreak()
+  titre(11.5pt, principale, [Commentaires])
+  v(0.2cm)
+  block(width: 100%, stroke: 0.6pt + gris, inset: 8pt, radius: 2pt)[
+    #set par(justify: false)
+    #for (i, ligne) in donnees.commentaires.split("\n").enumerate() {
+      if i > 0 { linebreak() }
+      ligne
+    }
+  ]
+}

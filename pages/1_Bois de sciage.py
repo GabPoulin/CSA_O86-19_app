@@ -6,8 +6,8 @@ import acces
 import config
 import datetime
 from moteur.commun.note_de_calcul import (
-    Apparence,
     EnTete,
+    nom_du_pdf,
     produire_pdf,
 )
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_3_resistances_prevues_et_modules_d_elasticite import (  # noqa: E501
@@ -1062,26 +1062,42 @@ if acces.permis("note_pdf"):
                 icon=":material/info:",
             )
         else:
-            with st.expander("En-tête de la note", width=650):
+            # En-tête toujours visible : sert à chaque note (datum-retours #5)
+            with st.container(width=650, border=True):
+                st.markdown("**En-tête de la note**")
                 col1, col2 = st.columns(2)
                 client = col1.text_input("Client")
                 projet = col2.text_input("Projet")
                 adresse = col1.text_input("Adresse du projet")
                 dossier = col2.text_input("Numéro de dossier")
-                ingenieur = col1.text_input("Ingénieur")
-                oiq = col2.text_input("Numéro OIQ")
-                date = col1.date_input("Date", value=datetime.date.today(), format="YYYY-MM-DD")
-                element = col2.text_input("Nom de l'élément", value="Élément 1")
-            with st.expander("Apparence de la note (logo et couleurs)", width=650):
-                st.caption(
-                    """Par défaut : logo et couleurs du compte (marque/comptes/), sinon ceux par défaut.
-                    Un logo téléversé ici sert seulement pendant la séance."""
+                # Liste des ingénieurs du compte ; un autre nom peut être tapé (datum-retours #6)
+                INGENIEURS = config.ingenieurs_du_compte(st.session_state.get("compte", ""))
+                OIQ_PAR_NOM = dict(INGENIEURS)
+                ingenieur = col1.selectbox(
+                    "Ingénieur",
+                    options=[nom for nom, _ in INGENIEURS],
+                    index=None,
+                    accept_new_options=True,
+                    placeholder="Choisir ou taper un nom",
                 )
-                APPARENCE = config.apparence_du_compte(st.session_state.get("compte", ""))
-                logo = st.file_uploader("Logo (PNG, JPG ou SVG)", type=["png", "jpg", "jpeg", "svg"])
-                col1, col2 = st.columns(2)
-                principale = col1.color_picker("Couleur principale", value=APPARENCE.principale)
-                accent = col2.color_picker("Couleur d'accent", value=APPARENCE.accent)
+                oiq = col2.text_input(
+                    "Numéro OIQ",
+                    value=OIQ_PAR_NOM.get(ingenieur, ""),
+                    key=f"note_oiq_{ingenieur}",  # se remplit quand l'ingénieur change
+                )
+                date = col1.date_input("Date", value=datetime.date.today(), format="YYYY-MM-DD")
+                # Titre par défaut : la pièce calculée, ex. « 2x6 » ou « 3-2x6 » (datum-retours #7)
+                piece = f"{width_input:g}x{depth_input:g}" + (" brut" if BRUT else "")
+                titre = col2.text_input(
+                    "Titre",
+                    value=piece if built_up == 1 else f"{built_up}-{piece}",
+                    key=f"note_titre_{built_up}_{piece}",  # suit la pièce choisie
+                    help="Titre de chaque page et nom du fichier PDF",
+                )
+                commentaires = st.text_area(
+                    "Commentaires",
+                    help="Ajoutés à la fin de la note, sur une page à part (datum-retours #3)",
+                )
             with st.container(width=650):
                 acces.avertir_si_en_test("note_pdf")
                 st.markdown("Vérifications à inclure :")
@@ -1089,16 +1105,18 @@ if acces.permis("note_pdf"):
                 if choix:
                     pdf = produire_pdf(
                         [
-                        (element, FAITES[nom], acces.en_test(FONCTION_DE_LA_VERIFICATION[nom]))
-                        for nom in choix
-                    ],
-                        EnTete(client, projet, adresse, dossier, str(date), ingenieur, oiq),
-                        Apparence(logo.getvalue() if logo else APPARENCE.logo, principale, accent),
+                            (titre, FAITES[nom], acces.en_test(FONCTION_DE_LA_VERIFICATION[nom]))
+                            for nom in choix
+                        ],
+                        EnTete(client, projet, adresse, dossier, str(date), ingenieur or "", oiq),
+                        # Apparence du compte, sans options pour la changer (datum-retours #8)
+                        config.apparence_du_compte(st.session_state.get("compte", "")),
+                        commentaires,
                     )
                     st.download_button(
                         "Télécharger la note de calcul (PDF)",
                         data=pdf,
-                        file_name=f"note_de_calcul_{dossier or 'datum'}_{date}.pdf",
+                        file_name=nom_du_pdf(titre),
                         mime="application/pdf",
                         icon=":material/download:",
                         type="primary",
