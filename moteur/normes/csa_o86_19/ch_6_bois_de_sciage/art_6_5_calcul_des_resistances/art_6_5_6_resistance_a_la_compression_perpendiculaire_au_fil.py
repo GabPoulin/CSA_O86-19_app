@@ -250,7 +250,7 @@ def verifier_compression_perpendiculaire_au_fil(
         r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances, source_K_D
     )
     if plis > 1:
-        r.ajouter_donnee(Donnee("n_{plis}", "Nombre de plis de l'élément composé", plis))
+        r.ajouter_donnee(Donnee("n", "Nombre de plis", plis))
     r.ajouter_donnee(Donnee("L_b", "Longueur d'appui", L_b, "mm", "dimension"))
 
     k_b = r.ajouter_etape(Etape(
@@ -324,7 +324,7 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
         r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances, source_K_D
     )
     if plis > 1:
-        r.ajouter_donnee(Donnee("n_{plis}", "Nombre de plis de l'élément composé", plis))
+        r.ajouter_donnee(Donnee("n", "Nombre de plis", plis))
     # Symboles de 6.5.6.3.2 : L_b1 = longueur d'appui la plus petite, L_b2 = la plus grande. À longueurs
     # égales, L_b1 est celle de la charge (sur le dessus), comme à la figure 6.2.
     if L_b_charge <= L_b_appui:

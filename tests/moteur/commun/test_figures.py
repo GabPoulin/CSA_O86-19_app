@@ -44,7 +44,7 @@ def test_couleurs_du_compte():
 
 
 def test_verification_sans_figure():
-    assert figure(Resultat("CSA O86:19", "6.5.3", "Flexion")) is None
+    assert figure(Resultat("CSA O86:19", "6.5.8", "Traction")) is None  # pas encore de figure
 
 
 def test_bois_de_bout_avec_un_x():
@@ -61,13 +61,13 @@ def test_element_compose_chaque_pli_avec_son_x():
     r = _appui(b=114, d=235, largeur_element=114, plis=3)
     svg = figure(r)
     assert svg.count("stroke-width='2.5'/><path") == 3  # 3 rectangles vus en bout, chacun avec un X
-    assert any(d.symbole == "n_{plis}" and d.valeur == 3 for d in r.donnees)
+    assert any(d.symbole == "n" and d.valeur == 3 for d in r.donnees)
 
 
 def test_un_seul_pli_sans_donnee_de_plis():
     r = _appui()
     assert figure(r).count("stroke-width='2.5'/><path") == 1
-    assert all(d.symbole != "n_{plis}" for d in r.donnees)  # pas de ligne inutile dans la note
+    assert all(d.symbole != "n" for d in r.donnees)  # pas de ligne inutile dans la note
 
 
 def _pres_d_un_appui(**kwargs) -> Resultat:
@@ -114,5 +114,85 @@ def test_compression_pres_d_un_appui_plis():
     r = _pres_d_un_appui(b=114, d=235, largeur_element=114, plis=3)
     svg = figure(r)
     assert svg.count("stroke-width='2.5'/><path") == 3  # 3 plis vus en bout, chacun avec un X
-    assert any(d.symbole == "n_{plis}" and d.valeur == 3 for d in r.donnees)
+    assert any(d.symbole == "n" and d.valeur == 3 for d in r.donnees)
 
+
+
+# --- Flexion, cisaillement, entaille et compression parallèle (issue #62) ---
+
+from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_5_calcul_des_resistances import (  # noqa: E402
+    art_6_5_3_resistance_au_moment_de_flexion as art_6_5_3,
+    art_6_5_4_resistance_au_cisaillement as art_6_5_4,
+    art_6_5_5_resistance_a_la_compression_parallele_au_fil as art_6_5_5,
+)
+
+
+def _sans_chiffres(texte: str, *symboles_avec_chiffres: str) -> bool:
+    for s in symboles_avec_chiffres:
+        texte = texte.replace(s, "")
+    return not any(c.isdigit() for c in texte)
+
+
+def test_flexion():
+    # 3-2x10 : 3 plis de 38 mm x 235 mm, plis fixés à au plus 4 d (6.5.3.2.4)
+    r = art_6_5_3.verifier_flexion(
+        b=38, d=235, f_b=11.8, plis=3, M_f=5,  # mm ; MPa ; kN·m
+        support_lateral_aux_appuis=True, rive_comprimee_maintenue=True,
+        plis_fixes_a_au_plus_4d=True,
+    )
+    svg = figure(r)
+    texte = _texte(svg)
+    for symbole in ("Mf", "b", "d"):
+        assert symbole in texte
+    assert _sans_chiffres(texte)
+    assert svg.count("stroke-width='2.5'/><path") == 3  # 3 plis vus en bout, chacun avec un X
+
+
+def test_cisaillement():
+    r = art_6_5_4.verifier_cisaillement(b=38, d=235, f_v=1.5, plis=1, V_f=5)  # mm ; MPa ; kN
+    svg = figure(r)
+    texte = _texte(svg)
+    for symbole in ("Vf", "b", "d"):
+        assert symbole in texte
+    assert _sans_chiffres(texte)
+    assert svg.count("stroke-width='2.5'/><path") == 1
+
+
+def test_cisaillement_a_l_entaille():
+    # Figure 6.1 : d_n et e
+    r = art_6_5_4.verifier_cisaillement_par_fissuration(
+        b=38, d=235, d_n=50, e=100, plis=2, V_f=5  # mm ; kN
+    )
+    svg = figure(r)
+    texte = _texte(svg)
+    for symbole in ("dn", "e", "Vf", "b", "d"):
+        assert symbole in texte
+    assert _sans_chiffres(texte)
+    assert svg.count("stroke-width='2.5'/><path") == 2
+
+
+def test_compression_parallele():
+    r = art_6_5_5.verifier_compression_parallele_au_fil(
+        b=89, d=89, L=3000, L_b=3000, L_d=3000, f_c=11.5, E_05=6500, P_f=10  # mm ; MPa ; kN
+    )
+    texte = _texte(figure(r))
+    for symbole in ("Pf", "L", "b", "d"):
+        assert symbole in texte
+    assert _sans_chiffres(texte)
+
+
+def test_toutes_les_figures_ont_la_meme_largeur():
+    """Même largeur de SVG (360 ou plus) : texte de taille semblable dans la note PDF."""
+    import re as _re
+
+    resultats = [
+        art_6_5_4.verifier_cisaillement(b=38, d=235, f_v=1.5),
+        art_6_5_5.verifier_compression_parallele_au_fil(
+            b=89, d=89, L=3000, L_b=3000, L_d=3000, f_c=11.5, E_05=6500
+        ),
+        _appui(),
+        _pres_d_un_appui(),
+    ]
+    for r in resultats:
+        largeur = float(_re.search(r"viewBox='[-\d.]+ [-\d.]+ ([\d.]+)", figure(r)).group(1))
+        assert 330 <= largeur <= 390
