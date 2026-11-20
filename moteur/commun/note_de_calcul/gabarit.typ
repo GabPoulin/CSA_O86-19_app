@@ -90,19 +90,20 @@
   footer-descent: 0.3cm,
 )
 
+// Ordre des colonnes : symbole, valeur, description, source (demande de l'utilisateur, issue #62)
 #let tableau-donnees(lignes) = table(
-  columns: (auto, 1fr, auto, auto),
+  columns: (auto, auto, 1fr, auto),
   stroke: none,
   inset: (x: 3pt, y: 2pt),
   fill: (_, y) => if y == 0 { principale } else if calc.even(y) { gris-pale },
   table.header(
-    ..([Symbole], [Description], [Valeur], [Source]).map(t => text(fill: white, weight: "bold", size: 7.5pt)[#t]),
+    ..([Symbole], [Valeur], [Description], [Source]).map(t => text(fill: white, weight: "bold", size: 7.5pt)[#t]),
   ),
   ..lignes
     .map(l => (
       mi(l.symbole),
-      text(size: 7.5pt)[#l.description],
       text(size: 7.5pt)[#l.valeur],
+      text(size: 7.5pt)[#l.description],
       text(size: 7pt, fill: accent)[#l.source],
     ))
     .flatten(),
