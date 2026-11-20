@@ -171,6 +171,7 @@ def modification_factors(
     _2ft_spacing: bool = False,
     connected_subfloor: bool = False,
     built_up_beam: bool = False,
+    loads: dict | None = None,
 ) -> tuple[float, float, float, float, float]:
     """
     6.4 Coefficients de correction. Déplacé dans le nouveau moteur
@@ -178,6 +179,8 @@ def modification_factors(
 
     Args:
         prop (str): "flex", "cis_f", "cis_v", "comp_para", "comp_perp", "trac" ou "moe".
+        loads (dict | None, optional): Charges spécifiées pour K_D selon 5.3.2.2 (clés « dead » = P_L,
+            « live » = L, « snow » = S ; même unité). None : K_D du tableau 5.1. Default to None.
 
     Returns:
         tuple: Kd, Ks, Kt, Kh, Kz. Comportement conservé pour l'interface : Kz = 1 en compression
@@ -187,7 +190,7 @@ def modification_factors(
     propriete = _PROPRIETES_6_4[prop]
     face_etroite = min(width, depth)
 
-    kd = general_design.load_duration(duration)
+    kd = general_design.load_duration(duration, **(loads or {}))
     ks = _art_6_4.K_S(propriete, wet_service, face_etroite)
     kt = _art_6_4.K_T(propriete, treated, incised, face_etroite, wet_service)
     cas = _art_6_4.cas_de_systeme(_2ft_spacing, connected_subfloor, built_up_beam)
