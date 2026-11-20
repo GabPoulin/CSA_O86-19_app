@@ -112,8 +112,9 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
    (`feature/...`, `fix/...`, `docs/...`). Ne jamais committer directement sur `main`.
 2. **Pas de PR automatique.** Créer une PR seulement quand c'est pertinent (travail prêt à être révisé,
    correctif à appliquer, décision à faire valider). Sinon, pousser la branche et en parler à l'utilisateur.
-3. **Surveiller les PR créées** (abonnement à l'activité de la PR) : noter les approbations et répondre
-   aux commentaires laissés dans GitHub.
+3. **Pas d'abonnement à l'activité des PR** (pour économiser l'utilisation de Claude) : vérifier les tests
+   automatiques une seule fois avant de présenter la PR ; les commentaires et les merges sont lus à la
+   séance suivante ou signalés par l'utilisateur.
 4. **Ne jamais merger soi-même.** Le merge dans `main` se fait seulement quand l'utilisateur confirme
    que tout fonctionne.
 5. **Assigner l'utilisateur (`GabPoulin`)** à chaque issue et PR créée, pour qu'il soit notifié.
@@ -125,8 +126,10 @@ Dépôt : **`LeRepere-GP/datum`** (organisation Le Repère).
 
 - Travailler de façon autonome dans des **branches à part**, en suivant la feuille de route
   (`ARCHITECTURE.md`, section 14), et **proposer les avancées de temps en temps** à l'utilisateur.
-- **Quand une PR est mergée, continuer comme au début d'une séance planifiée** : lire les nouveaux
-  commentaires des issues et des PR, vérifier les PR ouvertes, puis faire avancer la feuille de route.
+- **Séances planifiées** : en semaine, à midi et à 17 h, chacune dans une nouvelle conversation : lire les
+  nouveaux commentaires des issues et des PR, vérifier les PR ouvertes, puis faire avancer la feuille de route.
+- **Économiser l'utilisation** : pas de rappels planifiés ni d'abonnements aux PR ; captures d'écran
+  seulement pour les changements d'interface.
 - **Plusieurs PR à la fois sont permises** si ce sont de **petits avancements qui ne se chevauchent
   pas** (fichiers ou parties de fichiers différents, sans dépendance entre elles). Chaque branche part
   de `main` à jour. Si un nouveau travail dépend d'une PR ouverte ou touche les mêmes lignes, attendre
