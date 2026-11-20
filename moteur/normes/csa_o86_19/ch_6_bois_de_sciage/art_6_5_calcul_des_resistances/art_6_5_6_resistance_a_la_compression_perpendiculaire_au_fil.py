@@ -291,6 +291,7 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
     largeur_element: float | None = None,
     source_resistances: str = "Tableaux 6.4 à 6.9",
     source_K_D: str = "Tableau 5.1",
+    plis: int = 1,
 ) -> Resultat:
     """
     6.5.6.3 Résistance pondérée Q'_r sous les seules charges appliquées à une distance du centre de
@@ -311,6 +312,8 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
             ou « A.6.5.6 » si f_cp vient de la densité G). Default to "Tableaux 6.4 à 6.9".
         source_K_D (str, optional): Source de K_D pour la note de calcul : « Tableau 5.1 », ou
             « 5.3.2.2 » si K_D est calculé à partir des charges. Default to "Tableau 5.1".
+        plis (int, optional): Nombre de plis de l'élément composé, pour la note et la figure seulement
+            (largeur_element est la largeur totale). Default to 1.
 
     Returns:
         Resultat: Trace du calcul. Q'_r en N ; vérification en kN.
@@ -320,6 +323,8 @@ def verifier_compression_perpendiculaire_pres_d_un_appui(
     f_cp_corrige, k_zcp = _donnees_communes(
         r, b, largeur_element, d, f_cp, K_D, K_Scp, K_T, source_resistances, source_K_D
     )
+    if plis > 1:
+        r.ajouter_donnee(Donnee("n_{plis}", "Nombre de plis de l'élément composé", plis))
     r.ajouter_donnee(Donnee("L_{b,appui}", "Longueur d'appui à l'appui", L_b_appui, "mm", "dimension"))
     r.ajouter_donnee(Donnee("L_{b,charge}", "Longueur d'appui de la charge", L_b_charge, "mm",
                             "dimension"))
