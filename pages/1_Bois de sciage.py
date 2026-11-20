@@ -10,6 +10,9 @@ from moteur.commun.note_de_calcul import (
     EnTete,
     produire_pdf,
 )
+from moteur.normes.csa_o86_19.ch_5_conception_generale import (
+    art_5_3_conditions_et_coefficients_influant_sur_la_resistance as art_5_3,
+)
 from moteur.normes.csa_o86_19.ch_6_bois_de_sciage.art_6_3_resistances_prevues_et_modules_d_elasticite import (  # noqa: E501
     tableau_des_resistances,
 )
@@ -349,6 +352,53 @@ with st.container(horizontal_alignment="center"):
         espacés de 150 mm aux rives des panneaux de revêtement et de 300 mm aux autres
         endroits""",
     )
+    # K_D par les charges (5.3.2.2, issue #58) : en option, pour une durée continue
+    CHARGES = None  # None : K_D du tableau 5.1
+    SOURCE_KD = "Tableau 5.1"
+    if duration[DURATION] == "continue":
+        with st.container(width=550):
+            if st.checkbox(
+                "Calculer $K_D$ à partir des charges (5.3.2.2)",
+                key="kd_charges",
+                help="""Si la charge spécifiée de durée continue, P_L, est plus grande que la charge
+                spécifiée de durée normale, P_s, K_D = 1.0 - 0.50 log(P_L / P_s) >= 0.65, où
+                P_s = max(S ; L ; S + 0.5 L ; 0.5 S + L). Sans charges : K_D = 0.65 (tableau 5.1).""",
+            ):
+                AIDE_UNITE = """Toute unité cohérente convient pour les trois charges (ex. kN/m) :
+                seul le rapport P_L / P_s compte."""
+                c1, c2, c3 = st.columns(3)
+                p_l = c1.number_input(
+                    "$P_L$ (kPa)", min_value=0.0, value=None, key="kd_p_l",
+                    help="Charge spécifiée de durée d'application continue (ex. charge permanente). "
+                    + AIDE_UNITE,
+                )
+                neige = c2.number_input(
+                    "$S$ (kPa)", min_value=0.0, value=None, key="kd_s",
+                    help="Charge de neige spécifiée. " + AIDE_UNITE,
+                )
+                surcharge = c3.number_input(
+                    "$L$ (kPa)", min_value=0.0, value=None, key="kd_l",
+                    help="Surcharge spécifiée. " + AIDE_UNITE,
+                )
+                if p_l is None or not (neige or surcharge):
+                    st.info(
+                        "Entrez $P_L$ et au moins $S$ ou $L$. En attendant : $K_D$ = 0.65 "
+                        "(tableau 5.1).",
+                        icon=":material/info:",
+                    )
+                else:
+                    CHARGES = {"dead": p_l, "snow": neige or 0.0, "live": surcharge or 0.0}
+                    SOURCE_KD = "5.3.2.2"
+                    p_s = art_5_3.P_s(CHARGES["snow"], CHARGES["live"])
+                    kd_charges = general_design.load_duration("continue", **CHARGES)
+                    st.write(f"$P_s = {p_s:.2f}$ kPa ; $K_D = {kd_charges:.3f}$")
+                    if p_l <= p_s:
+                        st.warning(
+                            "$P_L \\leq P_s$ : la charge de durée continue ne domine pas. "
+                            "$K_D$ = 1.00 (5.3.2.2 ne s'applique pas) ; la durée normale convient.",
+                            icon=":material/warning:",
+                        )
+
     PLIS = True
     if built_up == 1:
         PLIS = False
@@ -381,6 +431,7 @@ with st.container(horizontal_alignment="center"):
             depth=depth,
             prop=prop_options[PROP_KEY],
             duration=duration[DURATION],
+            loads=CHARGES,
             category=CATEGORY,
             wet_service=wet,
             treated=treated,
@@ -435,6 +486,7 @@ if "flexion" in ONGLETS:
             depth=depth,
             prop="flex",
             duration=duration[DURATION],
+            loads=CHARGES,
             category=CATEGORY,
             wet_service=wet,
             treated=treated,
@@ -531,7 +583,7 @@ if "flexion" in ONGLETS:
                         support_lateral_aux_appuis=LATERAL, pannes_ou_tirants=TIE_ROD,
                         rive_comprimee_maintenue=COMP_EDGE, entretoises_ou_entremises=BLOCK,
                         rive_tendue_maintenue=TEN_EDGE, plis_fixes_a_au_plus_4d=PLIES_FASTENED,
-                        M_f=mf, source_resistances=SOURCE,
+                        M_f=mf, source_resistances=SOURCE, source_K_D=SOURCE_KD,
                     )
 
 if "cisaillement" in ONGLETS:
@@ -542,6 +594,7 @@ if "cisaillement" in ONGLETS:
             depth=depth,
             prop="cis_v",
             duration=duration[DURATION],
+            loads=CHARGES,
             category=CATEGORY,
             wet_service=wet,
             treated=treated,
@@ -597,6 +650,7 @@ if "cisaillement" in ONGLETS:
                         depth=depth,
                         prop="cis_f",
                         duration=duration[DURATION],
+                        loads=CHARGES,
                         category=CATEGORY,
                         wet_service=wet,
                         treated=treated,
@@ -629,13 +683,13 @@ if "cisaillement" in ONGLETS:
                     b=width, d=depth, f_v=compute_resistance[1], plis=built_up,
                     d_n=notch_depth if entaille else 0,
                     K_D=beam_shear.kd, K_H=beam_shear.kh, K_Sv=ksv, K_T=beam_shear.kt, K_Zv=kzv,
-                    V_f=vf, source_resistances=SOURCE,
+                    V_f=vf, source_resistances=SOURCE, source_K_D=SOURCE_KD,
                 )
                 if entaille:
                     NOTE["Cisaillement par fissuration à l'entaille (6.5.4.4)"] = (
                         art_6_5_4.verifier_cisaillement_par_fissuration(
                             b=width, d=depth, d_n=notch_depth, e=notch_length, plis=built_up,
-                            K_D=kd, K_H=kh, K_Sf=ksf, K_T=kt, V_f=vf,
+                            K_D=kd, K_H=kh, K_Sf=ksf, K_T=kt, V_f=vf, source_K_D=SOURCE_KD,
                         )
                     )
 
@@ -655,6 +709,7 @@ if "compression_parallele" in ONGLETS:
                     depth=depth,
                     prop="comp_para",
                     duration=duration[DURATION],
+                    loads=CHARGES,
                     category=CATEGORY,
                     wet_service=wet,
                     treated=treated,
@@ -668,6 +723,7 @@ if "compression_parallele" in ONGLETS:
                     depth=depth,
                     prop="moe",
                     duration=duration[DURATION],
+                    loads=CHARGES,
                     category=CATEGORY,
                     wet_service=wet,
                     treated=treated,
@@ -765,7 +821,7 @@ if "compression_parallele" in ONGLETS:
                                     b=width, d=depth, L=length, L_b=le_b, L_d=le_d,
                                     f_c=compute_resistance[2], E_05=e05,
                                     K_D=kd, K_H=kh, K_Sc=ksc, K_T=kt, K_SE=kse, P_f=pf,
-                                    source_resistances=SOURCE,
+                                    source_resistances=SOURCE, source_K_D=SOURCE_KD,
                                 )
                             )
 
@@ -794,6 +850,7 @@ if "compression_perpendiculaire" in ONGLETS:
                 depth=depth,
                 prop="comp_perp",
                 duration=duration[DURATION],
+                loads=CHARGES,
                 category=CATEGORY,
                 wet_service=wet,
                 treated=treated,
@@ -951,7 +1008,7 @@ if "compression_perpendiculaire" in ONGLETS:
                             loin_de_l_extremite=support_far,
                             hors_fortes_contraintes_de_flexion=support_low_bending,
                             R_f=rf, largeur_element=member_width,
-                            source_resistances=SOURCE_FCP,
+                            source_resistances=SOURCE_FCP, source_K_D=SOURCE_KD,
                         )
                     )
                     details.append(
@@ -1002,7 +1059,7 @@ if "compression_perpendiculaire" in ONGLETS:
                                 charge_loin_de_l_extremite=load_far,
                                 charge_hors_fortes_contraintes_de_flexion=load_low_bending,
                                 P_f=pf_near, largeur_element=member_width,
-                                source_resistances=SOURCE_FCP,
+                                source_resistances=SOURCE_FCP, source_K_D=SOURCE_KD,
                             )
                         )
                         details.append(
