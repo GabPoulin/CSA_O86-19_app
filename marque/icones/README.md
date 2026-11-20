@@ -5,8 +5,11 @@ défaut : principale `#233614` (élément, appuis, déformée) et accent `#9E5A0
 elles seront remplacées par les couleurs du compte (`couleurs.toml`).
 
 Icônes : flexion, cisaillement, cisaillement à l'entaille (6.5.4.4, figure 6.1 : entaille à la rive
-en traction, longueur e jusqu'au centre de l'appui, fissure au coin rentrant), compression parallèle,
-compression perpendiculaire, compression près d'un appui (6.5.6.3, figure 6.2 : charge à au plus d du
-centre de l'appui), traction, flexion et charge axiale.
+en traction, longueur e jusqu'au centre de l'appui, fissure en pointillé au coin rentrant), compression parallèle,
+compression perpendiculaire (6.5.6.2 : réaction de l'appui seulement, par-dessous), compression près
+d'un appui (6.5.6.3, figure 6.2 : réaction de l'appui et charge d'un autre élément appuyé sur le dessus), traction, flexion et charge axiale.
 
 Aperçu : `apercu.png`. Pas encore utilisées dans l'application : style à valider d'abord.
+
+Petites icônes : onglets. Grandes figures détaillées (variables du calcul, ex. longueur d'appui) :
+interface et note de calcul, à venir.
